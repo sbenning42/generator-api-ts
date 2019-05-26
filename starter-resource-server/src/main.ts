@@ -17,6 +17,7 @@ import morgan from 'morgan';
 import passport from 'passport';
 
 import { mainMongoService } from './database/mongo';
+import { RoleAPI, ScopeAPI, CredentialAPI, ProfilAPI, UserAPI } from './apis/apis';
 
 /**
  * Use async main function to get access to await
@@ -36,15 +37,20 @@ async function main() {
     passport.initialize() // initialize passport-js library
   );
 
-  const db = await mainMongoService.init();
   /**
    * Wait for database to connect
   */
-  if (db) {
-    app.listen(PORT, () => {
-      console.log(`Server up and running at http://localhost:${PORT}`);
-    });
-  }
+  await mainMongoService.init();
+
+  new RoleAPI().applyRouter(app);
+  new ScopeAPI().applyRouter(app);
+  // new CredentialAPI().applyRouter(app);
+  new ProfilAPI().applyRouter(app);
+  new UserAPI().applyRouter(app);
+
+  app.listen(PORT, () => {
+    console.log(`Server up and running at http://localhost:${PORT}`);
+  });
 
 }
 

@@ -1,3 +1,5 @@
+import { templates, replaceThem, replaceIt } from "./templates";
+
 export class APIGenerator {
     sample() {
         return {
@@ -46,13 +48,13 @@ export class APIGenerator {
     }
 
     suf() {
-        return `// export type User = any;
-// export type Profil = any;
-// export type Role = any;
-// export type Scope = any;
-// export type Credentials = any;
-        
-import { Request, Response, NextFunction, Router, Application } from 'express';
+        return `import {
+    Request,
+    Response,
+    NextFunction,
+    Router,
+    Application
+} from 'express';
 import mongoose from 'mongoose';
 import { ObjectID } from 'mongodb';
         
@@ -64,8 +66,10 @@ const Mixed = mongoose.Schema.Types.Mixed;
 
     generate<O={}, R={}>(schema: CRUDSchemaInput<O, R>) {
         Object.keys(schema.props).forEach(k => schema.props[k] = typeCRUDSchemaInputProp(schema.props[k]));
+        const relationsAsProps = Object.keys(schema.relations).map(k => [k, typeCRUDSchemaInputProp(schema.relations[k])])
         const C = (s: string) => `${s.slice(0, 1).toUpperCase()}${s.slice(1)}`;
         const c = (s: string) => `${s.slice(0, 1).toLowerCase()}${s.slice(1)}`;
+        const requireIt = (s: string, isRequired: boolean = false) => `${s}${isRequired ? '' : '?'}`;
         const A = (f: (ts: string, ta?: string) => string, g: string = '') =>
             (a: string, s: string) => a ? `${a}${g}${f(s, a)}` : f(s, a);
         const gT = (_t: CRUDSchemaInputPropType) => {
@@ -83,7 +87,7 @@ const Mixed = mongoose.Schema.Types.Mixed;
                 case t === Object:
                     return `any${iA ? '[]' : ''}`;
                 default:
-                    throw new Error(`@generate.gT: Do not know type.`);
+                    throw new Error(`@generate.gT: Do not know type.` + t);
             }
         };
         const gTR = (rt: string) => {
@@ -109,9 +113,14 @@ const Mixed = mongoose.Schema.Types.Mixed;
                 case 'any[]':
                     return '[Mixed]';
                 default:
-                    throw new Error(`@generate.gTR: Do not know reverse type.`);
+                    return rt.includes('[') ? `[ObjectId]` : `ObjectId`
             }
         };
+        const mGT = (t: any) => typeof(t) === 'string' ? t : gT(t);
+        const ent2Prop = ({ r=true, m=true, fR=false }={}) => (k: string, v: CRUDSchemaInputPropTyped) => [
+            r ? requireIt(k, v.required) : (fR ? requireIt(k) : k),
+            m ? mGT(v.type) : gT(v.type)
+        ];
         const T = {
             type: `/** 
  * Base entity interface
@@ -172,14 +181,22 @@ export async function __NAME_0__LeanExec() {
 export function __NAME_0__Middleware() {
     return async (req: Request, res: Response, next: NextFunction) => {
         req['result'] = req['result'] ? req['result'] : {};
-        req['result'].__NAME_0__ = await __NAME_0__LeanExec();
+        try {
+            req['result'].__NAME_0__ = await __NAME_0__LeanExec();
+        } catch(error) {
+            return res.status(400).json({ message: 'Something went wrong', error });            
+        }
         next();
     };
 }
 
 export function __NAME_0__Controller() {
     return async (req: Request, res: Response) => {
-        res.json(await __NAME_0__LeanExec());
+        try {
+            res.json(await __NAME_0__LeanExec());
+        } catch(error) {
+            res.status(500).json({ message: 'Something went wrong', error });
+        }
     };
 }
                 `,
@@ -200,7 +217,11 @@ export function __NAME_0__Middleware() {
     return async (req: Request, res: Response, next: NextFunction) => {
         const id = req.params.id;
         req['result'] = req['result'] ? req['result'] : {};
-        req['result'].__NAME_0__ = await __NAME_0__LeanExec(id);
+        try {
+            req['result'].__NAME_0__ = await __NAME_0__LeanExec(id);
+        } catch(error) {
+            return res.status(400).json({ message: 'Something went wrong', error });            
+        }
         next();
     };
 }
@@ -208,7 +229,11 @@ export function __NAME_0__Middleware() {
 export function __NAME_0__Controller() {
     return async (req: Request, res: Response) => {
         const id = req.params.id;
-        res.json(await __NAME_0__LeanExec(id));
+        try {
+            res.json(await __NAME_0__LeanExec(id));
+        } catch(error) {
+            return res.status(400).json({ message: 'Something went wrong', error });            
+        }
     };
 }
                 `,
@@ -221,7 +246,11 @@ export function __NAME_0__Middleware() {
     return async (req: Request, res: Response, next: NextFunction) => {
         const id = req.params.id;
         req['result'] = req['result'] ? req['result'] : {};
-        req['result'].__NAME_0__ = await __NAME_0__LeanExec(id);
+        try {
+            req['result'].__NAME_0__ = await __NAME_0__LeanExec(id);
+        } catch(error) {
+            return res.status(400).json({ message: 'Something went wrong', error });            
+        }
         next();
     };
 }
@@ -229,17 +258,196 @@ export function __NAME_0__Middleware() {
 export function __NAME_0__Controller() {
     return async (req: Request, res: Response) => {
         const id = req.params.id;
-        res.json(await __NAME_0__LeanExec(id));
+        try {
+            res.json(await __NAME_0__LeanExec(id));
+        } catch(error) {
+            return res.status(400).json({ message: 'Something went wrong', error });            
+        }
     };
 }
                 `,
             },
             mutation: {
-                create: ``,
-                update: ``,
-                delete: ``,
-                addRelation: ``, 
-                removeRelation: ``, 
+                create: `export function __NAME_0__Middleware() {
+    return async (req: Request, res: Response, next: NextFunction) => {
+        req['result'] = req['result'] ? req['result'] : {};
+        const data = req.body;
+        try {
+            const model = new __NAME_1__(data);
+            req['result'].__NAME_0__ = await model.save();
+        } catch(error) {
+            return res.status(400).json({ message: 'Something went wrong', error });            
+        }
+        next();
+    };
+}
+
+export function __NAME_0__Controller() {
+    return async (req: Request, res: Response) => {
+        const data = req.body;
+        try {
+            const model = new __NAME_1__(data);
+            res.json(await model.save());
+        } catch(error) {
+            return res.status(400).json({ message: 'Something went wrong', error });            
+        }
+    };
+}
+                `,
+                update: `export function __NAME_0__Middleware() {
+    return async (req: Request, res: Response, next: NextFunction) => {
+        const id = req.params.id;
+        req['result'] = req['result'] ? req['result'] : {};
+        const changes = req.body;
+        try {
+            // use { new: true } to return modified document rather than old one (default to false)
+            // use upsert if you want an update-or-create-if-not-exists behaviour
+            req['result'].__NAME_0__ = await __NAME_1__.findByIdAndUpdate(id, { $set: changes }, { new: true });
+        } catch(error) {
+            return res.status(400).json({ message: 'Something went wrong', error });            
+        }
+        next();
+    };
+}
+
+export function __NAME_0__Controller() {
+    return async (req: Request, res: Response) => {
+        const id = req.params.id;
+        const changes = req.body;
+        try {
+            res.json(await __NAME_1__.findByIdAndUpdate(id, { $set: changes }, { new: true }));
+        } catch(error) {
+            return res.status(400).json({ message: 'Something went wrong', error });            
+        }
+    };
+}
+                `,
+                delete: `export function __NAME_0__Middleware() {
+    return async (req: Request, res: Response, next: NextFunction) => {
+        const id = req.params.id;
+        req['result'] = req['result'] ? req['result'] : {};
+        try {
+            req['result'].__NAME_0__ = await __NAME_1__.findByIdAndRemove(id);
+        } catch(error) {
+            return res.status(400).json({ message: 'Something went wrong', error });            
+        }
+        next();
+    };
+}
+
+export function __NAME_0__Controller() {
+    return async (req: Request, res: Response) => {
+        const id = req.params.id;
+        try {
+            res.json(await __NAME_1__.findByIdAndRemove(id));
+        } catch(error) {
+            return res.status(400).json({ message: 'Something went wrong', error });            
+        }
+    };
+}
+                `,
+                addRelation: `export function __NAME_0__Middleware() {
+    return async (req: Request, res: Response, next: NextFunction) => {
+        const id = req.params.id;
+        req['result'] = req['result'] ? req['result'] : {};
+        const addId = req.body.id;
+        try {
+            const [sub, subject] = await Promise.all([
+                __NAME_1__.findById(id).populate('__NAME_3__').lean().exec(),
+                __NAME_2__.findById(addId).exec()
+            ]);
+            if (!(sub && subject)) {
+                return res.status(404).json({ message: 'Something went wrong', sub, subject });
+            }
+            if (Array.isArray(sub.__NAME_3__)) {
+                sub.__NAME_3__.push(subject._id);
+            } else {
+                sub.__NAME_3__ = subject._id;
+            }
+            req['result'].__NAME_0__ = await sub.save();
+        } catch(error) {
+            return res.status(400).json({ message: 'Something went wrong', error });            
+        }
+        next();
+    };
+}
+
+export function __NAME_0__Controller() {
+    return async (req: Request, res: Response) => {
+        const id = req.params.id;
+        req['result'] = req['result'] ? req['result'] : {};
+        const addId = req.body.id;
+        try {
+            const [sub, subject] = await Promise.all([
+                __NAME_1__.findById(id).populate('__NAME_3__').lean().exec(),
+                __NAME_2__.findById(addId).exec()
+            ]);
+            if (!(sub && subject)) {
+                return res.status(404).json({ message: 'Something went wrong', sub, subject });
+            }
+            if (Array.isArray(sub.__NAME_3__)) {
+                sub.__NAME_3__.push(subject._id);
+            } else {
+                sub.__NAME_3__ = subject._id;
+            }
+            res.json(await sub.save());
+        } catch(error) {
+            return res.status(400).json({ message: 'Something went wrong', error });            
+        }
+    };
+}
+                `, 
+                removeRelation: `export function __NAME_0__Middleware() {
+    return async (req: Request, res: Response, next: NextFunction) => {
+        const id = req.params.id;
+        req['result'] = req['result'] ? req['result'] : {};
+        const removeId = req.body.id;
+        try {
+            const [sub, subject] = await Promise.all([
+                __NAME_1__.findById(id).populate('__NAME_3__').lean().exec(),
+                __NAME_2__.findById(removeId).exec()
+            ]);
+            if (!(sub && subject)) {
+                return res.status(404).json({ message: 'Something went wrong', sub, subject });
+            }
+            if (Array.isArray(sub.__NAME_3__)) {
+                sub.__NAME_3__ = sub.__NAME_3__.filter((it: ObjectID) => !subject._id.equals(it));
+            } else {
+                sub.__NAME_3__ = undefined;
+            }
+            req['result'].__NAME_0__ = await sub.save();
+        } catch(error) {
+            return res.status(400).json({ message: 'Something went wrong', error });            
+        }
+        next();
+    };
+}
+
+export function __NAME_0__Controller() {
+    return async (req: Request, res: Response) => {
+        const id = req.params.id;
+        req['result'] = req['result'] ? req['result'] : {};
+        const removeId = req.body.id;
+        try {
+            const [sub, subject] = await Promise.all([
+                __NAME_1__.findById(id).populate('__NAME_3__').lean().exec(),
+                __NAME_2__.findById(removeId).exec()
+            ]);
+            if (!(sub && subject)) {
+                return res.status(404).json({ message: 'Something went wrong', sub, subject });
+            }
+            if (Array.isArray(sub.__NAME_3__)) {
+                sub.__NAME_3__ = sub.__NAME_3__.filter((it: ObjectID) => !subject._id.equals(it));
+            } else {
+                sub.__NAME_3__ = undefined;
+            }
+            res.json(await sub.save());
+        } catch(error) {
+            return res.status(400).json({ message: 'Something went wrong', error });            
+        }
+    };
+}
+                `, 
             },
             router: `export class __NAME_0__API {
     router = Router();
@@ -248,9 +456,9 @@ export function __NAME_0__Controller() {
         this.router
             .get('/', __NAME_1__Controller())
             .get('/:id', __NAME_2__Controller())
-            // .post('/', __NAME_3__Controller())
-            // .put('/:id', __NAME_4__Controller())
-            // .delete('/:id', __NAME_5__Controller())__GET____ADD____REMOVE__;
+            .post('/', __NAME_3__Controller())
+            .put('/:id', __NAME_4__Controller())
+            .delete('/:id', __NAME_5__Controller())__GET____ADD____REMOVE__;
     }
 
     applyRouter(app: Application) {
@@ -260,8 +468,10 @@ export function __NAME_0__Controller() {
             `,
             routerMiddlewareGet: `
             .get('/:id/__NAME_0__', __NAME_1__Controller())`,
-            routerMiddlewareAdd: ``,
-            routerMiddlewareRemove: ``,
+            routerMiddlewareAdd: `
+            .post('/:id/__NAME_0__/add', __NAME_1__Controller())`,
+            routerMiddlewareRemove: `
+            .post('/:id/__NAME_0__/remove', __NAME_1__Controller())`,
         };
         const {
             name,
@@ -352,7 +562,52 @@ export function __NAME_0__Controller() {
             query: allQueries.map(aq => aq.n),
             mutation: allMutations.map(am => am.n),
         };
+        const propsAndRelationsAsProps = [
+            ['_id', { type: String, required: true }],
+            ...Object.entries(props),
+            ...relationsAsProps,
+        ] as [string, CRUDSchemaInputPropTyped][];
+        const {
+            TS_CreateInputPropTpl,
+            TS_CreateInputTpl,
+            TS_SchemaPropTpl,
+            TS_SchemaTpl,
+            TS_TypePropTpl,
+            TS_TypeTpl,
+            TS_UpdateInputPropTpl,
+            TS_UpdateInputTpl,
+            TS_UtilsTpl
+        } = templates;
+        const typePropsTpl = replaceThem(TS_TypePropTpl, propsAndRelationsAsProps, ent2Prop());
+        const typeTpl = replaceIt(templates.TS_TypeTpl, Cname, typePropsTpl);
+        const createInputPropsTpl = replaceThem(TS_CreateInputPropTpl, Object.entries(props), ent2Prop({m:false}));
+        const createInputTpl = replaceIt(TS_CreateInputTpl, Cname, createInputPropsTpl);
+        const updateInputPropsTpl = replaceThem(TS_UpdateInputPropTpl, Object.entries(props), ent2Prop({r:false,m:false,fR:true}));
+        const updateInputTpl = replaceIt(TS_UpdateInputTpl, Cname, updateInputPropsTpl);
+        const schemaPropsTpl = replaceThem(
+            { tpl: TS_SchemaPropTpl, glue: '\n        ' },
+            propsAndRelationsAsProps.filter(([k]) => k !== '_id'),
+            (k: string, v: CRUDSchemaInputPropTyped) => [
+                k,
+                gTR(mGT(v.type)),
+                v.required ? 'true' : 'false',
+                JSON.stringify(v.default),
+                v.unique ? 'true' : 'false',
+                v.hidden ? 'true' : 'false',
+            ]
+        )
+            .replace(/\s*unique: false,/g, '')
+            .replace(/\s*required: false,/g, '')
+            .replace(/\s*hidden: false,/g, '')
+            .replace(/\s*default: undefined,/g, '');
+        const schemaTpl = replaceIt(TS_SchemaTpl, Cname, schemaPropsTpl);
+        const utilsTpl = replaceIt(TS_UtilsTpl, Cname);
         const defs = {
+            typeTpl,
+            createInputTpl,
+            updateInputTpl,
+            schemaTpl,
+            utilsTpl,
             type: T.type
                 .replace('__NAME__', syms.type)
                 .replace('__PROPS__', [T.typeProp
@@ -434,9 +689,31 @@ export function __NAME_0__Controller() {
                     ),
                 },
                 mutation: {
-                    create: ``,
-                    update: ``,
-                    delete: ``,
+                    create: T.mutation.create
+                        .replace(/__NAME_0__/g, syms.mutation[0])
+                        .replace(/__NAME_1__/g, syms.model),
+                    update: T.mutation.update
+                        .replace(/__NAME_0__/g, syms.mutation[1])
+                        .replace(/__NAME_1__/g, syms.model),
+                    delete: T.mutation.delete
+                        .replace(/__NAME_0__/g, syms.mutation[2])
+                        .replace(/__NAME_1__/g, syms.model),
+                    addRelations: allMutations.slice(3, 3 + Object.keys(relations).length).map((am,i) => T.mutation.addRelation
+                        .replace(/__NAME_0__/g, am.n)
+                        .replace(/__NAME_1__/g, syms.model)
+                        .replace(/__NAME_2__/g, (Object.values(relations)[i] as string)
+                            .replace('[', '')
+                            .replace(']', '') + 'Model'
+                        ).replace(/__NAME_3__/g, Object.keys(relations)[i])
+                    ),
+                    removeRelations: allMutations.slice(3 + Object.keys(relations).length).map((am,i) => T.mutation.removeRelation
+                        .replace(/__NAME_0__/g, am.n)
+                        .replace(/__NAME_1__/g, syms.model)
+                        .replace(/__NAME_2__/g, (Object.values(relations)[i] as string)
+                            .replace('[', '')
+                            .replace(']', '') + 'Model'
+                        ).replace(/__NAME_3__/g, Object.keys(relations)[i])
+                    ),
                     // ...
                     // ...
                 },
@@ -449,13 +726,26 @@ export function __NAME_0__Controller() {
                     .replace(/__NAME_5__/g, syms.mutation[2])
                     .replace(/__NAME_6__/g, cname + 's')
                     .replace(/__GET__/g, allQueries.slice(2)
+                        .filter((aq,i) => !Object.values(query)[i].skip)
                         .map((aq, i) => T.routerMiddlewareGet
                             .replace(/__NAME_0__/g, Object.keys(relations)[i])
                             .replace(/__NAME_1__/g, aq.n)
-                        ).reduce(A(p => p, '\n'), '')
+                        ).reduce(A(p => p, ''), '')
                     )
-                    .replace(/__ADD__/g, '')
-                    .replace(/__REMOVE__/g, '')
+                    .replace(/__ADD__/g, allMutations.slice(3, 3 + Object.keys(relations).length)
+                        .filter((am,i) => !(console.log(am.n, Object.keys(mutation)[i], Object.values(mutation)[i]), Object.values(mutation)[i].skip))
+                        .map((am, i) => T.routerMiddlewareAdd
+                            .replace(/__NAME_0__/g, Object.keys(relations)[i])
+                            .replace(/__NAME_1__/g, am.n)
+                        ).reduce(A(p => p, ''), '')
+                    )
+                    .replace(/__REMOVE__/g, allMutations.slice(3 + Object.keys(relations).length)
+                        .filter((am,i) => !Object.values(mutation)[i].skip)
+                        .map((am, i) => T.routerMiddlewareRemove
+                            .replace(/__NAME_0__/g, Object.keys(relations)[i])
+                            .replace(/__NAME_1__/g, am.n)
+                        ).reduce(A(p => p, ''), '')
+                    )
         }
         return `${
             defs.type.trim()
@@ -473,7 +763,31 @@ ${defs.query.getOne.trim()}
 
 ${defs.query.getRelations.reduce(A(p => p, '\n'), '')}
 
+${defs.mutation.create.trim()}
+
+${defs.mutation.update.trim()}
+
+${defs.mutation.delete.trim()}
+
+${defs.mutation.addRelations.reduce(A(p => p, '\n'), '')}
+
+${defs.mutation.removeRelations.reduce(A(p => p, '\n'), '')}
+
 ${defs.router}
+
+/*
+
+${defs.typeTpl}
+
+${defs.createInputTpl}
+
+${defs.updateInputTpl}
+
+${defs.schemaTpl}
+
+${defs.utilsTpl}
+
+*/
 
 `;
     }

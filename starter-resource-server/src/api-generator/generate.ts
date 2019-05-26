@@ -1,6 +1,11 @@
 import fs from 'fs';
 import { APIGenerator, CRUDSchemaInput } from "./core";
 
+import dotenv from 'dotenv';
+dotenv.config();
+
+const { BACKUP_GENERATED } = process.env;
+
 const G = new APIGenerator;
 
 const schemas: CRUDSchemaInput<any, any>[] = [
@@ -25,6 +30,14 @@ const schemas: CRUDSchemaInput<any, any>[] = [
         },
         relations: {
             users: '[User]'
+        },
+        query: {
+            
+        },
+        mutation: {
+            addUserCredential: {
+                skip: true
+            }
         }
     },
     {
@@ -78,6 +91,10 @@ const schemas: CRUDSchemaInput<any, any>[] = [
                 type: Date,
                 required: true,
             },
+            json: {
+                type: Object,
+                default: {}
+            },
         },
         relations: {
             owner: 'User'
@@ -102,4 +119,24 @@ const schemas: CRUDSchemaInput<any, any>[] = [
     },
 ];
 
-schemas.forEach(schema => fs.writeFileSync(`./src/apis/${schema.name.toLowerCase()}-api.ts`, `${G.suf()}${G.generate(schema)}`, 'utf8'));
+const content = G.suf() + schemas.reduce((all, schema) => {
+    const thisContent = G.generate(schema);
+    return all ? `${all}\n${thisContent}` : thisContent;
+}, '');
+
+if (BACKUP_GENERATED === 'true') {
+    try {
+        const old = fs.readFileSync(`./src/apis/apis.ts`, 'utf8');
+        if (old) {
+            fs.writeFileSync(`./src/apis/apis.ts.${Date.now()}.bk`, old, { encoding: 'utf8', flag: 'w' });
+        }
+    }catch(e){
+        console.log('Something Went wrong.', e);
+    }
+}
+
+try {
+    fs.writeFileSync(`./src/apis/apis.ts`, content, { encoding: 'utf8', flag: 'w' });
+}catch(e){
+    console.log('Something Went wrong.', e);
+}
