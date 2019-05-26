@@ -22,767 +22,6 @@ export function attachCTX(req: Request, key: string, value: any) {
     req['CTX'][key] = value;
     return value;
 }
-        
-/** 
- * Base entity interface
-*/
-export interface User {
-    _id: string;
-    roles?: [Role];
-    scopes?: [Scope];
-    credential?: Credential;
-    profil?: Profil;
-}
-      
-/** 
- * Input payload interface for entity creation
-*/
-export interface UserCreateInput {
-
-}
-      
-/** 
- * Input payload interface for entity update
-*/
-export interface UserChangesInput {
-
-}
-export interface UserUpdateInput {
-    id: string;
-    changes: UserChangesInput;
-}
-
-/** 
- * Mongoose Schema for this entity
-*/
-export const UserSchema = new mongoose.Schema({
-    roles: {
-        type: [ObjectId] /* relation ([Role]) */,
-        required: false,
-    },
-    scopes: {
-        type: [ObjectId] /* relation ([Scope]) */,
-        required: false,
-    },
-    credential: {
-        type: ObjectId /* relation (Credential) */,
-        required: false,
-    },
-    profil: {
-        type: ObjectId /* relation (Profil) */,
-        required: false,
-    },
-}, { minimize: false });
-export const UserModel = mongoose.model('User', UserSchema);
-
-export function getManyUsersQuery() {
-    return UserModel.find({});
-}
-export function getManyUsersLean() {
-    return getManyUsersQuery().lean();
-}
-export async function getManyUsersExec() {
-    return getManyUsersQuery().exec();
-}
-export async function getManyUsersLeanExec() {
-    return getManyUsersLean().exec();
-}
-
-export function getManyUsersMiddleware() {
-    return async (req: Request, res: Response, next: NextFunction) => {
-        req['result'] = req['result'] ? req['result'] : {};
-        try {
-            req['result'].getManyUsers = await getManyUsersLeanExec();
-        } catch(error) {
-            return res.status(400).json({ message: 'Something went wrong', error });            
-        }
-        next();
-    };
-}
-
-export function getManyUsersController() {
-    return async (req: Request, res: Response) => {
-        try {
-            res.json(await getManyUsersLeanExec());
-        } catch(error) {
-            res.status(500).json({ message: 'Something went wrong', error });
-        }
-    };
-}
-
-export function getOneUserQuery(id: string) {
-    return UserModel.findById(id);
-}
-export function getOneUserLean(id: string) {
-    return getOneUserQuery(id).lean();
-}
-export async function getOneUserExec(id: string) {
-    return getOneUserQuery(id).exec();
-}
-export async function getOneUserLeanExec(id: string) {
-    return getOneUserLean(id).exec();
-}
-
-export function getOneUserMiddleware() {
-    return async (req: Request, res: Response, next: NextFunction) => {
-        const id = req.params.id;
-        req['result'] = req['result'] ? req['result'] : {};
-        try {
-            req['result'].getOneUser = await getOneUserLeanExec(id);
-        } catch(error) {
-            return res.status(400).json({ message: 'Something went wrong', error });            
-        }
-        next();
-    };
-}
-
-export function getOneUserController() {
-    return async (req: Request, res: Response) => {
-        const id = req.params.id;
-        try {
-            res.json(await getOneUserLeanExec(id));
-        } catch(error) {
-            return res.status(400).json({ message: 'Something went wrong', error });            
-        }
-    };
-}
-
-export async function getUserRolesLeanExec(id: string) {
-    const related = await getOneUserQuery(id).populate('roles').lean().exec();
-    return related.roles;
-}
-
-export function getUserRolesMiddleware() {
-    return async (req: Request, res: Response, next: NextFunction) => {
-        const id = req.params.id;
-        req['result'] = req['result'] ? req['result'] : {};
-        try {
-            req['result'].getUserRoles = await getUserRolesLeanExec(id);
-        } catch(error) {
-            return res.status(400).json({ message: 'Something went wrong', error });            
-        }
-        next();
-    };
-}
-
-export function getUserRolesController() {
-    return async (req: Request, res: Response) => {
-        const id = req.params.id;
-        try {
-            res.json(await getUserRolesLeanExec(id));
-        } catch(error) {
-            return res.status(400).json({ message: 'Something went wrong', error });            
-        }
-    };
-}
-                
-export async function getUserScopesLeanExec(id: string) {
-    const related = await getOneUserQuery(id).populate('scopes').lean().exec();
-    return related.scopes;
-}
-
-export function getUserScopesMiddleware() {
-    return async (req: Request, res: Response, next: NextFunction) => {
-        const id = req.params.id;
-        req['result'] = req['result'] ? req['result'] : {};
-        try {
-            req['result'].getUserScopes = await getUserScopesLeanExec(id);
-        } catch(error) {
-            return res.status(400).json({ message: 'Something went wrong', error });            
-        }
-        next();
-    };
-}
-
-export function getUserScopesController() {
-    return async (req: Request, res: Response) => {
-        const id = req.params.id;
-        try {
-            res.json(await getUserScopesLeanExec(id));
-        } catch(error) {
-            return res.status(400).json({ message: 'Something went wrong', error });            
-        }
-    };
-}
-                
-export async function getUserCredentialLeanExec(id: string) {
-    const related = await getOneUserQuery(id).populate('credential').lean().exec();
-    return related.credential;
-}
-
-export function getUserCredentialMiddleware() {
-    return async (req: Request, res: Response, next: NextFunction) => {
-        const id = req.params.id;
-        req['result'] = req['result'] ? req['result'] : {};
-        try {
-            req['result'].getUserCredential = await getUserCredentialLeanExec(id);
-        } catch(error) {
-            return res.status(400).json({ message: 'Something went wrong', error });            
-        }
-        next();
-    };
-}
-
-export function getUserCredentialController() {
-    return async (req: Request, res: Response) => {
-        const id = req.params.id;
-        try {
-            res.json(await getUserCredentialLeanExec(id));
-        } catch(error) {
-            return res.status(400).json({ message: 'Something went wrong', error });            
-        }
-    };
-}
-                
-export async function getUserProfilLeanExec(id: string) {
-    const related = await getOneUserQuery(id).populate('profil').lean().exec();
-    return related.profil;
-}
-
-export function getUserProfilMiddleware() {
-    return async (req: Request, res: Response, next: NextFunction) => {
-        const id = req.params.id;
-        req['result'] = req['result'] ? req['result'] : {};
-        try {
-            req['result'].getUserProfil = await getUserProfilLeanExec(id);
-        } catch(error) {
-            return res.status(400).json({ message: 'Something went wrong', error });            
-        }
-        next();
-    };
-}
-
-export function getUserProfilController() {
-    return async (req: Request, res: Response) => {
-        const id = req.params.id;
-        try {
-            res.json(await getUserProfilLeanExec(id));
-        } catch(error) {
-            return res.status(400).json({ message: 'Something went wrong', error });            
-        }
-    };
-}
-                
-
-export function createUserMiddleware() {
-    return async (req: Request, res: Response, next: NextFunction) => {
-        req['result'] = req['result'] ? req['result'] : {};
-        const data = req.body;
-        try {
-            const model = new UserModel(data);
-            req['result'].createUser = await model.save();
-        } catch(error) {
-            return res.status(400).json({ message: 'Something went wrong', error });            
-        }
-        next();
-    };
-}
-
-export function createUserController() {
-    return async (req: Request, res: Response) => {
-        const data = req.body;
-        try {
-            const model = new UserModel(data);
-            res.json(await model.save());
-        } catch(error) {
-            return res.status(400).json({ message: 'Something went wrong', error });            
-        }
-    };
-}
-
-export function updateUserMiddleware() {
-    return async (req: Request, res: Response, next: NextFunction) => {
-        const id = req.params.id;
-        req['result'] = req['result'] ? req['result'] : {};
-        const changes = req.body;
-        try {
-            // use { new: true } to return modified document rather than old one (default to false)
-            // use upsert if you want an update-or-create-if-not-exists behaviour
-            req['result'].updateUser = await UserModel.findByIdAndUpdate(id, { $set: changes }, { new: true });
-        } catch(error) {
-            return res.status(400).json({ message: 'Something went wrong', error });            
-        }
-        next();
-    };
-}
-
-export function updateUserController() {
-    return async (req: Request, res: Response) => {
-        const id = req.params.id;
-        const changes = req.body;
-        try {
-            res.json(await UserModel.findByIdAndUpdate(id, { $set: changes }, { new: true }));
-        } catch(error) {
-            return res.status(400).json({ message: 'Something went wrong', error });            
-        }
-    };
-}
-
-export function deleteUserMiddleware() {
-    return async (req: Request, res: Response, next: NextFunction) => {
-        const id = req.params.id;
-        req['result'] = req['result'] ? req['result'] : {};
-        try {
-            req['result'].deleteUser = await UserModel.findByIdAndRemove(id);
-        } catch(error) {
-            return res.status(400).json({ message: 'Something went wrong', error });            
-        }
-        next();
-    };
-}
-
-export function deleteUserController() {
-    return async (req: Request, res: Response) => {
-        const id = req.params.id;
-        try {
-            res.json(await UserModel.findByIdAndRemove(id));
-        } catch(error) {
-            return res.status(400).json({ message: 'Something went wrong', error });            
-        }
-    };
-}
-
-export function addUserRolesMiddleware() {
-    return async (req: Request, res: Response, next: NextFunction) => {
-        const id = req.params.id;
-        req['result'] = req['result'] ? req['result'] : {};
-        const addId = req.body.id;
-        try {
-            const [sub, subject] = await Promise.all([
-                UserModel.findById(id).populate('roles').lean().exec(),
-                RoleModel.findById(addId).exec()
-            ]);
-            if (!(sub && subject)) {
-                return res.status(404).json({ message: 'Something went wrong', sub, subject });
-            }
-            if (Array.isArray(sub.roles)) {
-                sub.roles.push(subject._id);
-            } else {
-                sub.roles = subject._id;
-            }
-            req['result'].addUserRoles = await sub.save();
-        } catch(error) {
-            return res.status(400).json({ message: 'Something went wrong', error });            
-        }
-        next();
-    };
-}
-
-export function addUserRolesController() {
-    return async (req: Request, res: Response) => {
-        const id = req.params.id;
-        req['result'] = req['result'] ? req['result'] : {};
-        const addId = req.body.id;
-        try {
-            const [sub, subject] = await Promise.all([
-                UserModel.findById(id).populate('roles').lean().exec(),
-                RoleModel.findById(addId).exec()
-            ]);
-            if (!(sub && subject)) {
-                return res.status(404).json({ message: 'Something went wrong', sub, subject });
-            }
-            if (Array.isArray(sub.roles)) {
-                sub.roles.push(subject._id);
-            } else {
-                sub.roles = subject._id;
-            }
-            res.json(await sub.save());
-        } catch(error) {
-            return res.status(400).json({ message: 'Something went wrong', error });            
-        }
-    };
-}
-                
-export function addUserScopesMiddleware() {
-    return async (req: Request, res: Response, next: NextFunction) => {
-        const id = req.params.id;
-        req['result'] = req['result'] ? req['result'] : {};
-        const addId = req.body.id;
-        try {
-            const [sub, subject] = await Promise.all([
-                UserModel.findById(id).populate('scopes').lean().exec(),
-                ScopeModel.findById(addId).exec()
-            ]);
-            if (!(sub && subject)) {
-                return res.status(404).json({ message: 'Something went wrong', sub, subject });
-            }
-            if (Array.isArray(sub.scopes)) {
-                sub.scopes.push(subject._id);
-            } else {
-                sub.scopes = subject._id;
-            }
-            req['result'].addUserScopes = await sub.save();
-        } catch(error) {
-            return res.status(400).json({ message: 'Something went wrong', error });            
-        }
-        next();
-    };
-}
-
-export function addUserScopesController() {
-    return async (req: Request, res: Response) => {
-        const id = req.params.id;
-        req['result'] = req['result'] ? req['result'] : {};
-        const addId = req.body.id;
-        try {
-            const [sub, subject] = await Promise.all([
-                UserModel.findById(id).populate('scopes').lean().exec(),
-                ScopeModel.findById(addId).exec()
-            ]);
-            if (!(sub && subject)) {
-                return res.status(404).json({ message: 'Something went wrong', sub, subject });
-            }
-            if (Array.isArray(sub.scopes)) {
-                sub.scopes.push(subject._id);
-            } else {
-                sub.scopes = subject._id;
-            }
-            res.json(await sub.save());
-        } catch(error) {
-            return res.status(400).json({ message: 'Something went wrong', error });            
-        }
-    };
-}
-                
-export function addUserCredentialMiddleware() {
-    return async (req: Request, res: Response, next: NextFunction) => {
-        const id = req.params.id;
-        req['result'] = req['result'] ? req['result'] : {};
-        const addId = req.body.id;
-        try {
-            const [sub, subject] = await Promise.all([
-                UserModel.findById(id).populate('credential').lean().exec(),
-                CredentialModel.findById(addId).exec()
-            ]);
-            if (!(sub && subject)) {
-                return res.status(404).json({ message: 'Something went wrong', sub, subject });
-            }
-            if (Array.isArray(sub.credential)) {
-                sub.credential.push(subject._id);
-            } else {
-                sub.credential = subject._id;
-            }
-            req['result'].addUserCredential = await sub.save();
-        } catch(error) {
-            return res.status(400).json({ message: 'Something went wrong', error });            
-        }
-        next();
-    };
-}
-
-export function addUserCredentialController() {
-    return async (req: Request, res: Response) => {
-        const id = req.params.id;
-        req['result'] = req['result'] ? req['result'] : {};
-        const addId = req.body.id;
-        try {
-            const [sub, subject] = await Promise.all([
-                UserModel.findById(id).populate('credential').lean().exec(),
-                CredentialModel.findById(addId).exec()
-            ]);
-            if (!(sub && subject)) {
-                return res.status(404).json({ message: 'Something went wrong', sub, subject });
-            }
-            if (Array.isArray(sub.credential)) {
-                sub.credential.push(subject._id);
-            } else {
-                sub.credential = subject._id;
-            }
-            res.json(await sub.save());
-        } catch(error) {
-            return res.status(400).json({ message: 'Something went wrong', error });            
-        }
-    };
-}
-                
-export function addUserProfilMiddleware() {
-    return async (req: Request, res: Response, next: NextFunction) => {
-        const id = req.params.id;
-        req['result'] = req['result'] ? req['result'] : {};
-        const addId = req.body.id;
-        try {
-            const [sub, subject] = await Promise.all([
-                UserModel.findById(id).populate('profil').lean().exec(),
-                ProfilModel.findById(addId).exec()
-            ]);
-            if (!(sub && subject)) {
-                return res.status(404).json({ message: 'Something went wrong', sub, subject });
-            }
-            if (Array.isArray(sub.profil)) {
-                sub.profil.push(subject._id);
-            } else {
-                sub.profil = subject._id;
-            }
-            req['result'].addUserProfil = await sub.save();
-        } catch(error) {
-            return res.status(400).json({ message: 'Something went wrong', error });            
-        }
-        next();
-    };
-}
-
-export function addUserProfilController() {
-    return async (req: Request, res: Response) => {
-        const id = req.params.id;
-        req['result'] = req['result'] ? req['result'] : {};
-        const addId = req.body.id;
-        try {
-            const [sub, subject] = await Promise.all([
-                UserModel.findById(id).populate('profil').lean().exec(),
-                ProfilModel.findById(addId).exec()
-            ]);
-            if (!(sub && subject)) {
-                return res.status(404).json({ message: 'Something went wrong', sub, subject });
-            }
-            if (Array.isArray(sub.profil)) {
-                sub.profil.push(subject._id);
-            } else {
-                sub.profil = subject._id;
-            }
-            res.json(await sub.save());
-        } catch(error) {
-            return res.status(400).json({ message: 'Something went wrong', error });            
-        }
-    };
-}
-                
-
-export function removeUserRolesMiddleware() {
-    return async (req: Request, res: Response, next: NextFunction) => {
-        const id = req.params.id;
-        req['result'] = req['result'] ? req['result'] : {};
-        const removeId = req.body.id;
-        try {
-            const [sub, subject] = await Promise.all([
-                UserModel.findById(id).populate('roles').lean().exec(),
-                RoleModel.findById(removeId).exec()
-            ]);
-            if (!(sub && subject)) {
-                return res.status(404).json({ message: 'Something went wrong', sub, subject });
-            }
-            if (Array.isArray(sub.roles)) {
-                sub.roles = sub.roles.filter((it: ObjectID) => !subject._id.equals(it));
-            } else {
-                sub.roles = undefined;
-            }
-            req['result'].removeUserRoles = await sub.save();
-        } catch(error) {
-            return res.status(400).json({ message: 'Something went wrong', error });            
-        }
-        next();
-    };
-}
-
-export function removeUserRolesController() {
-    return async (req: Request, res: Response) => {
-        const id = req.params.id;
-        req['result'] = req['result'] ? req['result'] : {};
-        const removeId = req.body.id;
-        try {
-            const [sub, subject] = await Promise.all([
-                UserModel.findById(id).populate('roles').lean().exec(),
-                RoleModel.findById(removeId).exec()
-            ]);
-            if (!(sub && subject)) {
-                return res.status(404).json({ message: 'Something went wrong', sub, subject });
-            }
-            if (Array.isArray(sub.roles)) {
-                sub.roles = sub.roles.filter((it: ObjectID) => !subject._id.equals(it));
-            } else {
-                sub.roles = undefined;
-            }
-            res.json(await sub.save());
-        } catch(error) {
-            return res.status(400).json({ message: 'Something went wrong', error });            
-        }
-    };
-}
-                
-export function removeUserScopesMiddleware() {
-    return async (req: Request, res: Response, next: NextFunction) => {
-        const id = req.params.id;
-        req['result'] = req['result'] ? req['result'] : {};
-        const removeId = req.body.id;
-        try {
-            const [sub, subject] = await Promise.all([
-                UserModel.findById(id).populate('scopes').lean().exec(),
-                ScopeModel.findById(removeId).exec()
-            ]);
-            if (!(sub && subject)) {
-                return res.status(404).json({ message: 'Something went wrong', sub, subject });
-            }
-            if (Array.isArray(sub.scopes)) {
-                sub.scopes = sub.scopes.filter((it: ObjectID) => !subject._id.equals(it));
-            } else {
-                sub.scopes = undefined;
-            }
-            req['result'].removeUserScopes = await sub.save();
-        } catch(error) {
-            return res.status(400).json({ message: 'Something went wrong', error });            
-        }
-        next();
-    };
-}
-
-export function removeUserScopesController() {
-    return async (req: Request, res: Response) => {
-        const id = req.params.id;
-        req['result'] = req['result'] ? req['result'] : {};
-        const removeId = req.body.id;
-        try {
-            const [sub, subject] = await Promise.all([
-                UserModel.findById(id).populate('scopes').lean().exec(),
-                ScopeModel.findById(removeId).exec()
-            ]);
-            if (!(sub && subject)) {
-                return res.status(404).json({ message: 'Something went wrong', sub, subject });
-            }
-            if (Array.isArray(sub.scopes)) {
-                sub.scopes = sub.scopes.filter((it: ObjectID) => !subject._id.equals(it));
-            } else {
-                sub.scopes = undefined;
-            }
-            res.json(await sub.save());
-        } catch(error) {
-            return res.status(400).json({ message: 'Something went wrong', error });            
-        }
-    };
-}
-                
-export function removeUserCredentialMiddleware() {
-    return async (req: Request, res: Response, next: NextFunction) => {
-        const id = req.params.id;
-        req['result'] = req['result'] ? req['result'] : {};
-        const removeId = req.body.id;
-        try {
-            const [sub, subject] = await Promise.all([
-                UserModel.findById(id).populate('credential').lean().exec(),
-                CredentialModel.findById(removeId).exec()
-            ]);
-            if (!(sub && subject)) {
-                return res.status(404).json({ message: 'Something went wrong', sub, subject });
-            }
-            if (Array.isArray(sub.credential)) {
-                sub.credential = sub.credential.filter((it: ObjectID) => !subject._id.equals(it));
-            } else {
-                sub.credential = undefined;
-            }
-            req['result'].removeUserCredential = await sub.save();
-        } catch(error) {
-            return res.status(400).json({ message: 'Something went wrong', error });            
-        }
-        next();
-    };
-}
-
-export function removeUserCredentialController() {
-    return async (req: Request, res: Response) => {
-        const id = req.params.id;
-        req['result'] = req['result'] ? req['result'] : {};
-        const removeId = req.body.id;
-        try {
-            const [sub, subject] = await Promise.all([
-                UserModel.findById(id).populate('credential').lean().exec(),
-                CredentialModel.findById(removeId).exec()
-            ]);
-            if (!(sub && subject)) {
-                return res.status(404).json({ message: 'Something went wrong', sub, subject });
-            }
-            if (Array.isArray(sub.credential)) {
-                sub.credential = sub.credential.filter((it: ObjectID) => !subject._id.equals(it));
-            } else {
-                sub.credential = undefined;
-            }
-            res.json(await sub.save());
-        } catch(error) {
-            return res.status(400).json({ message: 'Something went wrong', error });            
-        }
-    };
-}
-                
-export function removeUserProfilMiddleware() {
-    return async (req: Request, res: Response, next: NextFunction) => {
-        const id = req.params.id;
-        req['result'] = req['result'] ? req['result'] : {};
-        const removeId = req.body.id;
-        try {
-            const [sub, subject] = await Promise.all([
-                UserModel.findById(id).populate('profil').lean().exec(),
-                ProfilModel.findById(removeId).exec()
-            ]);
-            if (!(sub && subject)) {
-                return res.status(404).json({ message: 'Something went wrong', sub, subject });
-            }
-            if (Array.isArray(sub.profil)) {
-                sub.profil = sub.profil.filter((it: ObjectID) => !subject._id.equals(it));
-            } else {
-                sub.profil = undefined;
-            }
-            req['result'].removeUserProfil = await sub.save();
-        } catch(error) {
-            return res.status(400).json({ message: 'Something went wrong', error });            
-        }
-        next();
-    };
-}
-
-export function removeUserProfilController() {
-    return async (req: Request, res: Response) => {
-        const id = req.params.id;
-        req['result'] = req['result'] ? req['result'] : {};
-        const removeId = req.body.id;
-        try {
-            const [sub, subject] = await Promise.all([
-                UserModel.findById(id).populate('profil').lean().exec(),
-                ProfilModel.findById(removeId).exec()
-            ]);
-            if (!(sub && subject)) {
-                return res.status(404).json({ message: 'Something went wrong', sub, subject });
-            }
-            if (Array.isArray(sub.profil)) {
-                sub.profil = sub.profil.filter((it: ObjectID) => !subject._id.equals(it));
-            } else {
-                sub.profil = undefined;
-            }
-            res.json(await sub.save());
-        } catch(error) {
-            return res.status(400).json({ message: 'Something went wrong', error });            
-        }
-    };
-}
-                
-
-export class UserAPI {
-    router = Router();
-
-    constructor() {
-        this.router
-            .get('/', getManyUsersController())
-            .get('/:id', getOneUserController())
-            .post('/', createUserController())
-            .put('/:id', updateUserController())
-            .delete('/:id', deleteUserController())
-            .get('/:id/roles', getUserRolesController())
-            .get('/:id/scopes', getUserScopesController())
-            .get('/:id/credential', getUserCredentialController())
-            .get('/:id/profil', getUserProfilController())
-            .post('/:id/roles/add', addUserRolesController())
-            .post('/:id/scopes/add', addUserScopesController())
-            .post('/:id/credential/add', addUserCredentialController())
-            .post('/:id/profil/add', addUserProfilController())
-            .post('/:id/roles/remove', removeUserRolesController())
-            .post('/:id/scopes/remove', removeUserScopesController())
-            .post('/:id/credential/remove', removeUserCredentialController())
-            .post('/:id/profil/remove', removeUserProfilController());
-    }
-
-    applyRouter(app: Application) {
-        app.use('/users', this.router);
-    }
-}
-            
-
-/*
 
 //  
 // Base entity interface
@@ -943,32 +182,36 @@ export function UserCreate(createInput: UserCreateInput) {
     const model = new UserModel(createInput);
     return model.save();
 }
+export async function UserCreateLean(createInput: UserCreateInput) {
+    const object = await UserCreate(createInput);
+    return object.toObject();
+}
 
 export function UserFindByIdAndUpdate(
     { id, changes }: UserUpdateInput,
     options: any = { new: true }
 ) {
-    return UserModel.findByIdAndUpdate(id, { $set: changes }, { new: true });
+    return UserModel.findByIdAndUpdate(id, { $set: changes }, options);
 }
 export function UserFindByIdAndUpdateLean(
     update: UserUpdateInput,
     options: any = { new: true }
 ) {
-    return UserFindByIdAndUpdate(id, update, options).lean();
+    return UserFindByIdAndUpdate(update, options).lean();
 }
 export function UserFindByIdAndUpdateExec(
     update: UserUpdateInput,
     options: any = { new: true },
     cb?: (err: any, result: any) => void
 ) {
-    return UserFindByIdAndUpdate(id, update, options).exec(cb);
+    return UserFindByIdAndUpdate(update, options).exec(cb);
 }
 export function UserFindByIdAndUpdateLeanExec(
     update: UserUpdateInput,
     options: any = { new: true },
     cb?: (err: any, result: any) => void
 ) {
-    return UserFindByIdAndUpdateLean(id, update, options).exec(cb);
+    return UserFindByIdAndUpdateLean(update, options).exec(cb);
 }
 
 export function UserFindByIdAndRemove(
@@ -1035,7 +278,7 @@ export async function UserFindByIdRoles(
     projection?: any,
     options: any = {},
 ) {
-    const object = await UserFindByIdPopulateRolesLeanExec();
+    const object = await UserFindByIdPopulateRolesLeanExec(id, projection, options);
     return object ? object.roles : undefined;
 }
 
@@ -1044,7 +287,7 @@ export function UserFindByIdAndAddRoles(
     addId: string | ObjectID,
     options: any = { new: true }
 ) {
-    return UserModel.findByIdAndUpdate(id, { $push: { roles: addId } }, { new: true });
+    return UserModel.findByIdAndUpdate(id, { $push: { roles: addId } }, options);
 }
 export function UserFindByIdAndAddRolesLean(
     id: string | ObjectID,
@@ -1075,7 +318,7 @@ export function UserFindByIdAndRemoveRoles(
     removeId: string | ObjectID,
     options: any = { new: true }
 ) {
-    return UserModel.findByIdAndUpdate(id, { $pull: { roles: removeId } }, { new: true });
+    return UserModel.findByIdAndUpdate(id, { $pull: { roles: removeId } }, options);
 }
 export function UserFindByIdAndRemoveRolesLean(
     id: string | ObjectID,
@@ -1138,7 +381,7 @@ export async function UserFindByIdScopes(
     projection?: any,
     options: any = {},
 ) {
-    const object = await UserFindByIdPopulateScopesLeanExec();
+    const object = await UserFindByIdPopulateScopesLeanExec(id, projection, options);
     return object ? object.scopes : undefined;
 }
 
@@ -1147,7 +390,7 @@ export function UserFindByIdAndAddScopes(
     addId: string | ObjectID,
     options: any = { new: true }
 ) {
-    return UserModel.findByIdAndUpdate(id, { $push: { scopes: addId } }, { new: true });
+    return UserModel.findByIdAndUpdate(id, { $push: { scopes: addId } }, options);
 }
 export function UserFindByIdAndAddScopesLean(
     id: string | ObjectID,
@@ -1178,7 +421,7 @@ export function UserFindByIdAndRemoveScopes(
     removeId: string | ObjectID,
     options: any = { new: true }
 ) {
-    return UserModel.findByIdAndUpdate(id, { $pull: { scopes: removeId } }, { new: true });
+    return UserModel.findByIdAndUpdate(id, { $pull: { scopes: removeId } }, options);
 }
 export function UserFindByIdAndRemoveScopesLean(
     id: string | ObjectID,
@@ -1241,7 +484,7 @@ export async function UserFindByIdCredential(
     projection?: any,
     options: any = {},
 ) {
-    const object = await UserFindByIdPopulateCredentialLeanExec();
+    const object = await UserFindByIdPopulateCredentialLeanExec(id, projection, options);
     return object ? object.credential : undefined;
 }
 
@@ -1250,7 +493,7 @@ export function UserFindByIdAndAddCredential(
     addId: string | ObjectID,
     options: any = { new: true }
 ) {
-    return UserModel.findByIdAndUpdate(id, { $push: { credential: addId } }, { new: true });
+    return UserModel.findByIdAndUpdate(id, { $push: { credential: addId } }, options);
 }
 export function UserFindByIdAndAddCredentialLean(
     id: string | ObjectID,
@@ -1281,7 +524,7 @@ export function UserFindByIdAndRemoveCredential(
     removeId: string | ObjectID,
     options: any = { new: true }
 ) {
-    return UserModel.findByIdAndUpdate(id, { $pull: { credential: removeId } }, { new: true });
+    return UserModel.findByIdAndUpdate(id, { $pull: { credential: removeId } }, options);
 }
 export function UserFindByIdAndRemoveCredentialLean(
     id: string | ObjectID,
@@ -1344,7 +587,7 @@ export async function UserFindByIdProfil(
     projection?: any,
     options: any = {},
 ) {
-    const object = await UserFindByIdPopulateProfilLeanExec();
+    const object = await UserFindByIdPopulateProfilLeanExec(id, projection, options);
     return object ? object.profil : undefined;
 }
 
@@ -1353,7 +596,7 @@ export function UserFindByIdAndAddProfil(
     addId: string | ObjectID,
     options: any = { new: true }
 ) {
-    return UserModel.findByIdAndUpdate(id, { $push: { profil: addId } }, { new: true });
+    return UserModel.findByIdAndUpdate(id, { $push: { profil: addId } }, options);
 }
 export function UserFindByIdAndAddProfilLean(
     id: string | ObjectID,
@@ -1384,7 +627,7 @@ export function UserFindByIdAndRemoveProfil(
     removeId: string | ObjectID,
     options: any = { new: true }
 ) {
-    return UserModel.findByIdAndUpdate(id, { $pull: { profil: removeId } }, { new: true });
+    return UserModel.findByIdAndUpdate(id, { $pull: { profil: removeId } }, options);
 }
 export function UserFindByIdAndRemoveProfilLean(
     id: string | ObjectID,
@@ -1416,7 +659,7 @@ export function getAllUserMiddleware() {
         try {
             attachCTX(req, 'getAllUser', await UserFindManyLeanExec());
         } catch(error) {
-            res.status(400).json({ message: 'Something went wrong.', error });
+            return res.status(400).json({ message: 'Something went wrong.', error });
         }
         next();
     };
@@ -1427,7 +670,7 @@ export function getByIdUserMiddleware() {
         try {
             attachCTX(req, 'getByIdUser', await UserFindByIdLeanExec(id));
         } catch(error) {
-            res.status(400).json({ message: 'Something went wrong.', error });
+            return res.status(400).json({ message: 'Something went wrong.', error });
         }
         next();
     };
@@ -1436,9 +679,9 @@ export function createUserMiddleware() {
     return async (req: Request, res: Response, next: NextFunction) => {
         const createInput: UserCreateInput = req.body;
         try {
-            attachCTX(req, 'createUser', await UserCreate(createInput));            
+            attachCTX(req, 'createUser', await UserCreateLean(createInput));            
         } catch(error) {
-            res.status(400).json({ message: 'Something went wrong.', error });
+            return res.status(400).json({ message: 'Something went wrong.', error });
         }
         next();
     };
@@ -1450,7 +693,7 @@ export function updateUserMiddleware() {
         try {
             attachCTX(req, 'updateUser', await UserFindByIdAndUpdate({ id, changes }));
         } catch(error) {
-            res.status(400).json({ message: 'Something went wrong.', error });
+            return res.status(400).json({ message: 'Something went wrong.', error });
         }
         next();
     };
@@ -1461,7 +704,7 @@ export function deleteUserMiddleware() {
         try {
             attachCTX(req, 'deleteUser', await UserFindByIdAndRemove(id));
         } catch(error) {
-            res.status(400).json({ message: 'Something went wrong.', error });
+            return res.status(400).json({ message: 'Something went wrong.', error });
         }
         next();
     };
@@ -1474,7 +717,7 @@ export function getUserRolesMiddleware() {
         try {
             attachCTX(req, 'getUserRoles', await UserFindByIdRoles(id));
         } catch(error) {
-            res.status(400).json({ message: 'Something went wrong.', error });
+            return res.status(400).json({ message: 'Something went wrong.', error });
         }
         next();
     };
@@ -1486,7 +729,7 @@ export function addUserRolesMiddleware() {
         try {
             attachCTX(req, 'addUserRoles', await UserFindByIdAndAddRolesLeanExec(id, addId));
         } catch(error) {
-            res.status(400).json({ message: 'Something went wrong.', error });
+            return res.status(400).json({ message: 'Something went wrong.', error });
         }
         next();
     };
@@ -1498,7 +741,7 @@ export function removeUserRolesMiddleware() {
         try {
             attachCTX(req, 'removeUserRoles', await UserFindByIdAndRemoveRolesLeanExec(id, removeId));
         } catch(error) {
-            res.status(400).json({ message: 'Something went wrong.', error });
+            return res.status(400).json({ message: 'Something went wrong.', error });
         }
         next();
     };
@@ -1511,7 +754,7 @@ export function getUserScopesMiddleware() {
         try {
             attachCTX(req, 'getUserScopes', await UserFindByIdScopes(id));
         } catch(error) {
-            res.status(400).json({ message: 'Something went wrong.', error });
+            return res.status(400).json({ message: 'Something went wrong.', error });
         }
         next();
     };
@@ -1523,7 +766,7 @@ export function addUserScopesMiddleware() {
         try {
             attachCTX(req, 'addUserScopes', await UserFindByIdAndAddScopesLeanExec(id, addId));
         } catch(error) {
-            res.status(400).json({ message: 'Something went wrong.', error });
+            return res.status(400).json({ message: 'Something went wrong.', error });
         }
         next();
     };
@@ -1535,7 +778,7 @@ export function removeUserScopesMiddleware() {
         try {
             attachCTX(req, 'removeUserScopes', await UserFindByIdAndRemoveScopesLeanExec(id, removeId));
         } catch(error) {
-            res.status(400).json({ message: 'Something went wrong.', error });
+            return res.status(400).json({ message: 'Something went wrong.', error });
         }
         next();
     };
@@ -1548,7 +791,7 @@ export function getUserCredentialMiddleware() {
         try {
             attachCTX(req, 'getUserCredential', await UserFindByIdCredential(id));
         } catch(error) {
-            res.status(400).json({ message: 'Something went wrong.', error });
+            return res.status(400).json({ message: 'Something went wrong.', error });
         }
         next();
     };
@@ -1560,7 +803,7 @@ export function addUserCredentialMiddleware() {
         try {
             attachCTX(req, 'addUserCredential', await UserFindByIdAndAddCredentialLeanExec(id, addId));
         } catch(error) {
-            res.status(400).json({ message: 'Something went wrong.', error });
+            return res.status(400).json({ message: 'Something went wrong.', error });
         }
         next();
     };
@@ -1572,7 +815,7 @@ export function removeUserCredentialMiddleware() {
         try {
             attachCTX(req, 'removeUserCredential', await UserFindByIdAndRemoveCredentialLeanExec(id, removeId));
         } catch(error) {
-            res.status(400).json({ message: 'Something went wrong.', error });
+            return res.status(400).json({ message: 'Something went wrong.', error });
         }
         next();
     };
@@ -1585,7 +828,7 @@ export function getUserProfilMiddleware() {
         try {
             attachCTX(req, 'getUserProfil', await UserFindByIdProfil(id));
         } catch(error) {
-            res.status(400).json({ message: 'Something went wrong.', error });
+            return res.status(400).json({ message: 'Something went wrong.', error });
         }
         next();
     };
@@ -1597,7 +840,7 @@ export function addUserProfilMiddleware() {
         try {
             attachCTX(req, 'addUserProfil', await UserFindByIdAndAddProfilLeanExec(id, addId));
         } catch(error) {
-            res.status(400).json({ message: 'Something went wrong.', error });
+            return res.status(400).json({ message: 'Something went wrong.', error });
         }
         next();
     };
@@ -1609,7 +852,7 @@ export function removeUserProfilMiddleware() {
         try {
             attachCTX(req, 'removeUserProfil', await UserFindByIdAndRemoveProfilLeanExec(id, removeId));
         } catch(error) {
-            res.status(400).json({ message: 'Something went wrong.', error });
+            return res.status(400).json({ message: 'Something went wrong.', error });
         }
         next();
     };
@@ -1639,7 +882,7 @@ export function createUserController() {
     return async (req: Request, res: Response, next: NextFunction) => {
         const createInput: UserCreateInput = req.body;
         try {
-            res.json(await UserCreate(createInput));
+            res.json(await UserCreateLean(createInput));
         } catch(error) {
             res.status(400).json({ message: 'Something went wrong.', error });
         }
@@ -1840,356 +1083,8 @@ export class UserAPI {
 }
 
 
-*/
 
 
-/** 
- * Base entity interface
-*/
-export interface Role {
-    _id: string;
-    name: string;
-    users?: [User];
-}
-      
-/** 
- * Input payload interface for entity creation
-*/
-export interface RoleCreateInput {
-    name: string;
-}
-      
-/** 
- * Input payload interface for entity update
-*/
-export interface RoleChangesInput {
-    name?: string;
-}
-export interface RoleUpdateInput {
-    id: string;
-    changes: RoleChangesInput;
-}
-
-/** 
- * Mongoose Schema for this entity
-*/
-export const RoleSchema = new mongoose.Schema({
-    name: {
-        type: String,
-        required: true,
-        unique: true,
-    },
-    users: {
-        type: [ObjectId] /* relation ([User]) */,
-        required: false,
-    },
-}, { minimize: false });
-export const RoleModel = mongoose.model('Role', RoleSchema);
-
-export function getManyRolesQuery() {
-    return RoleModel.find({});
-}
-export function getManyRolesLean() {
-    return getManyRolesQuery().lean();
-}
-export async function getManyRolesExec() {
-    return getManyRolesQuery().exec();
-}
-export async function getManyRolesLeanExec() {
-    return getManyRolesLean().exec();
-}
-
-export function getManyRolesMiddleware() {
-    return async (req: Request, res: Response, next: NextFunction) => {
-        req['result'] = req['result'] ? req['result'] : {};
-        try {
-            req['result'].getManyRoles = await getManyRolesLeanExec();
-        } catch(error) {
-            return res.status(400).json({ message: 'Something went wrong', error });            
-        }
-        next();
-    };
-}
-
-export function getManyRolesController() {
-    return async (req: Request, res: Response) => {
-        try {
-            res.json(await getManyRolesLeanExec());
-        } catch(error) {
-            res.status(500).json({ message: 'Something went wrong', error });
-        }
-    };
-}
-
-export function getOneRoleQuery(id: string) {
-    return RoleModel.findById(id);
-}
-export function getOneRoleLean(id: string) {
-    return getOneRoleQuery(id).lean();
-}
-export async function getOneRoleExec(id: string) {
-    return getOneRoleQuery(id).exec();
-}
-export async function getOneRoleLeanExec(id: string) {
-    return getOneRoleLean(id).exec();
-}
-
-export function getOneRoleMiddleware() {
-    return async (req: Request, res: Response, next: NextFunction) => {
-        const id = req.params.id;
-        req['result'] = req['result'] ? req['result'] : {};
-        try {
-            req['result'].getOneRole = await getOneRoleLeanExec(id);
-        } catch(error) {
-            return res.status(400).json({ message: 'Something went wrong', error });            
-        }
-        next();
-    };
-}
-
-export function getOneRoleController() {
-    return async (req: Request, res: Response) => {
-        const id = req.params.id;
-        try {
-            res.json(await getOneRoleLeanExec(id));
-        } catch(error) {
-            return res.status(400).json({ message: 'Something went wrong', error });            
-        }
-    };
-}
-
-export async function getRoleUsersLeanExec(id: string) {
-    const related = await getOneRoleQuery(id).populate('users').lean().exec();
-    return related.users;
-}
-
-export function getRoleUsersMiddleware() {
-    return async (req: Request, res: Response, next: NextFunction) => {
-        const id = req.params.id;
-        req['result'] = req['result'] ? req['result'] : {};
-        try {
-            req['result'].getRoleUsers = await getRoleUsersLeanExec(id);
-        } catch(error) {
-            return res.status(400).json({ message: 'Something went wrong', error });            
-        }
-        next();
-    };
-}
-
-export function getRoleUsersController() {
-    return async (req: Request, res: Response) => {
-        const id = req.params.id;
-        try {
-            res.json(await getRoleUsersLeanExec(id));
-        } catch(error) {
-            return res.status(400).json({ message: 'Something went wrong', error });            
-        }
-    };
-}
-                
-
-export function createRoleMiddleware() {
-    return async (req: Request, res: Response, next: NextFunction) => {
-        req['result'] = req['result'] ? req['result'] : {};
-        const data = req.body;
-        try {
-            const model = new RoleModel(data);
-            req['result'].createRole = await model.save();
-        } catch(error) {
-            return res.status(400).json({ message: 'Something went wrong', error });            
-        }
-        next();
-    };
-}
-
-export function createRoleController() {
-    return async (req: Request, res: Response) => {
-        const data = req.body;
-        try {
-            const model = new RoleModel(data);
-            res.json(await model.save());
-        } catch(error) {
-            return res.status(400).json({ message: 'Something went wrong', error });            
-        }
-    };
-}
-
-export function updateRoleMiddleware() {
-    return async (req: Request, res: Response, next: NextFunction) => {
-        const id = req.params.id;
-        req['result'] = req['result'] ? req['result'] : {};
-        const changes = req.body;
-        try {
-            // use { new: true } to return modified document rather than old one (default to false)
-            // use upsert if you want an update-or-create-if-not-exists behaviour
-            req['result'].updateRole = await RoleModel.findByIdAndUpdate(id, { $set: changes }, { new: true });
-        } catch(error) {
-            return res.status(400).json({ message: 'Something went wrong', error });            
-        }
-        next();
-    };
-}
-
-export function updateRoleController() {
-    return async (req: Request, res: Response) => {
-        const id = req.params.id;
-        const changes = req.body;
-        try {
-            res.json(await RoleModel.findByIdAndUpdate(id, { $set: changes }, { new: true }));
-        } catch(error) {
-            return res.status(400).json({ message: 'Something went wrong', error });            
-        }
-    };
-}
-
-export function deleteRoleMiddleware() {
-    return async (req: Request, res: Response, next: NextFunction) => {
-        const id = req.params.id;
-        req['result'] = req['result'] ? req['result'] : {};
-        try {
-            req['result'].deleteRole = await RoleModel.findByIdAndRemove(id);
-        } catch(error) {
-            return res.status(400).json({ message: 'Something went wrong', error });            
-        }
-        next();
-    };
-}
-
-export function deleteRoleController() {
-    return async (req: Request, res: Response) => {
-        const id = req.params.id;
-        try {
-            res.json(await RoleModel.findByIdAndRemove(id));
-        } catch(error) {
-            return res.status(400).json({ message: 'Something went wrong', error });            
-        }
-    };
-}
-
-export function addRoleUsersMiddleware() {
-    return async (req: Request, res: Response, next: NextFunction) => {
-        const id = req.params.id;
-        req['result'] = req['result'] ? req['result'] : {};
-        const addId = req.body.id;
-        try {
-            const [sub, subject] = await Promise.all([
-                RoleModel.findById(id).populate('users').lean().exec(),
-                UserModel.findById(addId).exec()
-            ]);
-            if (!(sub && subject)) {
-                return res.status(404).json({ message: 'Something went wrong', sub, subject });
-            }
-            if (Array.isArray(sub.users)) {
-                sub.users.push(subject._id);
-            } else {
-                sub.users = subject._id;
-            }
-            req['result'].addRoleUsers = await sub.save();
-        } catch(error) {
-            return res.status(400).json({ message: 'Something went wrong', error });            
-        }
-        next();
-    };
-}
-
-export function addRoleUsersController() {
-    return async (req: Request, res: Response) => {
-        const id = req.params.id;
-        req['result'] = req['result'] ? req['result'] : {};
-        const addId = req.body.id;
-        try {
-            const [sub, subject] = await Promise.all([
-                RoleModel.findById(id).populate('users').lean().exec(),
-                UserModel.findById(addId).exec()
-            ]);
-            if (!(sub && subject)) {
-                return res.status(404).json({ message: 'Something went wrong', sub, subject });
-            }
-            if (Array.isArray(sub.users)) {
-                sub.users.push(subject._id);
-            } else {
-                sub.users = subject._id;
-            }
-            res.json(await sub.save());
-        } catch(error) {
-            return res.status(400).json({ message: 'Something went wrong', error });            
-        }
-    };
-}
-                
-
-export function removeRoleUsersMiddleware() {
-    return async (req: Request, res: Response, next: NextFunction) => {
-        const id = req.params.id;
-        req['result'] = req['result'] ? req['result'] : {};
-        const removeId = req.body.id;
-        try {
-            const [sub, subject] = await Promise.all([
-                RoleModel.findById(id).populate('users').lean().exec(),
-                UserModel.findById(removeId).exec()
-            ]);
-            if (!(sub && subject)) {
-                return res.status(404).json({ message: 'Something went wrong', sub, subject });
-            }
-            if (Array.isArray(sub.users)) {
-                sub.users = sub.users.filter((it: ObjectID) => !subject._id.equals(it));
-            } else {
-                sub.users = undefined;
-            }
-            req['result'].removeRoleUsers = await sub.save();
-        } catch(error) {
-            return res.status(400).json({ message: 'Something went wrong', error });            
-        }
-        next();
-    };
-}
-
-export function removeRoleUsersController() {
-    return async (req: Request, res: Response) => {
-        const id = req.params.id;
-        req['result'] = req['result'] ? req['result'] : {};
-        const removeId = req.body.id;
-        try {
-            const [sub, subject] = await Promise.all([
-                RoleModel.findById(id).populate('users').lean().exec(),
-                UserModel.findById(removeId).exec()
-            ]);
-            if (!(sub && subject)) {
-                return res.status(404).json({ message: 'Something went wrong', sub, subject });
-            }
-            if (Array.isArray(sub.users)) {
-                sub.users = sub.users.filter((it: ObjectID) => !subject._id.equals(it));
-            } else {
-                sub.users = undefined;
-            }
-            res.json(await sub.save());
-        } catch(error) {
-            return res.status(400).json({ message: 'Something went wrong', error });            
-        }
-    };
-}
-                
-
-export class RoleAPI {
-    router = Router();
-
-    constructor() {
-        this.router
-            .get('/', getManyRolesController())
-            .get('/:id', getOneRoleController())
-            .post('/', createRoleController())
-            .put('/:id', updateRoleController())
-            .delete('/:id', deleteRoleController())
-            .get('/:id/users', getRoleUsersController());
-    }
-
-    applyRouter(app: Application) {
-        app.use('/roles', this.router);
-    }
-}
-            
-
-/*
 
 //  
 // Base entity interface
@@ -2342,32 +1237,36 @@ export function RoleCreate(createInput: RoleCreateInput) {
     const model = new RoleModel(createInput);
     return model.save();
 }
+export async function RoleCreateLean(createInput: RoleCreateInput) {
+    const object = await RoleCreate(createInput);
+    return object.toObject();
+}
 
 export function RoleFindByIdAndUpdate(
     { id, changes }: RoleUpdateInput,
     options: any = { new: true }
 ) {
-    return RoleModel.findByIdAndUpdate(id, { $set: changes }, { new: true });
+    return RoleModel.findByIdAndUpdate(id, { $set: changes }, options);
 }
 export function RoleFindByIdAndUpdateLean(
     update: RoleUpdateInput,
     options: any = { new: true }
 ) {
-    return RoleFindByIdAndUpdate(id, update, options).lean();
+    return RoleFindByIdAndUpdate(update, options).lean();
 }
 export function RoleFindByIdAndUpdateExec(
     update: RoleUpdateInput,
     options: any = { new: true },
     cb?: (err: any, result: any) => void
 ) {
-    return RoleFindByIdAndUpdate(id, update, options).exec(cb);
+    return RoleFindByIdAndUpdate(update, options).exec(cb);
 }
 export function RoleFindByIdAndUpdateLeanExec(
     update: RoleUpdateInput,
     options: any = { new: true },
     cb?: (err: any, result: any) => void
 ) {
-    return RoleFindByIdAndUpdateLean(id, update, options).exec(cb);
+    return RoleFindByIdAndUpdateLean(update, options).exec(cb);
 }
 
 export function RoleFindByIdAndRemove(
@@ -2434,7 +1333,7 @@ export async function RoleFindByIdUsers(
     projection?: any,
     options: any = {},
 ) {
-    const object = await RoleFindByIdPopulateUsersLeanExec();
+    const object = await RoleFindByIdPopulateUsersLeanExec(id, projection, options);
     return object ? object.users : undefined;
 }
 
@@ -2443,7 +1342,7 @@ export function RoleFindByIdAndAddUsers(
     addId: string | ObjectID,
     options: any = { new: true }
 ) {
-    return RoleModel.findByIdAndUpdate(id, { $push: { users: addId } }, { new: true });
+    return RoleModel.findByIdAndUpdate(id, { $push: { users: addId } }, options);
 }
 export function RoleFindByIdAndAddUsersLean(
     id: string | ObjectID,
@@ -2474,7 +1373,7 @@ export function RoleFindByIdAndRemoveUsers(
     removeId: string | ObjectID,
     options: any = { new: true }
 ) {
-    return RoleModel.findByIdAndUpdate(id, { $pull: { users: removeId } }, { new: true });
+    return RoleModel.findByIdAndUpdate(id, { $pull: { users: removeId } }, options);
 }
 export function RoleFindByIdAndRemoveUsersLean(
     id: string | ObjectID,
@@ -2506,7 +1405,7 @@ export function getAllRoleMiddleware() {
         try {
             attachCTX(req, 'getAllRole', await RoleFindManyLeanExec());
         } catch(error) {
-            res.status(400).json({ message: 'Something went wrong.', error });
+            return res.status(400).json({ message: 'Something went wrong.', error });
         }
         next();
     };
@@ -2517,7 +1416,7 @@ export function getByIdRoleMiddleware() {
         try {
             attachCTX(req, 'getByIdRole', await RoleFindByIdLeanExec(id));
         } catch(error) {
-            res.status(400).json({ message: 'Something went wrong.', error });
+            return res.status(400).json({ message: 'Something went wrong.', error });
         }
         next();
     };
@@ -2526,9 +1425,9 @@ export function createRoleMiddleware() {
     return async (req: Request, res: Response, next: NextFunction) => {
         const createInput: RoleCreateInput = req.body;
         try {
-            attachCTX(req, 'createRole', await RoleCreate(createInput));            
+            attachCTX(req, 'createRole', await RoleCreateLean(createInput));            
         } catch(error) {
-            res.status(400).json({ message: 'Something went wrong.', error });
+            return res.status(400).json({ message: 'Something went wrong.', error });
         }
         next();
     };
@@ -2540,7 +1439,7 @@ export function updateRoleMiddleware() {
         try {
             attachCTX(req, 'updateRole', await RoleFindByIdAndUpdate({ id, changes }));
         } catch(error) {
-            res.status(400).json({ message: 'Something went wrong.', error });
+            return res.status(400).json({ message: 'Something went wrong.', error });
         }
         next();
     };
@@ -2551,7 +1450,7 @@ export function deleteRoleMiddleware() {
         try {
             attachCTX(req, 'deleteRole', await RoleFindByIdAndRemove(id));
         } catch(error) {
-            res.status(400).json({ message: 'Something went wrong.', error });
+            return res.status(400).json({ message: 'Something went wrong.', error });
         }
         next();
     };
@@ -2564,7 +1463,7 @@ export function getRoleUsersMiddleware() {
         try {
             attachCTX(req, 'getRoleUsers', await RoleFindByIdUsers(id));
         } catch(error) {
-            res.status(400).json({ message: 'Something went wrong.', error });
+            return res.status(400).json({ message: 'Something went wrong.', error });
         }
         next();
     };
@@ -2576,7 +1475,7 @@ export function addRoleUsersMiddleware() {
         try {
             attachCTX(req, 'addRoleUsers', await RoleFindByIdAndAddUsersLeanExec(id, addId));
         } catch(error) {
-            res.status(400).json({ message: 'Something went wrong.', error });
+            return res.status(400).json({ message: 'Something went wrong.', error });
         }
         next();
     };
@@ -2588,7 +1487,7 @@ export function removeRoleUsersMiddleware() {
         try {
             attachCTX(req, 'removeRoleUsers', await RoleFindByIdAndRemoveUsersLeanExec(id, removeId));
         } catch(error) {
-            res.status(400).json({ message: 'Something went wrong.', error });
+            return res.status(400).json({ message: 'Something went wrong.', error });
         }
         next();
     };
@@ -2618,7 +1517,7 @@ export function createRoleController() {
     return async (req: Request, res: Response, next: NextFunction) => {
         const createInput: RoleCreateInput = req.body;
         try {
-            res.json(await RoleCreate(createInput));
+            res.json(await RoleCreateLean(createInput));
         } catch(error) {
             res.status(400).json({ message: 'Something went wrong.', error });
         }
@@ -2708,358 +1607,8 @@ export class RoleAPI {
 }
 
 
-*/
 
 
-/** 
- * Base entity interface
-*/
-export interface Scope {
-    _id: string;
-    name: string;
-    users?: [User];
-}
-      
-/** 
- * Input payload interface for entity creation
-*/
-export interface ScopeCreateInput {
-    name: string;
-}
-      
-/** 
- * Input payload interface for entity update
-*/
-export interface ScopeChangesInput {
-    name?: string;
-}
-export interface ScopeUpdateInput {
-    id: string;
-    changes: ScopeChangesInput;
-}
-
-/** 
- * Mongoose Schema for this entity
-*/
-export const ScopeSchema = new mongoose.Schema({
-    name: {
-        type: String,
-        required: true,
-        unique: true,
-    },
-    users: {
-        type: [ObjectId] /* relation ([User]) */,
-        required: false,
-    },
-}, { minimize: false });
-export const ScopeModel = mongoose.model('Scope', ScopeSchema);
-
-export function getManyScopesQuery() {
-    return ScopeModel.find({});
-}
-export function getManyScopesLean() {
-    return getManyScopesQuery().lean();
-}
-export async function getManyScopesExec() {
-    return getManyScopesQuery().exec();
-}
-export async function getManyScopesLeanExec() {
-    return getManyScopesLean().exec();
-}
-
-export function getManyScopesMiddleware() {
-    return async (req: Request, res: Response, next: NextFunction) => {
-        req['result'] = req['result'] ? req['result'] : {};
-        try {
-            req['result'].getManyScopes = await getManyScopesLeanExec();
-        } catch(error) {
-            return res.status(400).json({ message: 'Something went wrong', error });            
-        }
-        next();
-    };
-}
-
-export function getManyScopesController() {
-    return async (req: Request, res: Response) => {
-        try {
-            res.json(await getManyScopesLeanExec());
-        } catch(error) {
-            res.status(500).json({ message: 'Something went wrong', error });
-        }
-    };
-}
-
-export function getOneScopeQuery(id: string) {
-    return ScopeModel.findById(id);
-}
-export function getOneScopeLean(id: string) {
-    return getOneScopeQuery(id).lean();
-}
-export async function getOneScopeExec(id: string) {
-    return getOneScopeQuery(id).exec();
-}
-export async function getOneScopeLeanExec(id: string) {
-    return getOneScopeLean(id).exec();
-}
-
-export function getOneScopeMiddleware() {
-    return async (req: Request, res: Response, next: NextFunction) => {
-        const id = req.params.id;
-        req['result'] = req['result'] ? req['result'] : {};
-        try {
-            req['result'].getOneScope = await getOneScopeLeanExec(id);
-        } catch(error) {
-            return res.status(400).json({ message: 'Something went wrong', error });            
-        }
-        next();
-    };
-}
-
-export function getOneScopeController() {
-    return async (req: Request, res: Response) => {
-        const id = req.params.id;
-        try {
-            res.json(await getOneScopeLeanExec(id));
-        } catch(error) {
-            return res.status(400).json({ message: 'Something went wrong', error });            
-        }
-    };
-}
-
-export async function getScopeUsersLeanExec(id: string) {
-    const related = await getOneScopeQuery(id).populate('users').lean().exec();
-    return related.users;
-}
-
-export function getScopeUsersMiddleware() {
-    return async (req: Request, res: Response, next: NextFunction) => {
-        const id = req.params.id;
-        req['result'] = req['result'] ? req['result'] : {};
-        try {
-            req['result'].getScopeUsers = await getScopeUsersLeanExec(id);
-        } catch(error) {
-            return res.status(400).json({ message: 'Something went wrong', error });            
-        }
-        next();
-    };
-}
-
-export function getScopeUsersController() {
-    return async (req: Request, res: Response) => {
-        const id = req.params.id;
-        try {
-            res.json(await getScopeUsersLeanExec(id));
-        } catch(error) {
-            return res.status(400).json({ message: 'Something went wrong', error });            
-        }
-    };
-}
-                
-
-export function createScopeMiddleware() {
-    return async (req: Request, res: Response, next: NextFunction) => {
-        req['result'] = req['result'] ? req['result'] : {};
-        const data = req.body;
-        try {
-            const model = new ScopeModel(data);
-            req['result'].createScope = await model.save();
-        } catch(error) {
-            return res.status(400).json({ message: 'Something went wrong', error });            
-        }
-        next();
-    };
-}
-
-export function createScopeController() {
-    return async (req: Request, res: Response) => {
-        const data = req.body;
-        try {
-            const model = new ScopeModel(data);
-            res.json(await model.save());
-        } catch(error) {
-            return res.status(400).json({ message: 'Something went wrong', error });            
-        }
-    };
-}
-
-export function updateScopeMiddleware() {
-    return async (req: Request, res: Response, next: NextFunction) => {
-        const id = req.params.id;
-        req['result'] = req['result'] ? req['result'] : {};
-        const changes = req.body;
-        try {
-            // use { new: true } to return modified document rather than old one (default to false)
-            // use upsert if you want an update-or-create-if-not-exists behaviour
-            req['result'].updateScope = await ScopeModel.findByIdAndUpdate(id, { $set: changes }, { new: true });
-        } catch(error) {
-            return res.status(400).json({ message: 'Something went wrong', error });            
-        }
-        next();
-    };
-}
-
-export function updateScopeController() {
-    return async (req: Request, res: Response) => {
-        const id = req.params.id;
-        const changes = req.body;
-        try {
-            res.json(await ScopeModel.findByIdAndUpdate(id, { $set: changes }, { new: true }));
-        } catch(error) {
-            return res.status(400).json({ message: 'Something went wrong', error });            
-        }
-    };
-}
-
-export function deleteScopeMiddleware() {
-    return async (req: Request, res: Response, next: NextFunction) => {
-        const id = req.params.id;
-        req['result'] = req['result'] ? req['result'] : {};
-        try {
-            req['result'].deleteScope = await ScopeModel.findByIdAndRemove(id);
-        } catch(error) {
-            return res.status(400).json({ message: 'Something went wrong', error });            
-        }
-        next();
-    };
-}
-
-export function deleteScopeController() {
-    return async (req: Request, res: Response) => {
-        const id = req.params.id;
-        try {
-            res.json(await ScopeModel.findByIdAndRemove(id));
-        } catch(error) {
-            return res.status(400).json({ message: 'Something went wrong', error });            
-        }
-    };
-}
-
-export function addScopeUsersMiddleware() {
-    return async (req: Request, res: Response, next: NextFunction) => {
-        const id = req.params.id;
-        req['result'] = req['result'] ? req['result'] : {};
-        const addId = req.body.id;
-        try {
-            const [sub, subject] = await Promise.all([
-                ScopeModel.findById(id).populate('users').lean().exec(),
-                UserModel.findById(addId).exec()
-            ]);
-            if (!(sub && subject)) {
-                return res.status(404).json({ message: 'Something went wrong', sub, subject });
-            }
-            if (Array.isArray(sub.users)) {
-                sub.users.push(subject._id);
-            } else {
-                sub.users = subject._id;
-            }
-            req['result'].addScopeUsers = await sub.save();
-        } catch(error) {
-            return res.status(400).json({ message: 'Something went wrong', error });            
-        }
-        next();
-    };
-}
-
-export function addScopeUsersController() {
-    return async (req: Request, res: Response) => {
-        const id = req.params.id;
-        req['result'] = req['result'] ? req['result'] : {};
-        const addId = req.body.id;
-        try {
-            const [sub, subject] = await Promise.all([
-                ScopeModel.findById(id).populate('users').lean().exec(),
-                UserModel.findById(addId).exec()
-            ]);
-            if (!(sub && subject)) {
-                return res.status(404).json({ message: 'Something went wrong', sub, subject });
-            }
-            if (Array.isArray(sub.users)) {
-                sub.users.push(subject._id);
-            } else {
-                sub.users = subject._id;
-            }
-            res.json(await sub.save());
-        } catch(error) {
-            return res.status(400).json({ message: 'Something went wrong', error });            
-        }
-    };
-}
-                
-
-export function removeScopeUsersMiddleware() {
-    return async (req: Request, res: Response, next: NextFunction) => {
-        const id = req.params.id;
-        req['result'] = req['result'] ? req['result'] : {};
-        const removeId = req.body.id;
-        try {
-            const [sub, subject] = await Promise.all([
-                ScopeModel.findById(id).populate('users').lean().exec(),
-                UserModel.findById(removeId).exec()
-            ]);
-            if (!(sub && subject)) {
-                return res.status(404).json({ message: 'Something went wrong', sub, subject });
-            }
-            if (Array.isArray(sub.users)) {
-                sub.users = sub.users.filter((it: ObjectID) => !subject._id.equals(it));
-            } else {
-                sub.users = undefined;
-            }
-            req['result'].removeScopeUsers = await sub.save();
-        } catch(error) {
-            return res.status(400).json({ message: 'Something went wrong', error });            
-        }
-        next();
-    };
-}
-
-export function removeScopeUsersController() {
-    return async (req: Request, res: Response) => {
-        const id = req.params.id;
-        req['result'] = req['result'] ? req['result'] : {};
-        const removeId = req.body.id;
-        try {
-            const [sub, subject] = await Promise.all([
-                ScopeModel.findById(id).populate('users').lean().exec(),
-                UserModel.findById(removeId).exec()
-            ]);
-            if (!(sub && subject)) {
-                return res.status(404).json({ message: 'Something went wrong', sub, subject });
-            }
-            if (Array.isArray(sub.users)) {
-                sub.users = sub.users.filter((it: ObjectID) => !subject._id.equals(it));
-            } else {
-                sub.users = undefined;
-            }
-            res.json(await sub.save());
-        } catch(error) {
-            return res.status(400).json({ message: 'Something went wrong', error });            
-        }
-    };
-}
-                
-
-export class ScopeAPI {
-    router = Router();
-
-    constructor() {
-        this.router
-            .get('/', getManyScopesController())
-            .get('/:id', getOneScopeController())
-            .post('/', createScopeController())
-            .put('/:id', updateScopeController())
-            .delete('/:id', deleteScopeController())
-            .get('/:id/users', getScopeUsersController())
-            .post('/:id/users/add', addScopeUsersController())
-            .post('/:id/users/remove', removeScopeUsersController());
-    }
-
-    applyRouter(app: Application) {
-        app.use('/scopes', this.router);
-    }
-}
-            
-
-/*
 
 //  
 // Base entity interface
@@ -3212,32 +1761,36 @@ export function ScopeCreate(createInput: ScopeCreateInput) {
     const model = new ScopeModel(createInput);
     return model.save();
 }
+export async function ScopeCreateLean(createInput: ScopeCreateInput) {
+    const object = await ScopeCreate(createInput);
+    return object.toObject();
+}
 
 export function ScopeFindByIdAndUpdate(
     { id, changes }: ScopeUpdateInput,
     options: any = { new: true }
 ) {
-    return ScopeModel.findByIdAndUpdate(id, { $set: changes }, { new: true });
+    return ScopeModel.findByIdAndUpdate(id, { $set: changes }, options);
 }
 export function ScopeFindByIdAndUpdateLean(
     update: ScopeUpdateInput,
     options: any = { new: true }
 ) {
-    return ScopeFindByIdAndUpdate(id, update, options).lean();
+    return ScopeFindByIdAndUpdate(update, options).lean();
 }
 export function ScopeFindByIdAndUpdateExec(
     update: ScopeUpdateInput,
     options: any = { new: true },
     cb?: (err: any, result: any) => void
 ) {
-    return ScopeFindByIdAndUpdate(id, update, options).exec(cb);
+    return ScopeFindByIdAndUpdate(update, options).exec(cb);
 }
 export function ScopeFindByIdAndUpdateLeanExec(
     update: ScopeUpdateInput,
     options: any = { new: true },
     cb?: (err: any, result: any) => void
 ) {
-    return ScopeFindByIdAndUpdateLean(id, update, options).exec(cb);
+    return ScopeFindByIdAndUpdateLean(update, options).exec(cb);
 }
 
 export function ScopeFindByIdAndRemove(
@@ -3304,7 +1857,7 @@ export async function ScopeFindByIdUsers(
     projection?: any,
     options: any = {},
 ) {
-    const object = await ScopeFindByIdPopulateUsersLeanExec();
+    const object = await ScopeFindByIdPopulateUsersLeanExec(id, projection, options);
     return object ? object.users : undefined;
 }
 
@@ -3313,7 +1866,7 @@ export function ScopeFindByIdAndAddUsers(
     addId: string | ObjectID,
     options: any = { new: true }
 ) {
-    return ScopeModel.findByIdAndUpdate(id, { $push: { users: addId } }, { new: true });
+    return ScopeModel.findByIdAndUpdate(id, { $push: { users: addId } }, options);
 }
 export function ScopeFindByIdAndAddUsersLean(
     id: string | ObjectID,
@@ -3344,7 +1897,7 @@ export function ScopeFindByIdAndRemoveUsers(
     removeId: string | ObjectID,
     options: any = { new: true }
 ) {
-    return ScopeModel.findByIdAndUpdate(id, { $pull: { users: removeId } }, { new: true });
+    return ScopeModel.findByIdAndUpdate(id, { $pull: { users: removeId } }, options);
 }
 export function ScopeFindByIdAndRemoveUsersLean(
     id: string | ObjectID,
@@ -3376,7 +1929,7 @@ export function getAllScopeMiddleware() {
         try {
             attachCTX(req, 'getAllScope', await ScopeFindManyLeanExec());
         } catch(error) {
-            res.status(400).json({ message: 'Something went wrong.', error });
+            return res.status(400).json({ message: 'Something went wrong.', error });
         }
         next();
     };
@@ -3387,7 +1940,7 @@ export function getByIdScopeMiddleware() {
         try {
             attachCTX(req, 'getByIdScope', await ScopeFindByIdLeanExec(id));
         } catch(error) {
-            res.status(400).json({ message: 'Something went wrong.', error });
+            return res.status(400).json({ message: 'Something went wrong.', error });
         }
         next();
     };
@@ -3396,9 +1949,9 @@ export function createScopeMiddleware() {
     return async (req: Request, res: Response, next: NextFunction) => {
         const createInput: ScopeCreateInput = req.body;
         try {
-            attachCTX(req, 'createScope', await ScopeCreate(createInput));            
+            attachCTX(req, 'createScope', await ScopeCreateLean(createInput));            
         } catch(error) {
-            res.status(400).json({ message: 'Something went wrong.', error });
+            return res.status(400).json({ message: 'Something went wrong.', error });
         }
         next();
     };
@@ -3410,7 +1963,7 @@ export function updateScopeMiddleware() {
         try {
             attachCTX(req, 'updateScope', await ScopeFindByIdAndUpdate({ id, changes }));
         } catch(error) {
-            res.status(400).json({ message: 'Something went wrong.', error });
+            return res.status(400).json({ message: 'Something went wrong.', error });
         }
         next();
     };
@@ -3421,7 +1974,7 @@ export function deleteScopeMiddleware() {
         try {
             attachCTX(req, 'deleteScope', await ScopeFindByIdAndRemove(id));
         } catch(error) {
-            res.status(400).json({ message: 'Something went wrong.', error });
+            return res.status(400).json({ message: 'Something went wrong.', error });
         }
         next();
     };
@@ -3434,7 +1987,7 @@ export function getScopeUsersMiddleware() {
         try {
             attachCTX(req, 'getScopeUsers', await ScopeFindByIdUsers(id));
         } catch(error) {
-            res.status(400).json({ message: 'Something went wrong.', error });
+            return res.status(400).json({ message: 'Something went wrong.', error });
         }
         next();
     };
@@ -3446,7 +1999,7 @@ export function addScopeUsersMiddleware() {
         try {
             attachCTX(req, 'addScopeUsers', await ScopeFindByIdAndAddUsersLeanExec(id, addId));
         } catch(error) {
-            res.status(400).json({ message: 'Something went wrong.', error });
+            return res.status(400).json({ message: 'Something went wrong.', error });
         }
         next();
     };
@@ -3458,7 +2011,7 @@ export function removeScopeUsersMiddleware() {
         try {
             attachCTX(req, 'removeScopeUsers', await ScopeFindByIdAndRemoveUsersLeanExec(id, removeId));
         } catch(error) {
-            res.status(400).json({ message: 'Something went wrong.', error });
+            return res.status(400).json({ message: 'Something went wrong.', error });
         }
         next();
     };
@@ -3488,7 +2041,7 @@ export function createScopeController() {
     return async (req: Request, res: Response, next: NextFunction) => {
         const createInput: ScopeCreateInput = req.body;
         try {
-            res.json(await ScopeCreate(createInput));
+            res.json(await ScopeCreateLean(createInput));
         } catch(error) {
             res.status(400).json({ message: 'Something went wrong.', error });
         }
@@ -3578,365 +2131,8 @@ export class ScopeAPI {
 }
 
 
-*/
 
 
-/** 
- * Base entity interface
-*/
-export interface Credential {
-    _id: string;
-    username: string;
-    password: string;
-    owner?: User;
-}
-      
-/** 
- * Input payload interface for entity creation
-*/
-export interface CredentialCreateInput {
-    username: string;
-    password: string;
-}
-      
-/** 
- * Input payload interface for entity update
-*/
-export interface CredentialChangesInput {
-    username?: string;
-    password?: string;
-}
-export interface CredentialUpdateInput {
-    id: string;
-    changes: CredentialChangesInput;
-}
-
-/** 
- * Mongoose Schema for this entity
-*/
-export const CredentialSchema = new mongoose.Schema({
-    username: {
-        type: String,
-        required: true,
-        unique: true,
-    },
-    password: {
-        type: String,
-        required: true,
-    },
-    owner: {
-        type: ObjectId /* relation (User) */,
-        required: false,
-    },
-}, { minimize: false });
-export const CredentialModel = mongoose.model('Credential', CredentialSchema);
-
-export function getManyCredentialsQuery() {
-    return CredentialModel.find({});
-}
-export function getManyCredentialsLean() {
-    return getManyCredentialsQuery().lean();
-}
-export async function getManyCredentialsExec() {
-    return getManyCredentialsQuery().exec();
-}
-export async function getManyCredentialsLeanExec() {
-    return getManyCredentialsLean().exec();
-}
-
-export function getManyCredentialsMiddleware() {
-    return async (req: Request, res: Response, next: NextFunction) => {
-        req['result'] = req['result'] ? req['result'] : {};
-        try {
-            req['result'].getManyCredentials = await getManyCredentialsLeanExec();
-        } catch(error) {
-            return res.status(400).json({ message: 'Something went wrong', error });            
-        }
-        next();
-    };
-}
-
-export function getManyCredentialsController() {
-    return async (req: Request, res: Response) => {
-        try {
-            res.json(await getManyCredentialsLeanExec());
-        } catch(error) {
-            res.status(500).json({ message: 'Something went wrong', error });
-        }
-    };
-}
-
-export function getOneCredentialQuery(id: string) {
-    return CredentialModel.findById(id);
-}
-export function getOneCredentialLean(id: string) {
-    return getOneCredentialQuery(id).lean();
-}
-export async function getOneCredentialExec(id: string) {
-    return getOneCredentialQuery(id).exec();
-}
-export async function getOneCredentialLeanExec(id: string) {
-    return getOneCredentialLean(id).exec();
-}
-
-export function getOneCredentialMiddleware() {
-    return async (req: Request, res: Response, next: NextFunction) => {
-        const id = req.params.id;
-        req['result'] = req['result'] ? req['result'] : {};
-        try {
-            req['result'].getOneCredential = await getOneCredentialLeanExec(id);
-        } catch(error) {
-            return res.status(400).json({ message: 'Something went wrong', error });            
-        }
-        next();
-    };
-}
-
-export function getOneCredentialController() {
-    return async (req: Request, res: Response) => {
-        const id = req.params.id;
-        try {
-            res.json(await getOneCredentialLeanExec(id));
-        } catch(error) {
-            return res.status(400).json({ message: 'Something went wrong', error });            
-        }
-    };
-}
-
-export async function getCredentialOwnerLeanExec(id: string) {
-    const related = await getOneCredentialQuery(id).populate('owner').lean().exec();
-    return related.owner;
-}
-
-export function getCredentialOwnerMiddleware() {
-    return async (req: Request, res: Response, next: NextFunction) => {
-        const id = req.params.id;
-        req['result'] = req['result'] ? req['result'] : {};
-        try {
-            req['result'].getCredentialOwner = await getCredentialOwnerLeanExec(id);
-        } catch(error) {
-            return res.status(400).json({ message: 'Something went wrong', error });            
-        }
-        next();
-    };
-}
-
-export function getCredentialOwnerController() {
-    return async (req: Request, res: Response) => {
-        const id = req.params.id;
-        try {
-            res.json(await getCredentialOwnerLeanExec(id));
-        } catch(error) {
-            return res.status(400).json({ message: 'Something went wrong', error });            
-        }
-    };
-}
-                
-
-export function createCredentialMiddleware() {
-    return async (req: Request, res: Response, next: NextFunction) => {
-        req['result'] = req['result'] ? req['result'] : {};
-        const data = req.body;
-        try {
-            const model = new CredentialModel(data);
-            req['result'].createCredential = await model.save();
-        } catch(error) {
-            return res.status(400).json({ message: 'Something went wrong', error });            
-        }
-        next();
-    };
-}
-
-export function createCredentialController() {
-    return async (req: Request, res: Response) => {
-        const data = req.body;
-        try {
-            const model = new CredentialModel(data);
-            res.json(await model.save());
-        } catch(error) {
-            return res.status(400).json({ message: 'Something went wrong', error });            
-        }
-    };
-}
-
-export function updateCredentialMiddleware() {
-    return async (req: Request, res: Response, next: NextFunction) => {
-        const id = req.params.id;
-        req['result'] = req['result'] ? req['result'] : {};
-        const changes = req.body;
-        try {
-            // use { new: true } to return modified document rather than old one (default to false)
-            // use upsert if you want an update-or-create-if-not-exists behaviour
-            req['result'].updateCredential = await CredentialModel.findByIdAndUpdate(id, { $set: changes }, { new: true });
-        } catch(error) {
-            return res.status(400).json({ message: 'Something went wrong', error });            
-        }
-        next();
-    };
-}
-
-export function updateCredentialController() {
-    return async (req: Request, res: Response) => {
-        const id = req.params.id;
-        const changes = req.body;
-        try {
-            res.json(await CredentialModel.findByIdAndUpdate(id, { $set: changes }, { new: true }));
-        } catch(error) {
-            return res.status(400).json({ message: 'Something went wrong', error });            
-        }
-    };
-}
-
-export function deleteCredentialMiddleware() {
-    return async (req: Request, res: Response, next: NextFunction) => {
-        const id = req.params.id;
-        req['result'] = req['result'] ? req['result'] : {};
-        try {
-            req['result'].deleteCredential = await CredentialModel.findByIdAndRemove(id);
-        } catch(error) {
-            return res.status(400).json({ message: 'Something went wrong', error });            
-        }
-        next();
-    };
-}
-
-export function deleteCredentialController() {
-    return async (req: Request, res: Response) => {
-        const id = req.params.id;
-        try {
-            res.json(await CredentialModel.findByIdAndRemove(id));
-        } catch(error) {
-            return res.status(400).json({ message: 'Something went wrong', error });            
-        }
-    };
-}
-
-export function addCredentialOwnerMiddleware() {
-    return async (req: Request, res: Response, next: NextFunction) => {
-        const id = req.params.id;
-        req['result'] = req['result'] ? req['result'] : {};
-        const addId = req.body.id;
-        try {
-            const [sub, subject] = await Promise.all([
-                CredentialModel.findById(id).populate('owner').lean().exec(),
-                UserModel.findById(addId).exec()
-            ]);
-            if (!(sub && subject)) {
-                return res.status(404).json({ message: 'Something went wrong', sub, subject });
-            }
-            if (Array.isArray(sub.owner)) {
-                sub.owner.push(subject._id);
-            } else {
-                sub.owner = subject._id;
-            }
-            req['result'].addCredentialOwner = await sub.save();
-        } catch(error) {
-            return res.status(400).json({ message: 'Something went wrong', error });            
-        }
-        next();
-    };
-}
-
-export function addCredentialOwnerController() {
-    return async (req: Request, res: Response) => {
-        const id = req.params.id;
-        req['result'] = req['result'] ? req['result'] : {};
-        const addId = req.body.id;
-        try {
-            const [sub, subject] = await Promise.all([
-                CredentialModel.findById(id).populate('owner').lean().exec(),
-                UserModel.findById(addId).exec()
-            ]);
-            if (!(sub && subject)) {
-                return res.status(404).json({ message: 'Something went wrong', sub, subject });
-            }
-            if (Array.isArray(sub.owner)) {
-                sub.owner.push(subject._id);
-            } else {
-                sub.owner = subject._id;
-            }
-            res.json(await sub.save());
-        } catch(error) {
-            return res.status(400).json({ message: 'Something went wrong', error });            
-        }
-    };
-}
-                
-
-export function removeCredentialOwnerMiddleware() {
-    return async (req: Request, res: Response, next: NextFunction) => {
-        const id = req.params.id;
-        req['result'] = req['result'] ? req['result'] : {};
-        const removeId = req.body.id;
-        try {
-            const [sub, subject] = await Promise.all([
-                CredentialModel.findById(id).populate('owner').lean().exec(),
-                UserModel.findById(removeId).exec()
-            ]);
-            if (!(sub && subject)) {
-                return res.status(404).json({ message: 'Something went wrong', sub, subject });
-            }
-            if (Array.isArray(sub.owner)) {
-                sub.owner = sub.owner.filter((it: ObjectID) => !subject._id.equals(it));
-            } else {
-                sub.owner = undefined;
-            }
-            req['result'].removeCredentialOwner = await sub.save();
-        } catch(error) {
-            return res.status(400).json({ message: 'Something went wrong', error });            
-        }
-        next();
-    };
-}
-
-export function removeCredentialOwnerController() {
-    return async (req: Request, res: Response) => {
-        const id = req.params.id;
-        req['result'] = req['result'] ? req['result'] : {};
-        const removeId = req.body.id;
-        try {
-            const [sub, subject] = await Promise.all([
-                CredentialModel.findById(id).populate('owner').lean().exec(),
-                UserModel.findById(removeId).exec()
-            ]);
-            if (!(sub && subject)) {
-                return res.status(404).json({ message: 'Something went wrong', sub, subject });
-            }
-            if (Array.isArray(sub.owner)) {
-                sub.owner = sub.owner.filter((it: ObjectID) => !subject._id.equals(it));
-            } else {
-                sub.owner = undefined;
-            }
-            res.json(await sub.save());
-        } catch(error) {
-            return res.status(400).json({ message: 'Something went wrong', error });            
-        }
-    };
-}
-                
-
-export class CredentialAPI {
-    router = Router();
-
-    constructor() {
-        this.router
-            .get('/', getManyCredentialsController())
-            .get('/:id', getOneCredentialController())
-            .post('/', createCredentialController())
-            .put('/:id', updateCredentialController())
-            .delete('/:id', deleteCredentialController())
-            .get('/:id/owner', getCredentialOwnerController())
-            .post('/:id/owner/add', addCredentialOwnerController())
-            .post('/:id/owner/remove', removeCredentialOwnerController());
-    }
-
-    applyRouter(app: Application) {
-        app.use('/credentials', this.router);
-    }
-}
-            
-
-/*
 
 //  
 // Base entity interface
@@ -4097,32 +2293,36 @@ export function CredentialCreate(createInput: CredentialCreateInput) {
     const model = new CredentialModel(createInput);
     return model.save();
 }
+export async function CredentialCreateLean(createInput: CredentialCreateInput) {
+    const object = await CredentialCreate(createInput);
+    return object.toObject();
+}
 
 export function CredentialFindByIdAndUpdate(
     { id, changes }: CredentialUpdateInput,
     options: any = { new: true }
 ) {
-    return CredentialModel.findByIdAndUpdate(id, { $set: changes }, { new: true });
+    return CredentialModel.findByIdAndUpdate(id, { $set: changes }, options);
 }
 export function CredentialFindByIdAndUpdateLean(
     update: CredentialUpdateInput,
     options: any = { new: true }
 ) {
-    return CredentialFindByIdAndUpdate(id, update, options).lean();
+    return CredentialFindByIdAndUpdate(update, options).lean();
 }
 export function CredentialFindByIdAndUpdateExec(
     update: CredentialUpdateInput,
     options: any = { new: true },
     cb?: (err: any, result: any) => void
 ) {
-    return CredentialFindByIdAndUpdate(id, update, options).exec(cb);
+    return CredentialFindByIdAndUpdate(update, options).exec(cb);
 }
 export function CredentialFindByIdAndUpdateLeanExec(
     update: CredentialUpdateInput,
     options: any = { new: true },
     cb?: (err: any, result: any) => void
 ) {
-    return CredentialFindByIdAndUpdateLean(id, update, options).exec(cb);
+    return CredentialFindByIdAndUpdateLean(update, options).exec(cb);
 }
 
 export function CredentialFindByIdAndRemove(
@@ -4189,7 +2389,7 @@ export async function CredentialFindByIdOwner(
     projection?: any,
     options: any = {},
 ) {
-    const object = await CredentialFindByIdPopulateOwnerLeanExec();
+    const object = await CredentialFindByIdPopulateOwnerLeanExec(id, projection, options);
     return object ? object.owner : undefined;
 }
 
@@ -4198,7 +2398,7 @@ export function CredentialFindByIdAndAddOwner(
     addId: string | ObjectID,
     options: any = { new: true }
 ) {
-    return CredentialModel.findByIdAndUpdate(id, { $push: { owner: addId } }, { new: true });
+    return CredentialModel.findByIdAndUpdate(id, { $push: { owner: addId } }, options);
 }
 export function CredentialFindByIdAndAddOwnerLean(
     id: string | ObjectID,
@@ -4229,7 +2429,7 @@ export function CredentialFindByIdAndRemoveOwner(
     removeId: string | ObjectID,
     options: any = { new: true }
 ) {
-    return CredentialModel.findByIdAndUpdate(id, { $pull: { owner: removeId } }, { new: true });
+    return CredentialModel.findByIdAndUpdate(id, { $pull: { owner: removeId } }, options);
 }
 export function CredentialFindByIdAndRemoveOwnerLean(
     id: string | ObjectID,
@@ -4261,7 +2461,7 @@ export function getAllCredentialMiddleware() {
         try {
             attachCTX(req, 'getAllCredential', await CredentialFindManyLeanExec());
         } catch(error) {
-            res.status(400).json({ message: 'Something went wrong.', error });
+            return res.status(400).json({ message: 'Something went wrong.', error });
         }
         next();
     };
@@ -4272,7 +2472,7 @@ export function getByIdCredentialMiddleware() {
         try {
             attachCTX(req, 'getByIdCredential', await CredentialFindByIdLeanExec(id));
         } catch(error) {
-            res.status(400).json({ message: 'Something went wrong.', error });
+            return res.status(400).json({ message: 'Something went wrong.', error });
         }
         next();
     };
@@ -4281,9 +2481,9 @@ export function createCredentialMiddleware() {
     return async (req: Request, res: Response, next: NextFunction) => {
         const createInput: CredentialCreateInput = req.body;
         try {
-            attachCTX(req, 'createCredential', await CredentialCreate(createInput));            
+            attachCTX(req, 'createCredential', await CredentialCreateLean(createInput));            
         } catch(error) {
-            res.status(400).json({ message: 'Something went wrong.', error });
+            return res.status(400).json({ message: 'Something went wrong.', error });
         }
         next();
     };
@@ -4295,7 +2495,7 @@ export function updateCredentialMiddleware() {
         try {
             attachCTX(req, 'updateCredential', await CredentialFindByIdAndUpdate({ id, changes }));
         } catch(error) {
-            res.status(400).json({ message: 'Something went wrong.', error });
+            return res.status(400).json({ message: 'Something went wrong.', error });
         }
         next();
     };
@@ -4306,7 +2506,7 @@ export function deleteCredentialMiddleware() {
         try {
             attachCTX(req, 'deleteCredential', await CredentialFindByIdAndRemove(id));
         } catch(error) {
-            res.status(400).json({ message: 'Something went wrong.', error });
+            return res.status(400).json({ message: 'Something went wrong.', error });
         }
         next();
     };
@@ -4319,7 +2519,7 @@ export function getCredentialOwnerMiddleware() {
         try {
             attachCTX(req, 'getCredentialOwner', await CredentialFindByIdOwner(id));
         } catch(error) {
-            res.status(400).json({ message: 'Something went wrong.', error });
+            return res.status(400).json({ message: 'Something went wrong.', error });
         }
         next();
     };
@@ -4331,7 +2531,7 @@ export function addCredentialOwnerMiddleware() {
         try {
             attachCTX(req, 'addCredentialOwner', await CredentialFindByIdAndAddOwnerLeanExec(id, addId));
         } catch(error) {
-            res.status(400).json({ message: 'Something went wrong.', error });
+            return res.status(400).json({ message: 'Something went wrong.', error });
         }
         next();
     };
@@ -4343,7 +2543,7 @@ export function removeCredentialOwnerMiddleware() {
         try {
             attachCTX(req, 'removeCredentialOwner', await CredentialFindByIdAndRemoveOwnerLeanExec(id, removeId));
         } catch(error) {
-            res.status(400).json({ message: 'Something went wrong.', error });
+            return res.status(400).json({ message: 'Something went wrong.', error });
         }
         next();
     };
@@ -4373,7 +2573,7 @@ export function createCredentialController() {
     return async (req: Request, res: Response, next: NextFunction) => {
         const createInput: CredentialCreateInput = req.body;
         try {
-            res.json(await CredentialCreate(createInput));
+            res.json(await CredentialCreateLean(createInput));
         } catch(error) {
             res.status(400).json({ message: 'Something went wrong.', error });
         }
@@ -4463,388 +2663,8 @@ export class CredentialAPI {
 }
 
 
-*/
 
 
-/** 
- * Base entity interface
-*/
-export interface Profil {
-    _id: string;
-    username: string;
-    email: string;
-    name: string;
-    birthdate: Date;
-    json?: any;
-    owner?: User;
-}
-      
-/** 
- * Input payload interface for entity creation
-*/
-export interface ProfilCreateInput {
-    username: string;
-    email: string;
-    name: string;
-    birthdate: Date;
-    json?: any;
-}
-      
-/** 
- * Input payload interface for entity update
-*/
-export interface ProfilChangesInput {
-    username?: string;
-    email?: string;
-    name?: string;
-    birthdate?: Date;
-    json?: any;
-}
-export interface ProfilUpdateInput {
-    id: string;
-    changes: ProfilChangesInput;
-}
-
-/** 
- * Mongoose Schema for this entity
-*/
-export const ProfilSchema = new mongoose.Schema({
-    username: {
-        type: String,
-        required: true,
-        unique: true,
-    },
-    email: {
-        type: String,
-        required: true,
-        unique: true,
-    },
-    name: {
-        type: String,
-        required: true,
-    },
-    birthdate: {
-        type: Date,
-        required: true,
-    },
-    json: {
-        type: Mixed,
-        required: false,
-        default: {},
-    },
-    owner: {
-        type: ObjectId /* relation (User) */,
-        required: false,
-    },
-}, { minimize: false });
-export const ProfilModel = mongoose.model('Profil', ProfilSchema);
-
-export function getManyProfilsQuery() {
-    return ProfilModel.find({});
-}
-export function getManyProfilsLean() {
-    return getManyProfilsQuery().lean();
-}
-export async function getManyProfilsExec() {
-    return getManyProfilsQuery().exec();
-}
-export async function getManyProfilsLeanExec() {
-    return getManyProfilsLean().exec();
-}
-
-export function getManyProfilsMiddleware() {
-    return async (req: Request, res: Response, next: NextFunction) => {
-        req['result'] = req['result'] ? req['result'] : {};
-        try {
-            req['result'].getManyProfils = await getManyProfilsLeanExec();
-        } catch(error) {
-            return res.status(400).json({ message: 'Something went wrong', error });            
-        }
-        next();
-    };
-}
-
-export function getManyProfilsController() {
-    return async (req: Request, res: Response) => {
-        try {
-            res.json(await getManyProfilsLeanExec());
-        } catch(error) {
-            res.status(500).json({ message: 'Something went wrong', error });
-        }
-    };
-}
-
-export function getOneProfilQuery(id: string) {
-    return ProfilModel.findById(id);
-}
-export function getOneProfilLean(id: string) {
-    return getOneProfilQuery(id).lean();
-}
-export async function getOneProfilExec(id: string) {
-    return getOneProfilQuery(id).exec();
-}
-export async function getOneProfilLeanExec(id: string) {
-    return getOneProfilLean(id).exec();
-}
-
-export function getOneProfilMiddleware() {
-    return async (req: Request, res: Response, next: NextFunction) => {
-        const id = req.params.id;
-        req['result'] = req['result'] ? req['result'] : {};
-        try {
-            req['result'].getOneProfil = await getOneProfilLeanExec(id);
-        } catch(error) {
-            return res.status(400).json({ message: 'Something went wrong', error });            
-        }
-        next();
-    };
-}
-
-export function getOneProfilController() {
-    return async (req: Request, res: Response) => {
-        const id = req.params.id;
-        try {
-            res.json(await getOneProfilLeanExec(id));
-        } catch(error) {
-            return res.status(400).json({ message: 'Something went wrong', error });            
-        }
-    };
-}
-
-export async function getProfilOwnerLeanExec(id: string) {
-    const related = await getOneProfilQuery(id).populate('owner').lean().exec();
-    return related.owner;
-}
-
-export function getProfilOwnerMiddleware() {
-    return async (req: Request, res: Response, next: NextFunction) => {
-        const id = req.params.id;
-        req['result'] = req['result'] ? req['result'] : {};
-        try {
-            req['result'].getProfilOwner = await getProfilOwnerLeanExec(id);
-        } catch(error) {
-            return res.status(400).json({ message: 'Something went wrong', error });            
-        }
-        next();
-    };
-}
-
-export function getProfilOwnerController() {
-    return async (req: Request, res: Response) => {
-        const id = req.params.id;
-        try {
-            res.json(await getProfilOwnerLeanExec(id));
-        } catch(error) {
-            return res.status(400).json({ message: 'Something went wrong', error });            
-        }
-    };
-}
-                
-
-export function createProfilMiddleware() {
-    return async (req: Request, res: Response, next: NextFunction) => {
-        req['result'] = req['result'] ? req['result'] : {};
-        const data = req.body;
-        try {
-            const model = new ProfilModel(data);
-            req['result'].createProfil = await model.save();
-        } catch(error) {
-            return res.status(400).json({ message: 'Something went wrong', error });            
-        }
-        next();
-    };
-}
-
-export function createProfilController() {
-    return async (req: Request, res: Response) => {
-        const data = req.body;
-        try {
-            const model = new ProfilModel(data);
-            res.json(await model.save());
-        } catch(error) {
-            return res.status(400).json({ message: 'Something went wrong', error });            
-        }
-    };
-}
-
-export function updateProfilMiddleware() {
-    return async (req: Request, res: Response, next: NextFunction) => {
-        const id = req.params.id;
-        req['result'] = req['result'] ? req['result'] : {};
-        const changes = req.body;
-        try {
-            // use { new: true } to return modified document rather than old one (default to false)
-            // use upsert if you want an update-or-create-if-not-exists behaviour
-            req['result'].updateProfil = await ProfilModel.findByIdAndUpdate(id, { $set: changes }, { new: true });
-        } catch(error) {
-            return res.status(400).json({ message: 'Something went wrong', error });            
-        }
-        next();
-    };
-}
-
-export function updateProfilController() {
-    return async (req: Request, res: Response) => {
-        const id = req.params.id;
-        const changes = req.body;
-        try {
-            res.json(await ProfilModel.findByIdAndUpdate(id, { $set: changes }, { new: true }));
-        } catch(error) {
-            return res.status(400).json({ message: 'Something went wrong', error });            
-        }
-    };
-}
-
-export function deleteProfilMiddleware() {
-    return async (req: Request, res: Response, next: NextFunction) => {
-        const id = req.params.id;
-        req['result'] = req['result'] ? req['result'] : {};
-        try {
-            req['result'].deleteProfil = await ProfilModel.findByIdAndRemove(id);
-        } catch(error) {
-            return res.status(400).json({ message: 'Something went wrong', error });            
-        }
-        next();
-    };
-}
-
-export function deleteProfilController() {
-    return async (req: Request, res: Response) => {
-        const id = req.params.id;
-        try {
-            res.json(await ProfilModel.findByIdAndRemove(id));
-        } catch(error) {
-            return res.status(400).json({ message: 'Something went wrong', error });            
-        }
-    };
-}
-
-export function addProfilOwnerMiddleware() {
-    return async (req: Request, res: Response, next: NextFunction) => {
-        const id = req.params.id;
-        req['result'] = req['result'] ? req['result'] : {};
-        const addId = req.body.id;
-        try {
-            const [sub, subject] = await Promise.all([
-                ProfilModel.findById(id).populate('owner').lean().exec(),
-                UserModel.findById(addId).exec()
-            ]);
-            if (!(sub && subject)) {
-                return res.status(404).json({ message: 'Something went wrong', sub, subject });
-            }
-            if (Array.isArray(sub.owner)) {
-                sub.owner.push(subject._id);
-            } else {
-                sub.owner = subject._id;
-            }
-            req['result'].addProfilOwner = await sub.save();
-        } catch(error) {
-            return res.status(400).json({ message: 'Something went wrong', error });            
-        }
-        next();
-    };
-}
-
-export function addProfilOwnerController() {
-    return async (req: Request, res: Response) => {
-        const id = req.params.id;
-        req['result'] = req['result'] ? req['result'] : {};
-        const addId = req.body.id;
-        try {
-            const [sub, subject] = await Promise.all([
-                ProfilModel.findById(id).populate('owner').lean().exec(),
-                UserModel.findById(addId).exec()
-            ]);
-            if (!(sub && subject)) {
-                return res.status(404).json({ message: 'Something went wrong', sub, subject });
-            }
-            if (Array.isArray(sub.owner)) {
-                sub.owner.push(subject._id);
-            } else {
-                sub.owner = subject._id;
-            }
-            res.json(await sub.save());
-        } catch(error) {
-            return res.status(400).json({ message: 'Something went wrong', error });            
-        }
-    };
-}
-                
-
-export function removeProfilOwnerMiddleware() {
-    return async (req: Request, res: Response, next: NextFunction) => {
-        const id = req.params.id;
-        req['result'] = req['result'] ? req['result'] : {};
-        const removeId = req.body.id;
-        try {
-            const [sub, subject] = await Promise.all([
-                ProfilModel.findById(id).populate('owner').lean().exec(),
-                UserModel.findById(removeId).exec()
-            ]);
-            if (!(sub && subject)) {
-                return res.status(404).json({ message: 'Something went wrong', sub, subject });
-            }
-            if (Array.isArray(sub.owner)) {
-                sub.owner = sub.owner.filter((it: ObjectID) => !subject._id.equals(it));
-            } else {
-                sub.owner = undefined;
-            }
-            req['result'].removeProfilOwner = await sub.save();
-        } catch(error) {
-            return res.status(400).json({ message: 'Something went wrong', error });            
-        }
-        next();
-    };
-}
-
-export function removeProfilOwnerController() {
-    return async (req: Request, res: Response) => {
-        const id = req.params.id;
-        req['result'] = req['result'] ? req['result'] : {};
-        const removeId = req.body.id;
-        try {
-            const [sub, subject] = await Promise.all([
-                ProfilModel.findById(id).populate('owner').lean().exec(),
-                UserModel.findById(removeId).exec()
-            ]);
-            if (!(sub && subject)) {
-                return res.status(404).json({ message: 'Something went wrong', sub, subject });
-            }
-            if (Array.isArray(sub.owner)) {
-                sub.owner = sub.owner.filter((it: ObjectID) => !subject._id.equals(it));
-            } else {
-                sub.owner = undefined;
-            }
-            res.json(await sub.save());
-        } catch(error) {
-            return res.status(400).json({ message: 'Something went wrong', error });            
-        }
-    };
-}
-                
-
-export class ProfilAPI {
-    router = Router();
-
-    constructor() {
-        this.router
-            .get('/', getManyProfilsController())
-            .get('/:id', getOneProfilController())
-            .post('/', createProfilController())
-            .put('/:id', updateProfilController())
-            .delete('/:id', deleteProfilController())
-            .get('/:id/owner', getProfilOwnerController())
-            .post('/:id/owner/add', addProfilOwnerController())
-            .post('/:id/owner/remove', removeProfilOwnerController());
-    }
-
-    applyRouter(app: Application) {
-        app.use('/profils', this.router);
-    }
-}
-            
-
-/*
 
 //  
 // Base entity interface
@@ -5030,32 +2850,36 @@ export function ProfilCreate(createInput: ProfilCreateInput) {
     const model = new ProfilModel(createInput);
     return model.save();
 }
+export async function ProfilCreateLean(createInput: ProfilCreateInput) {
+    const object = await ProfilCreate(createInput);
+    return object.toObject();
+}
 
 export function ProfilFindByIdAndUpdate(
     { id, changes }: ProfilUpdateInput,
     options: any = { new: true }
 ) {
-    return ProfilModel.findByIdAndUpdate(id, { $set: changes }, { new: true });
+    return ProfilModel.findByIdAndUpdate(id, { $set: changes }, options);
 }
 export function ProfilFindByIdAndUpdateLean(
     update: ProfilUpdateInput,
     options: any = { new: true }
 ) {
-    return ProfilFindByIdAndUpdate(id, update, options).lean();
+    return ProfilFindByIdAndUpdate(update, options).lean();
 }
 export function ProfilFindByIdAndUpdateExec(
     update: ProfilUpdateInput,
     options: any = { new: true },
     cb?: (err: any, result: any) => void
 ) {
-    return ProfilFindByIdAndUpdate(id, update, options).exec(cb);
+    return ProfilFindByIdAndUpdate(update, options).exec(cb);
 }
 export function ProfilFindByIdAndUpdateLeanExec(
     update: ProfilUpdateInput,
     options: any = { new: true },
     cb?: (err: any, result: any) => void
 ) {
-    return ProfilFindByIdAndUpdateLean(id, update, options).exec(cb);
+    return ProfilFindByIdAndUpdateLean(update, options).exec(cb);
 }
 
 export function ProfilFindByIdAndRemove(
@@ -5122,7 +2946,7 @@ export async function ProfilFindByIdOwner(
     projection?: any,
     options: any = {},
 ) {
-    const object = await ProfilFindByIdPopulateOwnerLeanExec();
+    const object = await ProfilFindByIdPopulateOwnerLeanExec(id, projection, options);
     return object ? object.owner : undefined;
 }
 
@@ -5131,7 +2955,7 @@ export function ProfilFindByIdAndAddOwner(
     addId: string | ObjectID,
     options: any = { new: true }
 ) {
-    return ProfilModel.findByIdAndUpdate(id, { $push: { owner: addId } }, { new: true });
+    return ProfilModel.findByIdAndUpdate(id, { $push: { owner: addId } }, options);
 }
 export function ProfilFindByIdAndAddOwnerLean(
     id: string | ObjectID,
@@ -5162,7 +2986,7 @@ export function ProfilFindByIdAndRemoveOwner(
     removeId: string | ObjectID,
     options: any = { new: true }
 ) {
-    return ProfilModel.findByIdAndUpdate(id, { $pull: { owner: removeId } }, { new: true });
+    return ProfilModel.findByIdAndUpdate(id, { $pull: { owner: removeId } }, options);
 }
 export function ProfilFindByIdAndRemoveOwnerLean(
     id: string | ObjectID,
@@ -5194,7 +3018,7 @@ export function getAllProfilMiddleware() {
         try {
             attachCTX(req, 'getAllProfil', await ProfilFindManyLeanExec());
         } catch(error) {
-            res.status(400).json({ message: 'Something went wrong.', error });
+            return res.status(400).json({ message: 'Something went wrong.', error });
         }
         next();
     };
@@ -5205,7 +3029,7 @@ export function getByIdProfilMiddleware() {
         try {
             attachCTX(req, 'getByIdProfil', await ProfilFindByIdLeanExec(id));
         } catch(error) {
-            res.status(400).json({ message: 'Something went wrong.', error });
+            return res.status(400).json({ message: 'Something went wrong.', error });
         }
         next();
     };
@@ -5214,9 +3038,9 @@ export function createProfilMiddleware() {
     return async (req: Request, res: Response, next: NextFunction) => {
         const createInput: ProfilCreateInput = req.body;
         try {
-            attachCTX(req, 'createProfil', await ProfilCreate(createInput));            
+            attachCTX(req, 'createProfil', await ProfilCreateLean(createInput));            
         } catch(error) {
-            res.status(400).json({ message: 'Something went wrong.', error });
+            return res.status(400).json({ message: 'Something went wrong.', error });
         }
         next();
     };
@@ -5228,7 +3052,7 @@ export function updateProfilMiddleware() {
         try {
             attachCTX(req, 'updateProfil', await ProfilFindByIdAndUpdate({ id, changes }));
         } catch(error) {
-            res.status(400).json({ message: 'Something went wrong.', error });
+            return res.status(400).json({ message: 'Something went wrong.', error });
         }
         next();
     };
@@ -5239,7 +3063,7 @@ export function deleteProfilMiddleware() {
         try {
             attachCTX(req, 'deleteProfil', await ProfilFindByIdAndRemove(id));
         } catch(error) {
-            res.status(400).json({ message: 'Something went wrong.', error });
+            return res.status(400).json({ message: 'Something went wrong.', error });
         }
         next();
     };
@@ -5252,7 +3076,7 @@ export function getProfilOwnerMiddleware() {
         try {
             attachCTX(req, 'getProfilOwner', await ProfilFindByIdOwner(id));
         } catch(error) {
-            res.status(400).json({ message: 'Something went wrong.', error });
+            return res.status(400).json({ message: 'Something went wrong.', error });
         }
         next();
     };
@@ -5264,7 +3088,7 @@ export function addProfilOwnerMiddleware() {
         try {
             attachCTX(req, 'addProfilOwner', await ProfilFindByIdAndAddOwnerLeanExec(id, addId));
         } catch(error) {
-            res.status(400).json({ message: 'Something went wrong.', error });
+            return res.status(400).json({ message: 'Something went wrong.', error });
         }
         next();
     };
@@ -5276,7 +3100,7 @@ export function removeProfilOwnerMiddleware() {
         try {
             attachCTX(req, 'removeProfilOwner', await ProfilFindByIdAndRemoveOwnerLeanExec(id, removeId));
         } catch(error) {
-            res.status(400).json({ message: 'Something went wrong.', error });
+            return res.status(400).json({ message: 'Something went wrong.', error });
         }
         next();
     };
@@ -5306,7 +3130,7 @@ export function createProfilController() {
     return async (req: Request, res: Response, next: NextFunction) => {
         const createInput: ProfilCreateInput = req.body;
         try {
-            res.json(await ProfilCreate(createInput));
+            res.json(await ProfilCreateLean(createInput));
         } catch(error) {
             res.status(400).json({ message: 'Something went wrong.', error });
         }
@@ -5396,365 +3220,8 @@ export class ProfilAPI {
 }
 
 
-*/
 
 
-/** 
- * Base entity interface
-*/
-export interface Todo {
-    _id: string;
-    title: string;
-    done: boolean;
-    owner?: User;
-}
-      
-/** 
- * Input payload interface for entity creation
-*/
-export interface TodoCreateInput {
-    title: string;
-    done: boolean;
-}
-      
-/** 
- * Input payload interface for entity update
-*/
-export interface TodoChangesInput {
-    title?: string;
-    done?: boolean;
-}
-export interface TodoUpdateInput {
-    id: string;
-    changes: TodoChangesInput;
-}
-
-/** 
- * Mongoose Schema for this entity
-*/
-export const TodoSchema = new mongoose.Schema({
-    title: {
-        type: String,
-        required: true,
-        unique: true,
-    },
-    done: {
-        type: Boolean,
-        required: true,
-    },
-    owner: {
-        type: ObjectId /* relation (User) */,
-        required: false,
-    },
-}, { minimize: false });
-export const TodoModel = mongoose.model('Todo', TodoSchema);
-
-export function getManyTodosQuery() {
-    return TodoModel.find({});
-}
-export function getManyTodosLean() {
-    return getManyTodosQuery().lean();
-}
-export async function getManyTodosExec() {
-    return getManyTodosQuery().exec();
-}
-export async function getManyTodosLeanExec() {
-    return getManyTodosLean().exec();
-}
-
-export function getManyTodosMiddleware() {
-    return async (req: Request, res: Response, next: NextFunction) => {
-        req['result'] = req['result'] ? req['result'] : {};
-        try {
-            req['result'].getManyTodos = await getManyTodosLeanExec();
-        } catch(error) {
-            return res.status(400).json({ message: 'Something went wrong', error });            
-        }
-        next();
-    };
-}
-
-export function getManyTodosController() {
-    return async (req: Request, res: Response) => {
-        try {
-            res.json(await getManyTodosLeanExec());
-        } catch(error) {
-            res.status(500).json({ message: 'Something went wrong', error });
-        }
-    };
-}
-
-export function getOneTodoQuery(id: string) {
-    return TodoModel.findById(id);
-}
-export function getOneTodoLean(id: string) {
-    return getOneTodoQuery(id).lean();
-}
-export async function getOneTodoExec(id: string) {
-    return getOneTodoQuery(id).exec();
-}
-export async function getOneTodoLeanExec(id: string) {
-    return getOneTodoLean(id).exec();
-}
-
-export function getOneTodoMiddleware() {
-    return async (req: Request, res: Response, next: NextFunction) => {
-        const id = req.params.id;
-        req['result'] = req['result'] ? req['result'] : {};
-        try {
-            req['result'].getOneTodo = await getOneTodoLeanExec(id);
-        } catch(error) {
-            return res.status(400).json({ message: 'Something went wrong', error });            
-        }
-        next();
-    };
-}
-
-export function getOneTodoController() {
-    return async (req: Request, res: Response) => {
-        const id = req.params.id;
-        try {
-            res.json(await getOneTodoLeanExec(id));
-        } catch(error) {
-            return res.status(400).json({ message: 'Something went wrong', error });            
-        }
-    };
-}
-
-export async function getTodoOwnerLeanExec(id: string) {
-    const related = await getOneTodoQuery(id).populate('owner').lean().exec();
-    return related.owner;
-}
-
-export function getTodoOwnerMiddleware() {
-    return async (req: Request, res: Response, next: NextFunction) => {
-        const id = req.params.id;
-        req['result'] = req['result'] ? req['result'] : {};
-        try {
-            req['result'].getTodoOwner = await getTodoOwnerLeanExec(id);
-        } catch(error) {
-            return res.status(400).json({ message: 'Something went wrong', error });            
-        }
-        next();
-    };
-}
-
-export function getTodoOwnerController() {
-    return async (req: Request, res: Response) => {
-        const id = req.params.id;
-        try {
-            res.json(await getTodoOwnerLeanExec(id));
-        } catch(error) {
-            return res.status(400).json({ message: 'Something went wrong', error });            
-        }
-    };
-}
-                
-
-export function createTodoMiddleware() {
-    return async (req: Request, res: Response, next: NextFunction) => {
-        req['result'] = req['result'] ? req['result'] : {};
-        const data = req.body;
-        try {
-            const model = new TodoModel(data);
-            req['result'].createTodo = await model.save();
-        } catch(error) {
-            return res.status(400).json({ message: 'Something went wrong', error });            
-        }
-        next();
-    };
-}
-
-export function createTodoController() {
-    return async (req: Request, res: Response) => {
-        const data = req.body;
-        try {
-            const model = new TodoModel(data);
-            res.json(await model.save());
-        } catch(error) {
-            return res.status(400).json({ message: 'Something went wrong', error });            
-        }
-    };
-}
-
-export function updateTodoMiddleware() {
-    return async (req: Request, res: Response, next: NextFunction) => {
-        const id = req.params.id;
-        req['result'] = req['result'] ? req['result'] : {};
-        const changes = req.body;
-        try {
-            // use { new: true } to return modified document rather than old one (default to false)
-            // use upsert if you want an update-or-create-if-not-exists behaviour
-            req['result'].updateTodo = await TodoModel.findByIdAndUpdate(id, { $set: changes }, { new: true });
-        } catch(error) {
-            return res.status(400).json({ message: 'Something went wrong', error });            
-        }
-        next();
-    };
-}
-
-export function updateTodoController() {
-    return async (req: Request, res: Response) => {
-        const id = req.params.id;
-        const changes = req.body;
-        try {
-            res.json(await TodoModel.findByIdAndUpdate(id, { $set: changes }, { new: true }));
-        } catch(error) {
-            return res.status(400).json({ message: 'Something went wrong', error });            
-        }
-    };
-}
-
-export function deleteTodoMiddleware() {
-    return async (req: Request, res: Response, next: NextFunction) => {
-        const id = req.params.id;
-        req['result'] = req['result'] ? req['result'] : {};
-        try {
-            req['result'].deleteTodo = await TodoModel.findByIdAndRemove(id);
-        } catch(error) {
-            return res.status(400).json({ message: 'Something went wrong', error });            
-        }
-        next();
-    };
-}
-
-export function deleteTodoController() {
-    return async (req: Request, res: Response) => {
-        const id = req.params.id;
-        try {
-            res.json(await TodoModel.findByIdAndRemove(id));
-        } catch(error) {
-            return res.status(400).json({ message: 'Something went wrong', error });            
-        }
-    };
-}
-
-export function addTodoOwnerMiddleware() {
-    return async (req: Request, res: Response, next: NextFunction) => {
-        const id = req.params.id;
-        req['result'] = req['result'] ? req['result'] : {};
-        const addId = req.body.id;
-        try {
-            const [sub, subject] = await Promise.all([
-                TodoModel.findById(id).populate('owner').lean().exec(),
-                UserModel.findById(addId).exec()
-            ]);
-            if (!(sub && subject)) {
-                return res.status(404).json({ message: 'Something went wrong', sub, subject });
-            }
-            if (Array.isArray(sub.owner)) {
-                sub.owner.push(subject._id);
-            } else {
-                sub.owner = subject._id;
-            }
-            req['result'].addTodoOwner = await sub.save();
-        } catch(error) {
-            return res.status(400).json({ message: 'Something went wrong', error });            
-        }
-        next();
-    };
-}
-
-export function addTodoOwnerController() {
-    return async (req: Request, res: Response) => {
-        const id = req.params.id;
-        req['result'] = req['result'] ? req['result'] : {};
-        const addId = req.body.id;
-        try {
-            const [sub, subject] = await Promise.all([
-                TodoModel.findById(id).populate('owner').lean().exec(),
-                UserModel.findById(addId).exec()
-            ]);
-            if (!(sub && subject)) {
-                return res.status(404).json({ message: 'Something went wrong', sub, subject });
-            }
-            if (Array.isArray(sub.owner)) {
-                sub.owner.push(subject._id);
-            } else {
-                sub.owner = subject._id;
-            }
-            res.json(await sub.save());
-        } catch(error) {
-            return res.status(400).json({ message: 'Something went wrong', error });            
-        }
-    };
-}
-                
-
-export function removeTodoOwnerMiddleware() {
-    return async (req: Request, res: Response, next: NextFunction) => {
-        const id = req.params.id;
-        req['result'] = req['result'] ? req['result'] : {};
-        const removeId = req.body.id;
-        try {
-            const [sub, subject] = await Promise.all([
-                TodoModel.findById(id).populate('owner').lean().exec(),
-                UserModel.findById(removeId).exec()
-            ]);
-            if (!(sub && subject)) {
-                return res.status(404).json({ message: 'Something went wrong', sub, subject });
-            }
-            if (Array.isArray(sub.owner)) {
-                sub.owner = sub.owner.filter((it: ObjectID) => !subject._id.equals(it));
-            } else {
-                sub.owner = undefined;
-            }
-            req['result'].removeTodoOwner = await sub.save();
-        } catch(error) {
-            return res.status(400).json({ message: 'Something went wrong', error });            
-        }
-        next();
-    };
-}
-
-export function removeTodoOwnerController() {
-    return async (req: Request, res: Response) => {
-        const id = req.params.id;
-        req['result'] = req['result'] ? req['result'] : {};
-        const removeId = req.body.id;
-        try {
-            const [sub, subject] = await Promise.all([
-                TodoModel.findById(id).populate('owner').lean().exec(),
-                UserModel.findById(removeId).exec()
-            ]);
-            if (!(sub && subject)) {
-                return res.status(404).json({ message: 'Something went wrong', sub, subject });
-            }
-            if (Array.isArray(sub.owner)) {
-                sub.owner = sub.owner.filter((it: ObjectID) => !subject._id.equals(it));
-            } else {
-                sub.owner = undefined;
-            }
-            res.json(await sub.save());
-        } catch(error) {
-            return res.status(400).json({ message: 'Something went wrong', error });            
-        }
-    };
-}
-                
-
-export class TodoAPI {
-    router = Router();
-
-    constructor() {
-        this.router
-            .get('/', getManyTodosController())
-            .get('/:id', getOneTodoController())
-            .post('/', createTodoController())
-            .put('/:id', updateTodoController())
-            .delete('/:id', deleteTodoController())
-            .get('/:id/owner', getTodoOwnerController())
-            .post('/:id/owner/add', addTodoOwnerController())
-            .post('/:id/owner/remove', removeTodoOwnerController());
-    }
-
-    applyRouter(app: Application) {
-        app.use('/todos', this.router);
-    }
-}
-            
-
-/*
 
 //  
 // Base entity interface
@@ -5915,32 +3382,36 @@ export function TodoCreate(createInput: TodoCreateInput) {
     const model = new TodoModel(createInput);
     return model.save();
 }
+export async function TodoCreateLean(createInput: TodoCreateInput) {
+    const object = await TodoCreate(createInput);
+    return object.toObject();
+}
 
 export function TodoFindByIdAndUpdate(
     { id, changes }: TodoUpdateInput,
     options: any = { new: true }
 ) {
-    return TodoModel.findByIdAndUpdate(id, { $set: changes }, { new: true });
+    return TodoModel.findByIdAndUpdate(id, { $set: changes }, options);
 }
 export function TodoFindByIdAndUpdateLean(
     update: TodoUpdateInput,
     options: any = { new: true }
 ) {
-    return TodoFindByIdAndUpdate(id, update, options).lean();
+    return TodoFindByIdAndUpdate(update, options).lean();
 }
 export function TodoFindByIdAndUpdateExec(
     update: TodoUpdateInput,
     options: any = { new: true },
     cb?: (err: any, result: any) => void
 ) {
-    return TodoFindByIdAndUpdate(id, update, options).exec(cb);
+    return TodoFindByIdAndUpdate(update, options).exec(cb);
 }
 export function TodoFindByIdAndUpdateLeanExec(
     update: TodoUpdateInput,
     options: any = { new: true },
     cb?: (err: any, result: any) => void
 ) {
-    return TodoFindByIdAndUpdateLean(id, update, options).exec(cb);
+    return TodoFindByIdAndUpdateLean(update, options).exec(cb);
 }
 
 export function TodoFindByIdAndRemove(
@@ -6007,7 +3478,7 @@ export async function TodoFindByIdOwner(
     projection?: any,
     options: any = {},
 ) {
-    const object = await TodoFindByIdPopulateOwnerLeanExec();
+    const object = await TodoFindByIdPopulateOwnerLeanExec(id, projection, options);
     return object ? object.owner : undefined;
 }
 
@@ -6016,7 +3487,7 @@ export function TodoFindByIdAndAddOwner(
     addId: string | ObjectID,
     options: any = { new: true }
 ) {
-    return TodoModel.findByIdAndUpdate(id, { $push: { owner: addId } }, { new: true });
+    return TodoModel.findByIdAndUpdate(id, { $push: { owner: addId } }, options);
 }
 export function TodoFindByIdAndAddOwnerLean(
     id: string | ObjectID,
@@ -6047,7 +3518,7 @@ export function TodoFindByIdAndRemoveOwner(
     removeId: string | ObjectID,
     options: any = { new: true }
 ) {
-    return TodoModel.findByIdAndUpdate(id, { $pull: { owner: removeId } }, { new: true });
+    return TodoModel.findByIdAndUpdate(id, { $pull: { owner: removeId } }, options);
 }
 export function TodoFindByIdAndRemoveOwnerLean(
     id: string | ObjectID,
@@ -6079,7 +3550,7 @@ export function getAllTodoMiddleware() {
         try {
             attachCTX(req, 'getAllTodo', await TodoFindManyLeanExec());
         } catch(error) {
-            res.status(400).json({ message: 'Something went wrong.', error });
+            return res.status(400).json({ message: 'Something went wrong.', error });
         }
         next();
     };
@@ -6090,7 +3561,7 @@ export function getByIdTodoMiddleware() {
         try {
             attachCTX(req, 'getByIdTodo', await TodoFindByIdLeanExec(id));
         } catch(error) {
-            res.status(400).json({ message: 'Something went wrong.', error });
+            return res.status(400).json({ message: 'Something went wrong.', error });
         }
         next();
     };
@@ -6099,9 +3570,9 @@ export function createTodoMiddleware() {
     return async (req: Request, res: Response, next: NextFunction) => {
         const createInput: TodoCreateInput = req.body;
         try {
-            attachCTX(req, 'createTodo', await TodoCreate(createInput));            
+            attachCTX(req, 'createTodo', await TodoCreateLean(createInput));            
         } catch(error) {
-            res.status(400).json({ message: 'Something went wrong.', error });
+            return res.status(400).json({ message: 'Something went wrong.', error });
         }
         next();
     };
@@ -6113,7 +3584,7 @@ export function updateTodoMiddleware() {
         try {
             attachCTX(req, 'updateTodo', await TodoFindByIdAndUpdate({ id, changes }));
         } catch(error) {
-            res.status(400).json({ message: 'Something went wrong.', error });
+            return res.status(400).json({ message: 'Something went wrong.', error });
         }
         next();
     };
@@ -6124,7 +3595,7 @@ export function deleteTodoMiddleware() {
         try {
             attachCTX(req, 'deleteTodo', await TodoFindByIdAndRemove(id));
         } catch(error) {
-            res.status(400).json({ message: 'Something went wrong.', error });
+            return res.status(400).json({ message: 'Something went wrong.', error });
         }
         next();
     };
@@ -6137,7 +3608,7 @@ export function getTodoOwnerMiddleware() {
         try {
             attachCTX(req, 'getTodoOwner', await TodoFindByIdOwner(id));
         } catch(error) {
-            res.status(400).json({ message: 'Something went wrong.', error });
+            return res.status(400).json({ message: 'Something went wrong.', error });
         }
         next();
     };
@@ -6149,7 +3620,7 @@ export function addTodoOwnerMiddleware() {
         try {
             attachCTX(req, 'addTodoOwner', await TodoFindByIdAndAddOwnerLeanExec(id, addId));
         } catch(error) {
-            res.status(400).json({ message: 'Something went wrong.', error });
+            return res.status(400).json({ message: 'Something went wrong.', error });
         }
         next();
     };
@@ -6161,7 +3632,7 @@ export function removeTodoOwnerMiddleware() {
         try {
             attachCTX(req, 'removeTodoOwner', await TodoFindByIdAndRemoveOwnerLeanExec(id, removeId));
         } catch(error) {
-            res.status(400).json({ message: 'Something went wrong.', error });
+            return res.status(400).json({ message: 'Something went wrong.', error });
         }
         next();
     };
@@ -6191,7 +3662,7 @@ export function createTodoController() {
     return async (req: Request, res: Response, next: NextFunction) => {
         const createInput: TodoCreateInput = req.body;
         try {
-            res.json(await TodoCreate(createInput));
+            res.json(await TodoCreateLean(createInput));
         } catch(error) {
             res.status(400).json({ message: 'Something went wrong.', error });
         }
@@ -6280,6 +3751,4 @@ export class TodoAPI {
     }
 }
 
-
-*/
 

@@ -22,11 +22,12 @@ import {
   ScopeAPI,
   CredentialAPI,
   ProfilAPI,
-  UserAPI
+  UserAPI,
+  TodoAPI
 } from './apis/apis';
 
 /**
- * Use async main function to get access to await
+ * Use async main function to get access to `await`
  */
 async function main() {
 
@@ -48,11 +49,12 @@ async function main() {
   */
   await mainMongoService.init();
 
-  new RoleAPI().applyRouter(app);
-  new ScopeAPI().applyRouter(app);
-  // new CredentialAPI().applyRouter(app);
-  new ProfilAPI().applyRouter(app);
-  new UserAPI().applyRouter(app);
+  new RoleAPI().applyAPI(app);
+  new ScopeAPI().applyAPI(app);
+  new CredentialAPI().applyAPI(app);
+  new ProfilAPI().applyAPI(app);
+  new UserAPI().applyAPI(app);
+  new TodoAPI().applyAPI(app);
 
   app.listen(PORT, () => {
     console.log(`Server up and running at http://localhost:${PORT}`);

@@ -31,14 +31,6 @@ generateAll(
             },
             relations: {
                 users: '[User]'
-            },
-            query: {
-                
-            },
-            mutation: {
-                addUserCredential: {
-                    skip: true
-                }
             }
         },
         {
@@ -116,7 +108,7 @@ generateAll(
             },
             relations: {
                 owner: 'User'
-            }
+            },
         },
     ],
     PATH_GENERATED,

@@ -1,4 +1,4 @@
-const TS_Suffix = `
+const TS_Prefix = `
 import {
     Request,
     Response,
@@ -190,32 +190,36 @@ export function $0Create(createInput: $0CreateInput) {
     const model = new $0Model(createInput);
     return model.save();
 }
+export async function $0CreateLean(createInput: $0CreateInput) {
+    const object = await $0Create(createInput);
+    return object.toObject();
+}
 
 export function $0FindByIdAndUpdate(
     { id, changes }: $0UpdateInput,
     options: any = { new: true }
 ) {
-    return $0Model.findByIdAndUpdate(id, { $set: changes }, { new: true });
+    return $0Model.findByIdAndUpdate(id, { $set: changes }, options);
 }
 export function $0FindByIdAndUpdateLean(
     update: $0UpdateInput,
     options: any = { new: true }
 ) {
-    return $0FindByIdAndUpdate(id, update, options).lean();
+    return $0FindByIdAndUpdate(update, options).lean();
 }
 export function $0FindByIdAndUpdateExec(
     update: $0UpdateInput,
     options: any = { new: true },
     cb?: (err: any, result: any) => void
 ) {
-    return $0FindByIdAndUpdate(id, update, options).exec(cb);
+    return $0FindByIdAndUpdate(update, options).exec(cb);
 }
 export function $0FindByIdAndUpdateLeanExec(
     update: $0UpdateInput,
     options: any = { new: true },
     cb?: (err: any, result: any) => void
 ) {
-    return $0FindByIdAndUpdateLean(id, update, options).exec(cb);
+    return $0FindByIdAndUpdateLean(update, options).exec(cb);
 }
 
 export function $0FindByIdAndRemove(
@@ -284,7 +288,7 @@ export async function $0FindById$1(
     projection?: any,
     options: any = {},
 ) {
-    const object = await $0FindByIdPopulate$1LeanExec();
+    const object = await $0FindByIdPopulate$1LeanExec(id, projection, options);
     return object ? object.$2 : undefined;
 }
 
@@ -293,7 +297,7 @@ export function $0FindByIdAndAdd$1(
     addId: string | ObjectID,
     options: any = { new: true }
 ) {
-    return $0Model.findByIdAndUpdate(id, { $push: { $2: addId } }, { new: true });
+    return $0Model.findByIdAndUpdate(id, { $push: { $2: addId } }, options);
 }
 export function $0FindByIdAndAdd$1Lean(
     id: string | ObjectID,
@@ -324,7 +328,7 @@ export function $0FindByIdAndRemove$1(
     removeId: string | ObjectID,
     options: any = { new: true }
 ) {
-    return $0Model.findByIdAndUpdate(id, { $pull: { $2: removeId } }, { new: true });
+    return $0Model.findByIdAndUpdate(id, { $pull: { $2: removeId } }, options);
 }
 export function $0FindByIdAndRemove$1Lean(
     id: string | ObjectID,
@@ -357,7 +361,7 @@ export function getAll$0Middleware() {
         try {
             attachCTX(req, 'getAll$0', await $0FindManyLeanExec());
         } catch(error) {
-            res.status(400).json({ message: 'Something went wrong.', error });
+            return res.status(400).json({ message: 'Something went wrong.', error });
         }
         next();
     };
@@ -368,7 +372,7 @@ export function getById$0Middleware() {
         try {
             attachCTX(req, 'getById$0', await $0FindByIdLeanExec(id));
         } catch(error) {
-            res.status(400).json({ message: 'Something went wrong.', error });
+            return res.status(400).json({ message: 'Something went wrong.', error });
         }
         next();
     };
@@ -377,9 +381,9 @@ export function create$0Middleware() {
     return async (req: Request, res: Response, next: NextFunction) => {
         const createInput: $0CreateInput = req.body;
         try {
-            attachCTX(req, 'create$0', await $0Create(createInput));            
+            attachCTX(req, 'create$0', await $0CreateLean(createInput));            
         } catch(error) {
-            res.status(400).json({ message: 'Something went wrong.', error });
+            return res.status(400).json({ message: 'Something went wrong.', error });
         }
         next();
     };
@@ -391,7 +395,7 @@ export function update$0Middleware() {
         try {
             attachCTX(req, 'update$0', await $0FindByIdAndUpdate({ id, changes }));
         } catch(error) {
-            res.status(400).json({ message: 'Something went wrong.', error });
+            return res.status(400).json({ message: 'Something went wrong.', error });
         }
         next();
     };
@@ -402,7 +406,7 @@ export function delete$0Middleware() {
         try {
             attachCTX(req, 'delete$0', await $0FindByIdAndRemove(id));
         } catch(error) {
-            res.status(400).json({ message: 'Something went wrong.', error });
+            return res.status(400).json({ message: 'Something went wrong.', error });
         }
         next();
     };
@@ -416,7 +420,7 @@ export function get$0$1Middleware() {
         try {
             attachCTX(req, 'get$0$1', await $0FindById$1(id));
         } catch(error) {
-            res.status(400).json({ message: 'Something went wrong.', error });
+            return res.status(400).json({ message: 'Something went wrong.', error });
         }
         next();
     };
@@ -428,7 +432,7 @@ export function add$0$1Middleware() {
         try {
             attachCTX(req, 'add$0$1', await $0FindByIdAndAdd$1LeanExec(id, addId));
         } catch(error) {
-            res.status(400).json({ message: 'Something went wrong.', error });
+            return res.status(400).json({ message: 'Something went wrong.', error });
         }
         next();
     };
@@ -440,7 +444,7 @@ export function remove$0$1Middleware() {
         try {
             attachCTX(req, 'remove$0$1', await $0FindByIdAndRemove$1LeanExec(id, removeId));
         } catch(error) {
-            res.status(400).json({ message: 'Something went wrong.', error });
+            return res.status(400).json({ message: 'Something went wrong.', error });
         }
         next();
     };
@@ -471,7 +475,7 @@ export function create$0Controller() {
     return async (req: Request, res: Response, next: NextFunction) => {
         const createInput: $0CreateInput = req.body;
         try {
-            res.json(await $0Create(createInput));
+            res.json(await $0CreateLean(createInput));
         } catch(error) {
             res.status(400).json({ message: 'Something went wrong.', error });
         }
@@ -583,7 +587,8 @@ export const templates = {
     TS_RouterTpl,
     TS_GetRelationRouterTpl,
     TS_AddRelationRouterTpl,
-    TS_RemoveRelationRouterTpl
+    TS_RemoveRelationRouterTpl,
+    TS_Prefix
 };
 
 export function replaceIt(tpl: string, ...args: string[]) {

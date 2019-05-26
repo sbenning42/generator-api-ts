@@ -1,10 +1,15 @@
 
-#POST http://localhost:4266/roles HTTP/1.1
+#POST http://localhost:4266/users/5ceaece15ffb793e28ad88f0/profil/add HTTP/1.1
 #content-type: application/json
-#
+
 #{
-#    "name": "admin"
+#    "id": "5ceaecb45ffb793e28ad88ef"
 #}
 
-GET http://localhost:4266/roles HTTP/1.1
+GET http://localhost:4266/profils/5ceaecb45ffb793e28ad88ef/owner HTTP/1.1
 content-type: application/json
+
+#u: 5ceaece15ffb793e28ad88f0
+#r: [5cea26eabd2b5341d85ed881]
+#c: 5ceaec1f5ffb793e28ad88ee
+#p: 5ceaecb45ffb793e28ad88ef
