@@ -17,7 +17,13 @@ import morgan from 'morgan';
 import passport from 'passport';
 
 import { mainMongoService } from './database/mongo';
-import { RoleAPI, ScopeAPI, CredentialAPI, ProfilAPI, UserAPI } from './apis/apis';
+import {
+  RoleAPI,
+  ScopeAPI,
+  CredentialAPI,
+  ProfilAPI,
+  UserAPI
+} from './apis/apis';
 
 /**
  * Use async main function to get access to await

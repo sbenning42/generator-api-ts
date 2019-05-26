@@ -60,6 +60,18 @@ import { ObjectID } from 'mongodb';
         
 const ObjectId = mongoose.Schema.Types.ObjectId;
 const Mixed = mongoose.Schema.Types.Mixed;
+
+export function contextMiddleware(req: Request, res: Response, next: NextFunction) {
+    req['CTX'] = req['CTX'] ? req['CTX'] : {};
+    req['CTX'].req = req;
+    req['CTX'].res = res;
+    next();
+};
+
+export function attachCTX(req: Request, key: string, value: any) {
+    req['CTX'][key] = value;
+    return value;
+}
         
 `;
     }
@@ -576,10 +588,19 @@ export function __NAME_0__Controller() {
             TS_TypeTpl,
             TS_UpdateInputPropTpl,
             TS_UpdateInputTpl,
-            TS_UtilsTpl
+            TS_UtilsTpl,
+            TS_RelationUtilsTpl,
+            TS_MiddlewareTpls,
+            TS_RelationMiddlewareTpls,
+            TS_ControllerTpls,
+            TS_RelationControllerTpls,
+            TS_RouterTpl,
+            TS_GetRelationRouterTpl,
+            TS_AddRelationRouterTpl,
+            TS_RemoveRelationRouterTpl
         } = templates;
         const typePropsTpl = replaceThem(TS_TypePropTpl, propsAndRelationsAsProps, ent2Prop());
-        const typeTpl = replaceIt(templates.TS_TypeTpl, Cname, typePropsTpl);
+        const typeTpl = replaceIt(TS_TypeTpl, Cname, typePropsTpl);
         const createInputPropsTpl = replaceThem(TS_CreateInputPropTpl, Object.entries(props), ent2Prop({m:false}));
         const createInputTpl = replaceIt(TS_CreateInputTpl, Cname, createInputPropsTpl);
         const updateInputPropsTpl = replaceThem(TS_UpdateInputPropTpl, Object.entries(props), ent2Prop({r:false,m:false,fR:true}));
@@ -594,20 +615,60 @@ export function __NAME_0__Controller() {
                 JSON.stringify(v.default),
                 v.unique ? 'true' : 'false',
                 v.hidden ? 'true' : 'false',
+                typeof(v.type) === 'string' ? v.type.replace('[', '').replace(']', '') : undefined
             ]
         )
             .replace(/\s*unique: false,/g, '')
             .replace(/\s*required: false,/g, '')
             .replace(/\s*hidden: false,/g, '')
-            .replace(/\s*default: undefined,/g, '');
+            .replace(/\s*default: undefined,/g, '')
+            .replace(/\s*ref: undefined,/g, '');
         const schemaTpl = replaceIt(TS_SchemaTpl, Cname, schemaPropsTpl);
         const utilsTpl = replaceIt(TS_UtilsTpl, Cname);
+        const relationUtilsTpls = replaceThem(TS_RelationUtilsTpl, Object.entries(relations), k => [Cname, C(k), k]);
+        const middlewareTpls = replaceIt(TS_MiddlewareTpls, Cname);
+        const controllerTpls = replaceIt(TS_ControllerTpls, Cname);
+        const relationMiddlewareTpls = replaceThem(TS_RelationMiddlewareTpls, Object.entries(relations), k => [Cname, C(k)]);
+        const relationControllerTpls = replaceThem(TS_RelationControllerTpls, Object.entries(relations), k => [Cname, C(k)]);
+        const glue = '\n            ';
+        const skipIt = (what: any) => ([k]) => {
+            const e: any[] = Object.entries(what).find(([_k]) => k === _k);
+            return !e || (e && e[1].skip !== true);
+        };
+        const skipQuery = skipIt(query);
+        const skipMutation = skipIt(mutation);
+        const routerTpl = replaceIt(
+            TS_RouterTpl,
+            Cname,
+            `${cname}s`,
+            replaceThem(
+                { tpl: `${glue}${TS_GetRelationRouterTpl}`, glue },
+                Object.entries(relations).filter(skipQuery as any),
+                k => [k, Cname, C(k)]
+            ),
+            replaceThem(
+                { tpl: `${glue}${TS_AddRelationRouterTpl}`, glue },
+                Object.entries(relations).filter(skipMutation as any),
+                k => [k, Cname, C(k)]
+            ),
+            replaceThem(
+                { tpl: `${glue}${TS_RemoveRelationRouterTpl}`, glue },
+                Object.entries(relations).filter(skipMutation as any),
+                k => [k, Cname, C(k)]
+            )
+        ).replace(/\n            \n/g, '\n');
         const defs = {
             typeTpl,
             createInputTpl,
             updateInputTpl,
             schemaTpl,
             utilsTpl,
+            relationUtilsTpls,
+            middlewareTpls,
+            relationMiddlewareTpls,
+            controllerTpls,
+            relationControllerTpls,
+            routerTpl,
             type: T.type
                 .replace('__NAME__', syms.type)
                 .replace('__PROPS__', [T.typeProp
@@ -747,7 +808,7 @@ export function __NAME_0__Controller() {
                         ).reduce(A(p => p, ''), '')
                     )
         }
-        return `${
+        return [`${
             defs.type.trim()
           }
       
@@ -787,9 +848,21 @@ ${defs.schemaTpl}
 
 ${defs.utilsTpl}
 
+${defs.relationUtilsTpls}
+
+${defs.middlewareTpls}
+
+${defs.relationMiddlewareTpls}
+
+${defs.controllerTpls}
+
+${defs.relationControllerTpls}
+
+${defs.routerTpl}
+
 */
 
-`;
+`, defs];
     }
 }
 
@@ -844,4 +917,37 @@ export interface CRUDSchemaInput<O={}, R={}> {
     mutation?: CRUDSchemaInputMutations;
 }
 
+import fs from 'fs';
+
+export function generateAll(
+    schemas: CRUDSchemaInput[],
+    path: string,
+    backup: boolean = true,
+) {
+
+    const G = new APIGenerator;
+
+    const content = G.suf() + schemas.reduce((all, schema) => {
+        const [thisContent] = G.generate(schema);
+        return all ? `${all}\n${thisContent}` : thisContent;
+    }, '');
+
+    if (backup) {
+        try {
+            const old = fs.readFileSync(`${path}`, 'utf8');
+            if (old) {
+                fs.writeFileSync(`${path}.${Date.now()}.bk`, old, { encoding: 'utf8', flag: 'w' });
+            }
+        }catch(e){
+            console.log('Something Went wrong.', e);
+        }
+    }
+
+    try {
+        fs.writeFileSync(`${path}`, content, { encoding: 'utf8', flag: 'w' });
+    }catch(e){
+        console.log('Something Went wrong.', e);
+    }
+
+}
 

@@ -1,4 +1,29 @@
-import { Model, Document } from "mongoose";
+const TS_Suffix = `
+import {
+    Request,
+    Response,
+    NextFunction,
+    Router,
+    Application
+} from 'express';
+import mongoose from 'mongoose';
+import { ObjectID } from 'mongodb';
+        
+const ObjectId = mongoose.Schema.Types.ObjectId;
+const Mixed = mongoose.Schema.Types.Mixed;
+
+export function contextMiddleware(req: Request, res: Response, next: NextFunction) {
+    req['CTX'] = req['CTX'] ? req['CTX'] : {};
+    req['CTX'].req = req;
+    req['CTX'].res = res;
+    next();
+};
+
+export function attachCTX(req: Request, key: string, value: any) {
+    req['CTX'][key] = value;
+    return value;
+}      
+`.trim();
 
 const TS_TypeTpl = `
 //  
@@ -9,7 +34,9 @@ export interface $0 {
 $1
 }
 `.trim();
+
 const TS_TypePropTpl = `    $0: $1;`;
+
 const TS_CreateInputTpl = `
 //  
 // Input payload interface for entity creation
@@ -19,7 +46,9 @@ export interface $0CreateInput {
 $1
 }
 `.trim();
+
 const TS_CreateInputPropTpl = `    $0: $1;`;
+
 const TS_UpdateInputTpl = `
 //  
 // Input payload interface for entity update
@@ -34,7 +63,9 @@ export interface $0UpdateInput {
     changes: $0ChangesInput;
 }
 `.trim();
+
 const TS_UpdateInputPropTpl = `    $0: $1;`;
+
 const TS_SchemaTpl = `
 //  
 // Mongoose Schema/Model for this entity
@@ -50,50 +81,108 @@ export const $0Schema = new mongoose.Schema(
 );
 export const $0Model = mongoose.model('$0', $0Schema);
 `.trim();
+
 const TS_SchemaPropTpl = `$0: {
             type: $1,
             required: $2,
             default: $3,
             unique: $4,
             hidden: $5,
+            ref: '$6',
         },`;
+
+
 const TS_UtilsTpl = `
-export function $0FindMany(conditions: any = {}, projection?: any, options: any = {}) {
+export function $0FindMany(
+    conditions: any = {},
+    projection?: any,
+    options: any = {}
+) {
     return $0Model.find(conditions, projection, options);
 }
-export function $0FindManyLean(conditions: any = {}, projection?: any, options: any = {}) {
+export function $0FindManyLean(
+    conditions: any = {},
+    projection?: any,
+    options: any = {}
+) {
     return $0FindMany(conditions, projection, options).lean();
 }
-export function $0FindManyExec(conditions: any = {}, projection?: any, options: any = {}, cb?) {
+export function $0FindManyExec(
+    conditions: any = {},
+    projection?: any,
+    options: any = {},
+    cb?: (err: any, result: any) => void
+) {
     return $0FindMany(conditions, projection, options).exec(cb);
 }
-export function $0FindManyLeanExec(conditions: any = {}, projection?: any, options: any = {}, cb?) {
+export function $0FindManyLeanExec(
+    conditions: any = {},
+    projection?: any,
+    options: any = {},
+    cb?: (err: any, result: any) => void
+) {
     return $0FindManyLean(conditions, projection, options).exec(cb);
 }
 
-export function $0FindOne(conditions: any = {}, projection?: any, options: any = {}) {
+export function $0FindOne(
+    conditions: any = {},
+    projection?: any,
+    options: any = {}
+) {
     return $0Model.findOne(conditions, projection, options);
 }
-export function $0FindOneLean(conditions: any = {}, projection?: any, options: any = {}) {
+export function $0FindOneLean(
+    conditions: any = {},
+    projection?: any,
+    options: any = {}
+) {
     return $0FindOne(conditions, projection, options).lean();
 }
-export function $0FindOneExec(conditions: any = {}, projection?: any, options: any = {}, cb?) {
+export function $0FindOneExec(
+    conditions: any = {},
+    projection?: any,
+    options: any = {},
+    cb?: (err: any, result: any) => void
+) {
     return $0FindOne(conditions, projection, options).exec(cb);
 }
-export function $0FindOneLeanExec(conditions: any = {}, projection?: any, options: any = {}, cb?) {
+export function $0FindOneLeanExec(
+    conditions: any = {},
+    projection?: any,
+    options: any = {},
+    cb?: (err: any, result: any) => void
+) {
     return $0FindOneLean(conditions, projection, options).exec(cb);
 }
 
-export function $0FindById(id: string | ObjectID, projection?: any, options: any = {}) {
+export function $0FindById(
+    id: string | ObjectID,
+    projection?: any,
+    options: any = {}
+) {
     return $0Model.findById(id, projection, options);
 }
-export function $0FindByIdLean(id: string | ObjectID, projection?: any, options: any = {}) {
+export function $0FindByIdLean(
+    id: string | ObjectID,
+    projection?: any,
+    options: any = {}
+) {
     return $0FindById(id, projection, options).lean();
 }
-export function $0FindByIdExec(id: string | ObjectID, projection?: any, options: any = {}, cb?) {
+export function $0FindByIdExec(
+    id: string | ObjectID,
+    projection?: any,
+    options: any = {},
+    cb?: (err: any, result: any) => void
+) {
     return $0FindById(id, projection, options).exec(cb);
 }
-export function $0FindByIdLeanExec(id: string | ObjectID, projection?: any, options: any = {}, cb?) {
+export function $0FindByIdLeanExec(
+    id: string | ObjectID,
+    projection?: any,
+    options: any = {},
+    cb?: (err: any, result: any) => void
+) {
     return $0FindByIdLean(id, projection, options).exec(cb);
 }
 
@@ -102,344 +191,380 @@ export function $0Create(createInput: $0CreateInput) {
     return model.save();
 }
 
-export function $0FindByIdAndUpdate({ id, changes }: $0UpdateInput, options: any = { new: true }) {
+export function $0FindByIdAndUpdate(
+    { id, changes }: $0UpdateInput,
+    options: any = { new: true }
+) {
     return $0Model.findByIdAndUpdate(id, { $set: changes }, { new: true });
 }
-export function $0FindByIdAndUpdateLean(update: $0UpdateInput, options: any = { new: true }) {
+export function $0FindByIdAndUpdateLean(
+    update: $0UpdateInput,
+    options: any = { new: true }
+) {
     return $0FindByIdAndUpdate(id, update, options).lean();
 }
-export function $0FindByIdAndUpdateExec(update: $0UpdateInput, options: any = { new: true }, cb?) {
+export function $0FindByIdAndUpdateExec(
+    update: $0UpdateInput,
+    options: any = { new: true },
+    cb?: (err: any, result: any) => void
+) {
     return $0FindByIdAndUpdate(id, update, options).exec(cb);
 }
-export function $0FindByIdAndUpdateLeanExec(update: $0UpdateInput, options: any = { new: true }, cb?) {
+export function $0FindByIdAndUpdateLeanExec(
+    update: $0UpdateInput,
+    options: any = { new: true },
+    cb?: (err: any, result: any) => void
+) {
     return $0FindByIdAndUpdateLean(id, update, options).exec(cb);
 }
 
-export function $0FindByIdAndRemove(id: string | ObjectID, options: any = { new: true }) {
-    return $0Model.findByIdAndRemove(id, { new: true });
+export function $0FindByIdAndRemove(
+    id: string | ObjectID,
+    options: any = {}
+) {
+    return $0Model.findByIdAndRemove(id, options);
 }
-export function $0FindByIdAndRemoveLean(id: string | ObjectID, options: any = { new: true }) {
+export function $0FindByIdAndRemoveLean(
+    id: string | ObjectID,
+    options: any = {}
+) {
     return $0FindByIdAndRemove(id, options).lean();
 }
-export function $0FindByIdAndRemoveExec(id: string | ObjectID, options: any = { new: true }, cb?) {
+export function $0FindByIdAndRemoveExec(
+    id: string | ObjectID,
+    options: any = {},
+    cb?: (err: any, result: any) => void
+) {
     return $0FindByIdAndRemove(id, options).exec(cb);
 }
-export function $0FindByIdAndRemoveLeanExec(id: string | ObjectID, options: any = { new: true }, cb?) {
+export function $0FindByIdAndRemoveLeanExec(
+    id: string | ObjectID,
+    options: any = {},
+    cb?: (err: any, result: any) => void
+) {
     return $0FindByIdAndRemoveLean(id, options).exec(cb);
 }
 
 `.trim();
 
-const T = {
-    query: {
-        getMany: `export function __NAME_0__Query() {
-return __NAME_1__.find({});
+const TS_RelationUtilsTpl = `
+export function $0FindByIdPopulate$1(
+    id: string | ObjectID,
+    projection?: any,
+    options: any = {}
+) {
+    return $0Model.findById(id, projection, options).populate('$2');
 }
-export function __NAME_0__Lean() {
-return __NAME_0__Query().lean();
+export function $0FindByIdPopulate$1Lean(
+    id: string | ObjectID,
+    projection?: any,
+    options: any = {}
+) {
+    return $0FindByIdPopulate$1(id, projection, options).lean();
 }
-export async function __NAME_0__Exec() {
-return __NAME_0__Query().exec();
+export function $0FindByIdPopulate$1Exec(
+    id: string | ObjectID,
+    projection?: any,
+    options: any = {},
+    cb?: (err: any, result: any) => void
+) {
+    return $0FindByIdPopulate$1(id, projection, options).exec(cb);
 }
-export async function __NAME_0__LeanExec() {
-return __NAME_0__Lean().exec();
-}
-
-export function __NAME_0__Middleware() {
-return async (req: Request, res: Response, next: NextFunction) => {
-req['result'] = req['result'] ? req['result'] : {};
-try {
-    req['result'].__NAME_0__ = await __NAME_0__LeanExec();
-} catch(error) {
-    return res.status(400).json({ message: 'Something went wrong', error });            
-}
-next();
-};
-}
-
-export function __NAME_0__Controller() {
-return async (req: Request, res: Response) => {
-try {
-    res.json(await __NAME_0__LeanExec());
-} catch(error) {
-    res.status(500).json({ message: 'Something went wrong', error });
-}
-};
-}
-        `,
-        getOne: `export function __NAME_0__Query(id: string) {
-return __NAME_1__.findById(id);
-}
-export function __NAME_0__Lean(id: string) {
-return __NAME_0__Query(id).lean();
-}
-export async function __NAME_0__Exec(id: string) {
-return __NAME_0__Query(id).exec();
-}
-export async function __NAME_0__LeanExec(id: string) {
-return __NAME_0__Lean(id).exec();
+export function $0FindByIdPopulate$1LeanExec(
+    id: string | ObjectID,
+    projection?: any,
+    options: any = {},
+    cb?: (err: any, result: any) => void
+) {
+    return $0FindByIdPopulate$1Lean(id, projection, options).exec(cb);
 }
 
-export function __NAME_0__Middleware() {
-return async (req: Request, res: Response, next: NextFunction) => {
-const id = req.params.id;
-req['result'] = req['result'] ? req['result'] : {};
-try {
-    req['result'].__NAME_0__ = await __NAME_0__LeanExec(id);
-} catch(error) {
-    return res.status(400).json({ message: 'Something went wrong', error });            
-}
-next();
-};
+export async function $0FindById$1(
+    id: string | ObjectID,
+    projection?: any,
+    options: any = {},
+) {
+    const object = await $0FindByIdPopulate$1LeanExec();
+    return object ? object.$2 : undefined;
 }
 
-export function __NAME_0__Controller() {
-return async (req: Request, res: Response) => {
-const id = req.params.id;
-try {
-    res.json(await __NAME_0__LeanExec(id));
-} catch(error) {
-    return res.status(400).json({ message: 'Something went wrong', error });            
+export function $0FindByIdAndAdd$1(
+    id: string | ObjectID,
+    addId: string | ObjectID,
+    options: any = { new: true }
+) {
+    return $0Model.findByIdAndUpdate(id, { $push: { $2: addId } }, { new: true });
 }
-};
+export function $0FindByIdAndAdd$1Lean(
+    id: string | ObjectID,
+    addId: string | ObjectID,
+    options: any = { new: true }
+) {
+    return $0FindByIdAndAdd$1(id, addId, options).lean();
 }
-        `,
-        getRelation: `export async function __NAME_0__LeanExec(id: string) {
-const related = await __NAME_1__Query(id).populate('__NAME_2__').lean().exec();
-return related.__NAME_2__;
+export function $0FindByIdAndAdd$1Exec(
+    id: string | ObjectID,
+    addId: string | ObjectID,
+    options: any = { new: true },
+    cb?: (err: any, result: any) => void
+) {
+    return $0FindByIdAndAdd$1(id, addId, options).exec(cb);
 }
-
-export function __NAME_0__Middleware() {
-return async (req: Request, res: Response, next: NextFunction) => {
-const id = req.params.id;
-req['result'] = req['result'] ? req['result'] : {};
-try {
-    req['result'].__NAME_0__ = await __NAME_0__LeanExec(id);
-} catch(error) {
-    return res.status(400).json({ message: 'Something went wrong', error });            
-}
-next();
-};
-}
-
-export function __NAME_0__Controller() {
-return async (req: Request, res: Response) => {
-const id = req.params.id;
-try {
-    res.json(await __NAME_0__LeanExec(id));
-} catch(error) {
-    return res.status(400).json({ message: 'Something went wrong', error });            
-}
-};
-}
-        `,
-    },
-    mutation: {
-        create: `export function __NAME_0__Middleware() {
-return async (req: Request, res: Response, next: NextFunction) => {
-req['result'] = req['result'] ? req['result'] : {};
-const data = req.body;
-try {
-    const model = new __NAME_1__(data);
-    req['result'].__NAME_0__ = await model.save();
-} catch(error) {
-    return res.status(400).json({ message: 'Something went wrong', error });            
-}
-next();
-};
+export function $0FindByIdAndAdd$1LeanExec(
+    id: string | ObjectID,
+    addId: string | ObjectID,
+    options: any = { new: true },
+    cb?: (err: any, result: any) => void
+) {
+    return $0FindByIdAndAdd$1Lean(id, addId, options).exec(cb);
 }
 
-export function __NAME_0__Controller() {
-return async (req: Request, res: Response) => {
-const data = req.body;
-try {
-    const model = new __NAME_1__(data);
-    res.json(await model.save());
-} catch(error) {
-    return res.status(400).json({ message: 'Something went wrong', error });            
+export function $0FindByIdAndRemove$1(
+    id: string | ObjectID,
+    removeId: string | ObjectID,
+    options: any = { new: true }
+) {
+    return $0Model.findByIdAndUpdate(id, { $pull: { $2: removeId } }, { new: true });
 }
-};
+export function $0FindByIdAndRemove$1Lean(
+    id: string | ObjectID,
+    removeId: string | ObjectID,
+    options: any = { new: true }
+) {
+    return $0FindByIdAndRemove$1(id, removeId, options).lean();
 }
-        `,
-        update: `export function __NAME_0__Middleware() {
-return async (req: Request, res: Response, next: NextFunction) => {
-const id = req.params.id;
-req['result'] = req['result'] ? req['result'] : {};
-const changes = req.body;
-try {
-    // use { new: true } to return modified document rather than old one (default to false)
-    // use upsert if you want an update-or-create-if-not-exists behaviour
-    req['result'].__NAME_0__ = await __NAME_1__.findByIdAndUpdate(id, { $set: changes }, { new: true });
-} catch(error) {
-    return res.status(400).json({ message: 'Something went wrong', error });            
+export function $0FindByIdAndRemove$1Exec(
+    id: string | ObjectID,
+    removeId: string | ObjectID,
+    options: any = { new: true },
+    cb?: (err: any, result: any) => void
+) {
+    return $0FindByIdAndRemove$1(id, removeId, options).exec(cb);
 }
-next();
-};
+export function $0FindByIdAndRemove$1LeanExec(
+    id: string | ObjectID,
+    removeId: string | ObjectID,
+    options: any = { new: true },
+    cb?: (err: any, result: any) => void
+) {
+    return $0FindByIdAndRemove$1Lean(id, removeId, options).exec(cb);
 }
+`;
 
-export function __NAME_0__Controller() {
-return async (req: Request, res: Response) => {
-const id = req.params.id;
-const changes = req.body;
-try {
-    res.json(await __NAME_1__.findByIdAndUpdate(id, { $set: changes }, { new: true }));
-} catch(error) {
-    return res.status(400).json({ message: 'Something went wrong', error });            
+const TS_MiddlewareTpls = `
+export function getAll$0Middleware() {
+    return async (req: Request, res: Response, next: NextFunction) => {
+        try {
+            attachCTX(req, 'getAll$0', await $0FindManyLeanExec());
+        } catch(error) {
+            res.status(400).json({ message: 'Something went wrong.', error });
+        }
+        next();
+    };
 }
-};
+export function getById$0Middleware() {
+    return async (req: Request, res: Response, next: NextFunction) => {
+        const id = req.params.id;
+        try {
+            attachCTX(req, 'getById$0', await $0FindByIdLeanExec(id));
+        } catch(error) {
+            res.status(400).json({ message: 'Something went wrong.', error });
+        }
+        next();
+    };
 }
-        `,
-        delete: `export function __NAME_0__Middleware() {
-return async (req: Request, res: Response, next: NextFunction) => {
-const id = req.params.id;
-req['result'] = req['result'] ? req['result'] : {};
-try {
-    req['result'].__NAME_0__ = await __NAME_1__.findByIdAndRemove(id);
-} catch(error) {
-    return res.status(400).json({ message: 'Something went wrong', error });            
+export function create$0Middleware() {
+    return async (req: Request, res: Response, next: NextFunction) => {
+        const createInput: $0CreateInput = req.body;
+        try {
+            attachCTX(req, 'create$0', await $0Create(createInput));            
+        } catch(error) {
+            res.status(400).json({ message: 'Something went wrong.', error });
+        }
+        next();
+    };
 }
-next();
-};
+export function update$0Middleware() {
+    return async (req: Request, res: Response, next: NextFunction) => {
+        const id = req.params.id;
+        const changes: $0ChangesInput = req.body;
+        try {
+            attachCTX(req, 'update$0', await $0FindByIdAndUpdate({ id, changes }));
+        } catch(error) {
+            res.status(400).json({ message: 'Something went wrong.', error });
+        }
+        next();
+    };
 }
+export function delete$0Middleware() {
+    return async (req: Request, res: Response, next: NextFunction) => {
+        const id = req.params.id;
+        try {
+            attachCTX(req, 'delete$0', await $0FindByIdAndRemove(id));
+        } catch(error) {
+            res.status(400).json({ message: 'Something went wrong.', error });
+        }
+        next();
+    };
+}
+`.trim();
 
-export function __NAME_0__Controller() {
-return async (req: Request, res: Response) => {
-const id = req.params.id;
-try {
-    res.json(await __NAME_1__.findByIdAndRemove(id));
-} catch(error) {
-    return res.status(400).json({ message: 'Something went wrong', error });            
+const TS_RelationMiddlewareTpls = `
+export function get$0$1Middleware() {
+    return async (req: Request, res: Response, next: NextFunction) => {
+        const id = req.params.id;
+        try {
+            attachCTX(req, 'get$0$1', await $0FindById$1(id));
+        } catch(error) {
+            res.status(400).json({ message: 'Something went wrong.', error });
+        }
+        next();
+    };
 }
-};
+export function add$0$1Middleware() {
+    return async (req: Request, res: Response, next: NextFunction) => {
+        const id = req.params.id;
+        const { id: addId } = req.body;
+        try {
+            attachCTX(req, 'add$0$1', await $0FindByIdAndAdd$1LeanExec(id, addId));
+        } catch(error) {
+            res.status(400).json({ message: 'Something went wrong.', error });
+        }
+        next();
+    };
 }
-        `,
-        addRelation: `export function __NAME_0__Middleware() {
-return async (req: Request, res: Response, next: NextFunction) => {
-const id = req.params.id;
-req['result'] = req['result'] ? req['result'] : {};
-const addId = req.body.id;
-try {
-    const [sub, subject] = await Promise.all([
-        __NAME_1__.findById(id).populate('__NAME_3__').lean().exec(),
-        __NAME_2__.findById(addId).exec()
-    ]);
-    if (!(sub && subject)) {
-        return res.status(404).json({ message: 'Something went wrong', sub, subject });
+export function remove$0$1Middleware() {
+    return async (req: Request, res: Response, next: NextFunction) => {
+        const id = req.params.id;
+        const { id: removeId } = req.body;
+        try {
+            attachCTX(req, 'remove$0$1', await $0FindByIdAndRemove$1LeanExec(id, removeId));
+        } catch(error) {
+            res.status(400).json({ message: 'Something went wrong.', error });
+        }
+        next();
+    };
+}
+`; 
+
+const TS_ControllerTpls = `
+export function getAll$0Controller() {
+    return async (req: Request, res: Response, next: NextFunction) => {
+        try {
+            res.json(await $0FindManyLeanExec());
+        } catch(error) {
+            res.status(400).json({ message: 'Something went wrong.', error });
+        }
+    };
+}
+export function getById$0Controller() {
+    return async (req: Request, res: Response, next: NextFunction) => {
+        const id = req.params.id;
+        try {
+            res.json(await $0FindByIdLeanExec(id));
+        } catch(error) {
+            res.status(400).json({ message: 'Something went wrong.', error });
+        }
+    };
+}
+export function create$0Controller() {
+    return async (req: Request, res: Response, next: NextFunction) => {
+        const createInput: $0CreateInput = req.body;
+        try {
+            res.json(await $0Create(createInput));
+        } catch(error) {
+            res.status(400).json({ message: 'Something went wrong.', error });
+        }
+    };
+}
+export function update$0Controller() {
+    return async (req: Request, res: Response, next: NextFunction) => {
+        const id = req.params.id;
+        const changes: $0ChangesInput = req.body;
+        try {
+            res.json(await $0FindByIdAndUpdate({ id, changes }));
+        } catch(error) {
+            res.status(400).json({ message: 'Something went wrong.', error });
+        }
+    };
+}
+export function delete$0Controller() {
+    return async (req: Request, res: Response, next: NextFunction) => {
+        const id = req.params.id;
+        try {
+            res.json(await $0FindByIdAndRemove(id));
+        } catch(error) {
+            res.status(400).json({ message: 'Something went wrong.', error });
+        }
+    };
+}
+`.trim();
+
+const TS_RelationControllerTpls = `
+export function get$0$1Controller() {
+    return async (req: Request, res: Response, next: NextFunction) => {
+        const id = req.params.id;
+        try {
+            res.json(await $0FindById$1(id));
+        } catch(error) {
+            res.status(400).json({ message: 'Something went wrong.', error });
+        }
+    };
+}
+export function add$0$1Controller() {
+    return async (req: Request, res: Response, next: NextFunction) => {
+        const id = req.params.id;
+        const { id: addId } = req.body;
+        try {
+            res.json(await $0FindByIdAndAdd$1LeanExec(id, addId));
+        } catch(error) {
+            res.status(400).json({ message: 'Something went wrong.', error });
+        }
+    };
+}
+export function remove$0$1Controller() {
+    return async (req: Request, res: Response, next: NextFunction) => {
+        const id = req.params.id;
+        const { id: removeId } = req.body;
+        try {
+            res.json(await $0FindByIdAndRemove$1LeanExec(id, removeId));
+        } catch(error) {
+            res.status(400).json({ message: 'Something went wrong.', error });
+        }
+    };
+}
+`;
+
+const TS_RouterTpl = `
+export class $0API {
+
+    router = Router();
+    
+    constructor() {
+        this.makeAPI();
     }
-    if (Array.isArray(sub.__NAME_3__)) {
-        sub.__NAME_3__.push(subject._id);
-    } else {
-        sub.__NAME_3__ = subject._id;
-    }
-    req['result'].__NAME_0__ = await sub.save();
-} catch(error) {
-    return res.status(400).json({ message: 'Something went wrong', error });            
-}
-next();
-};
-}
 
-export function __NAME_0__Controller() {
-return async (req: Request, res: Response) => {
-const id = req.params.id;
-req['result'] = req['result'] ? req['result'] : {};
-const addId = req.body.id;
-try {
-    const [sub, subject] = await Promise.all([
-        __NAME_1__.findById(id).populate('__NAME_3__').lean().exec(),
-        __NAME_2__.findById(addId).exec()
-    ]);
-    if (!(sub && subject)) {
-        return res.status(404).json({ message: 'Something went wrong', sub, subject });
+    private makeAPI() {
+        this.router
+            .get('/', getAll$0Controller())
+            .get('/:id', getById$0Controller())
+            .post('/', create$0Controller())
+            .put('/:id', update$0Controller())
+            .delete('/:id', delete$0Controller())$2$3$4;
     }
-    if (Array.isArray(sub.__NAME_3__)) {
-        sub.__NAME_3__.push(subject._id);
-    } else {
-        sub.__NAME_3__ = subject._id;
+    
+    applyAPI(app: Application) {
+        app.use('/$1', this.router);
     }
-    res.json(await sub.save());
-} catch(error) {
-    return res.status(400).json({ message: 'Something went wrong', error });            
 }
-};
-}
-        `, 
-        removeRelation: `export function __NAME_0__Middleware() {
-return async (req: Request, res: Response, next: NextFunction) => {
-const id = req.params.id;
-req['result'] = req['result'] ? req['result'] : {};
-const removeId = req.body.id;
-try {
-    const [sub, subject] = await Promise.all([
-        __NAME_1__.findById(id).populate('__NAME_3__').lean().exec(),
-        __NAME_2__.findById(removeId).exec()
-    ]);
-    if (!(sub && subject)) {
-        return res.status(404).json({ message: 'Something went wrong', sub, subject });
-    }
-    if (Array.isArray(sub.__NAME_3__)) {
-        sub.__NAME_3__ = sub.__NAME_3__.filter((it: ObjectID) => !subject._id.equals(it));
-    } else {
-        sub.__NAME_3__ = undefined;
-    }
-    req['result'].__NAME_0__ = await sub.save();
-} catch(error) {
-    return res.status(400).json({ message: 'Something went wrong', error });            
-}
-next();
-};
-}
+`;
 
-export function __NAME_0__Controller() {
-return async (req: Request, res: Response) => {
-const id = req.params.id;
-req['result'] = req['result'] ? req['result'] : {};
-const removeId = req.body.id;
-try {
-    const [sub, subject] = await Promise.all([
-        __NAME_1__.findById(id).populate('__NAME_3__').lean().exec(),
-        __NAME_2__.findById(removeId).exec()
-    ]);
-    if (!(sub && subject)) {
-        return res.status(404).json({ message: 'Something went wrong', sub, subject });
-    }
-    if (Array.isArray(sub.__NAME_3__)) {
-        sub.__NAME_3__ = sub.__NAME_3__.filter((it: ObjectID) => !subject._id.equals(it));
-    } else {
-        sub.__NAME_3__ = undefined;
-    }
-    res.json(await sub.save());
-} catch(error) {
-    return res.status(400).json({ message: 'Something went wrong', error });            
-}
-};
-}
-        `, 
-    },
-    router: `export class __NAME_0__API {
-router = Router();
+const TS_GetRelationRouterTpl = `.get('/:id/$0', get$1$2Controller())`;
 
-constructor() {
-this.router
-    .get('/', __NAME_1__Controller())
-    .get('/:id', __NAME_2__Controller())
-    .post('/', __NAME_3__Controller())
-    .put('/:id', __NAME_4__Controller())
-    .delete('/:id', __NAME_5__Controller())__GET____ADD____REMOVE__;
-}
+const TS_AddRelationRouterTpl = `.post('/:id/$0/add', add$1$2Controller())`;
 
-applyRouter(app: Application) {
-app.use('/__NAME_6__', this.router);
-}
-}
-    `,
-    routerMiddlewareGet: `
-    .get('/:id/__NAME_0__', __NAME_1__Controller())`,
-    routerMiddlewareAdd: `
-    .post('/:id/__NAME_0__/add', __NAME_1__Controller())`,
-    routerMiddlewareRemove: `
-    .post('/:id/__NAME_0__/remove', __NAME_1__Controller())`,
-};
+const TS_RemoveRelationRouterTpl = `.post('/:id/$0/remove', remove$1$2Controller())`;
+
 export const templates = {
     TS_CreateInputPropTpl,
     TS_CreateInputTpl,
@@ -450,6 +575,15 @@ export const templates = {
     TS_UpdateInputPropTpl,
     TS_UpdateInputTpl,
     TS_UtilsTpl,
+    TS_RelationUtilsTpl,
+    TS_MiddlewareTpls,
+    TS_RelationMiddlewareTpls,
+    TS_ControllerTpls,
+    TS_RelationControllerTpls,
+    TS_RouterTpl,
+    TS_GetRelationRouterTpl,
+    TS_AddRelationRouterTpl,
+    TS_RemoveRelationRouterTpl
 };
 
 export function replaceIt(tpl: string, ...args: string[]) {
@@ -460,9 +594,7 @@ export function replaceThem(
     _tpl: string | { tpl: string, glue: string },
     on: [string, any][],
     by: (...args: any[]) => string[],
-    ...args: string[]
 ) {
     const { tpl, glue } = typeof(_tpl) === 'string' ? { tpl: _tpl, glue: '\n' } : _tpl;
     return on.map(([k, v], idx) => replaceIt(tpl, ...by(k, v, idx))).join(glue);
 }
-
