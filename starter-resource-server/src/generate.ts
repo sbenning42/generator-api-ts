@@ -28,6 +28,21 @@ generateAll(
       },
       relations: {
         users: "[User]"
+      },
+      query: {
+        ALL: {
+          middlewares: [`
+                middlewaresMap.isAuthentified,
+                `]
+        }
+      },
+      mutation: {
+        ALL: {
+          middlewares: [`
+                middlewaresMap.isAuthentified,
+                middlewaresMap.isAdmin,
+                `]
+        }
       }
     },
     {
@@ -39,7 +54,26 @@ generateAll(
         credential: "Credential",
         profil: "Profil"
       },
-      skips: ["getUserCredential"]
+      query: {
+        getUserCredential: {
+          skip: true,
+        },
+      }, // equivalent for `"getUserCredential"` in `skips`
+      mutation: {
+        addUserCredential: {
+          middlewares: [`
+                middlewaresMap.isAuthentified,
+                middlewaresMap.isOwner,
+                `]
+        },
+        removeUserCredential: {
+          middlewares: [`
+                middlewaresMap.isAuthentified,
+                middlewaresMap.isOwner,
+                `]
+        }
+      },
+      // skips: ["getUserCredential"]
     },
     {
       name: "Scope",

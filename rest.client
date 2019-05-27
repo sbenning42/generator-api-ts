@@ -1,5 +1,5 @@
 
 
-GET http://localhost:4266/roles/5cec5839be58034e40ccc6dc HTTP/1.1
+GET http://localhost:4266/profils HTTP/1.1
 content-type: application/json
 

@@ -97,7 +97,8 @@ export class APIGenerator {
             TS_DeleteRouterTpl,
             TS_GetRelationRouterTpl,
             TS_AddRelationRouterTpl,
-            TS_RemoveRelationRouterTpl
+            TS_RemoveRelationRouterTpl,
+            TS_MaybeMiddlewareTpl
         } = templates;
         const typePropsTpl = replaceThem(TS_TypePropTpl, propsAndRelationsAsProps, ent2Prop());
         const typeTpl = replaceIt(TS_TypeTpl, Cname, typePropsTpl);
@@ -154,7 +155,12 @@ export class APIGenerator {
                     || skips.includes(`getAll${Cname}`)
             )
                 ? ''
-                : replaceIt(TS_GetAllRouterTpl, Cname),
+                : replaceIt(
+                    TS_GetAllRouterTpl,
+                    Cname,
+                    (query[`ALL`] && query[`ALL`].middlewares.toString() || '')
+                        + (query[`getAll${Cname}`] && query[`getAll${Cname}`].middlewares.toString() || ''),
+                ),
             (
                 (query[`getById${Cname}`] && query[`getById${Cname}`].skip)
                     || skips.includes('all')
@@ -162,7 +168,12 @@ export class APIGenerator {
                     || skips.includes(`getById${Cname}`)
             )
                 ? ''
-                : (glue + replaceIt(TS_GetByIdRouterTpl, Cname)),
+                : (glue + replaceIt(
+                    TS_GetByIdRouterTpl,
+                    Cname,
+                    (query[`ALL`] && query[`ALL`].middlewares.toString() || '')
+                        + (query[`getById${Cname}`] && query[`getById${Cname}`].middlewares.toString() || ''),
+                )),
             (
                 (mutation[`create${Cname}`] && mutation[`create${Cname}`].skip)
                     || skips.includes('all')
@@ -170,7 +181,12 @@ export class APIGenerator {
                     || skips.includes(`create${Cname}`)
             )    
                 ? ''
-                : (glue + replaceIt(TS_CreateRouterTpl, Cname)),
+                : (glue + replaceIt(
+                    TS_CreateRouterTpl,
+                    Cname,
+                    (mutation[`ALL`] && mutation[`ALL`].middlewares.toString() || '')
+                        + (mutation[`create${Cname}`] && mutation[`create${Cname}`].middlewares.toString() || ''),
+                )),
             (
                 (mutation[`update${Cname}`] && mutation[`update${Cname}`].skip)
                     || skips.includes('all')
@@ -178,7 +194,12 @@ export class APIGenerator {
                     || skips.includes(`update${Cname}`)
             )
                 ? ''
-                : (glue + replaceIt(TS_UpdateRouterTpl, Cname)),
+                : (glue + replaceIt(
+                    TS_UpdateRouterTpl,
+                    Cname,
+                    (mutation[`ALL`] && mutation[`ALL`].middlewares.toString() || '')
+                        + (mutation[`update${Cname}`] && mutation[`update${Cname}`].middlewares.toString() || ''),
+                )),
             (
                 (mutation[`delete${Cname}`] && mutation[`delete${Cname}`].skip)
                     || skips.includes('all')
@@ -186,11 +207,16 @@ export class APIGenerator {
                     || skips.includes(`delete${Cname}`)
             )
                 ? ''
-                : (glue + replaceIt(TS_DeleteRouterTpl, Cname)),
+                : (glue + replaceIt(
+                    TS_DeleteRouterTpl,
+                    Cname,
+                    (mutation[`ALL`] && mutation[`ALL`].middlewares.toString() || '')
+                        + (mutation[`delete${Cname}`] && mutation[`delete${Cname}`].middlewares.toString() || ''),
+                )),
             replaceThem(
                 { tpl: `${glue}${TS_GetRelationRouterTpl}`, glue },
                 Object.entries(relations).filter(([name, type]) => {
-                    const key = Object.keys(query).find(k => k === `get${Cname}${C(name)}`);
+                    const key = Object.keys(query).find(_k => _k === `get${Cname}${C(name)}`);
                     const getQuery = query[key];
                     return !(skips.includes('all')
                         || skips.includes('query')
@@ -198,12 +224,22 @@ export class APIGenerator {
                         && (!getQuery
                         || getQuery.skip !== true);
                 }),
-                k => [k, Cname, C(k)]
+                (k, v) => {
+                    const key = Object.keys(query).find(_k => _k === `get${Cname}${C(k)}`);
+                    const getQuery = query[key];
+                    return [
+                        k,
+                        Cname,
+                        C(k),
+                        (query['ALL'] && query[`ALL`].middlewares.toString() || '')
+                            + (getQuery && getQuery.middlewares.toString() || ''),
+                    ];
+                }
             ),
             replaceThem(
                 { tpl: `${glue}${TS_AddRelationRouterTpl}`, glue },
                 Object.entries(relations).filter(([name, type]) => {
-                    const key = Object.keys(mutation).find(k => k === `add${Cname}${C(name)}`);
+                    const key = Object.keys(mutation).find(_k => _k === `add${Cname}${C(name)}`);
                     const addMutation = mutation[key];
                     return !(skips.includes('all')
                         && skips.includes('mutation')
@@ -211,12 +247,22 @@ export class APIGenerator {
                         && (!addMutation
                         || addMutation.skip !== true);
                 }),
-                k => [k, Cname, C(k)]
+                k => {
+                    const key = Object.keys(mutation).find(_k => _k === `add${Cname}${C(k)}`);
+                    const addMutation = mutation[key];
+                    return [
+                        k,
+                        Cname,
+                        C(k),
+                        (mutation['ALL'] && mutation[`ALL`].middlewares.toString() || '')
+                            + (addMutation && addMutation.middlewares.toString() || ''),
+                    ];
+                }
             ),
             replaceThem(
                 { tpl: `${glue}${TS_RemoveRelationRouterTpl}`, glue },
                 Object.entries(relations).filter(([name, type]) => {
-                    const key = Object.keys(mutation).find(k => k === `remove${Cname}${C(name)}`);
+                    const key = Object.keys(mutation).find(_k => _k === `remove${Cname}${C(name)}`);
                     const removeMutation = mutation[key];
                     return !(skips.includes('all')
                         && skips.includes('mutation')
@@ -224,7 +270,17 @@ export class APIGenerator {
                         && (!removeMutation
                         || removeMutation.skip !== true);
                 }),
-                k => [k, Cname, C(k)]
+                k => {
+                    const key = Object.keys(mutation).find(_k => _k === `remove${Cname}${C(k)}`);
+                    const removeMutation = mutation[key];
+                    return [
+                        k,
+                        Cname,
+                        C(k),
+                        (mutation['ALL'] && mutation[`ALL`].middlewares.toString() || '')
+                            + (removeMutation && removeMutation.middlewares.toString() || ''),
+                    ];
+                }
             )
         ).replace(/\n            \n/g, '\n');
         const defs = {

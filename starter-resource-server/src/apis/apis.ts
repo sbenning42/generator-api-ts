@@ -95,6 +95,11 @@ export interface Role {
 export interface RoleCreateInput {
     name: string;
 }
+
+//
+// Function used to pick only needed properties
+//
+
 export function pickRoleCreateInput<T extends {}>(input: T) {
     return ['name'].reduce((createInput, key) => {
         createInput[key] = input[key];
@@ -109,6 +114,10 @@ export function pickRoleCreateInput<T extends {}>(input: T) {
 export interface RoleChangesInput {
     name?: string;
 }
+
+//
+// Function used to pick only needed properties
+//
 
 export function pickRoleChangesInput<T extends {}>(input: T) {
     return ['name'].reduce((changesInput, key) => {
@@ -591,20 +600,41 @@ export class RoleAPI {
 
     router = Router();
     
-    constructor() {
-        this.makeAPI();
+    constructor(middlewaresMap: { [key: string]: (req: Request, res: Response, next: NextFunction) => void } = {}) {
+        this.makeAPI(middlewaresMap);
     }
 
-    private makeAPI() {
+    private makeAPI(middlewaresMap: { [key: string]: (req: Request, res: Response, next: NextFunction) => void } = {}) {
         this.router
-            .get('/', getAllRoleController())
-            .get('/:id', getByIdRoleController())
-            .post('/', createRoleController())
-            .put('/:id', updateRoleController())
-            .delete('/:id', deleteRoleController())
-            .get('/:id/users', getRoleUsersController())
-            .put('/:id/users/add', addRoleUsersController())
-            .put('/:id/users/remove', removeRoleUsersController());
+            .get('/', 
+                middlewaresMap.isAuthentified,
+                getAllRoleController())
+            .get('/:id', 
+                middlewaresMap.isAuthentified,
+                getByIdRoleController())
+            .post('/', 
+                middlewaresMap.isAuthentified,
+                middlewaresMap.isAdmin,
+                createRoleController())
+            .put('/:id', 
+                middlewaresMap.isAuthentified,
+                middlewaresMap.isAdmin,
+                updateRoleController())
+            .delete('/:id', 
+                middlewaresMap.isAuthentified,
+                middlewaresMap.isAdmin,
+                deleteRoleController())
+            .get('/:id/users', 
+                middlewaresMap.isAuthentified,
+                getRoleUsersController())
+            .put('/:id/users/add', 
+                middlewaresMap.isAuthentified,
+                middlewaresMap.isAdmin,
+                addRoleUsersController())
+            .put('/:id/users/remove', 
+                middlewaresMap.isAuthentified,
+                middlewaresMap.isAdmin,
+                removeRoleUsersController());
     }
     
     applyAPI(app: Application) {
@@ -642,6 +672,11 @@ export interface User {
 export interface UserCreateInput {
 
 }
+
+//
+// Function used to pick only needed properties
+//
+
 export function pickUserCreateInput<T extends {}>(input: T) {
     return [].reduce((createInput, key) => {
         createInput[key] = input[key];
@@ -656,6 +691,10 @@ export function pickUserCreateInput<T extends {}>(input: T) {
 export interface UserChangesInput {
 
 }
+
+//
+// Function used to pick only needed properties
+//
 
 export function pickUserChangesInput<T extends {}>(input: T) {
     return [].reduce((changesInput, key) => {
@@ -1667,11 +1706,11 @@ export class UserAPI {
 
     router = Router();
     
-    constructor() {
-        this.makeAPI();
+    constructor(middlewaresMap: { [key: string]: (req: Request, res: Response, next: NextFunction) => void } = {}) {
+        this.makeAPI(middlewaresMap);
     }
 
-    private makeAPI() {
+    private makeAPI(middlewaresMap: { [key: string]: (req: Request, res: Response, next: NextFunction) => void } = {}) {
         this.router
             .get('/', getAllUserController())
             .get('/:id', getByIdUserController())
@@ -1683,11 +1722,17 @@ export class UserAPI {
             .get('/:id/profil', getUserProfilController())
             .put('/:id/roles/add', addUserRolesController())
             .put('/:id/scopes/add', addUserScopesController())
-            .put('/:id/credential/add', addUserCredentialController())
+            .put('/:id/credential/add', 
+                middlewaresMap.isAuthentified,
+                middlewaresMap.isOwner,
+                addUserCredentialController())
             .put('/:id/profil/add', addUserProfilController())
             .put('/:id/roles/remove', removeUserRolesController())
             .put('/:id/scopes/remove', removeUserScopesController())
-            .put('/:id/credential/remove', removeUserCredentialController())
+            .put('/:id/credential/remove', 
+                middlewaresMap.isAuthentified,
+                middlewaresMap.isOwner,
+                removeUserCredentialController())
             .put('/:id/profil/remove', removeUserProfilController());
     }
     
@@ -1724,6 +1769,11 @@ export interface Scope {
 export interface ScopeCreateInput {
     name: string;
 }
+
+//
+// Function used to pick only needed properties
+//
+
 export function pickScopeCreateInput<T extends {}>(input: T) {
     return ['name'].reduce((createInput, key) => {
         createInput[key] = input[key];
@@ -1738,6 +1788,10 @@ export function pickScopeCreateInput<T extends {}>(input: T) {
 export interface ScopeChangesInput {
     name?: string;
 }
+
+//
+// Function used to pick only needed properties
+//
 
 export function pickScopeChangesInput<T extends {}>(input: T) {
     return ['name'].reduce((changesInput, key) => {
@@ -2220,11 +2274,11 @@ export class ScopeAPI {
 
     router = Router();
     
-    constructor() {
-        this.makeAPI();
+    constructor(middlewaresMap: { [key: string]: (req: Request, res: Response, next: NextFunction) => void } = {}) {
+        this.makeAPI(middlewaresMap);
     }
 
-    private makeAPI() {
+    private makeAPI(middlewaresMap: { [key: string]: (req: Request, res: Response, next: NextFunction) => void } = {}) {
         this.router
             .get('/', getAllScopeController())
             .get('/:id', getByIdScopeController())
@@ -2271,6 +2325,11 @@ export interface CredentialCreateInput {
     username: string;
     password: string;
 }
+
+//
+// Function used to pick only needed properties
+//
+
 export function pickCredentialCreateInput<T extends {}>(input: T) {
     return ['username','password'].reduce((createInput, key) => {
         createInput[key] = input[key];
@@ -2286,6 +2345,10 @@ export interface CredentialChangesInput {
     username?: string;
     password?: string;
 }
+
+//
+// Function used to pick only needed properties
+//
 
 export function pickCredentialChangesInput<T extends {}>(input: T) {
     return ['username'].reduce((changesInput, key) => {
@@ -2773,11 +2836,11 @@ export class CredentialAPI {
 
     router = Router();
     
-    constructor() {
-        this.makeAPI();
+    constructor(middlewaresMap: { [key: string]: (req: Request, res: Response, next: NextFunction) => void } = {}) {
+        this.makeAPI(middlewaresMap);
     }
 
-    private makeAPI() {
+    private makeAPI(middlewaresMap: { [key: string]: (req: Request, res: Response, next: NextFunction) => void } = {}) {
         this.router
             .put('/:id/owner/add', addCredentialOwnerController())
             .put('/:id/owner/remove', removeCredentialOwnerController());
@@ -2824,6 +2887,11 @@ export interface ProfilCreateInput {
     birthdate: Date;
     json?: any;
 }
+
+//
+// Function used to pick only needed properties
+//
+
 export function pickProfilCreateInput<T extends {}>(input: T) {
     return ['username','email','name','birthdate','json'].reduce((createInput, key) => {
         createInput[key] = input[key];
@@ -2842,6 +2910,10 @@ export interface ProfilChangesInput {
     birthdate?: Date;
     json?: any;
 }
+
+//
+// Function used to pick only needed properties
+//
 
 export function pickProfilChangesInput<T extends {}>(input: T) {
     return ['username','email','name','birthdate','json'].reduce((changesInput, key) => {
@@ -3341,11 +3413,11 @@ export class ProfilAPI {
 
     router = Router();
     
-    constructor() {
-        this.makeAPI();
+    constructor(middlewaresMap: { [key: string]: (req: Request, res: Response, next: NextFunction) => void } = {}) {
+        this.makeAPI(middlewaresMap);
     }
 
-    private makeAPI() {
+    private makeAPI(middlewaresMap: { [key: string]: (req: Request, res: Response, next: NextFunction) => void } = {}) {
         this.router
             .get('/', getAllProfilController())
             .get('/:id', getByIdProfilController())
@@ -3392,6 +3464,11 @@ export interface TodoCreateInput {
     title: string;
     done: boolean;
 }
+
+//
+// Function used to pick only needed properties
+//
+
 export function pickTodoCreateInput<T extends {}>(input: T) {
     return ['title','done'].reduce((createInput, key) => {
         createInput[key] = input[key];
@@ -3407,6 +3484,10 @@ export interface TodoChangesInput {
     title?: string;
     done?: boolean;
 }
+
+//
+// Function used to pick only needed properties
+//
 
 export function pickTodoChangesInput<T extends {}>(input: T) {
     return ['title','done'].reduce((changesInput, key) => {
@@ -3893,11 +3974,11 @@ export class TodoAPI {
 
     router = Router();
     
-    constructor() {
-        this.makeAPI();
+    constructor(middlewaresMap: { [key: string]: (req: Request, res: Response, next: NextFunction) => void } = {}) {
+        this.makeAPI(middlewaresMap);
     }
 
-    private makeAPI() {
+    private makeAPI(middlewaresMap: { [key: string]: (req: Request, res: Response, next: NextFunction) => void } = {}) {
         this.router
             .get('/', getAllTodoController())
             .get('/:id', getByIdTodoController())

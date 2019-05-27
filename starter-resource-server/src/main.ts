@@ -12,7 +12,7 @@ const {
 /**
  * Standard `express` import statements
  */
-import express from 'express';
+import express, { Request, Response, NextFunction } from 'express';
 import bodyParser from 'body-parser';
 import cors from 'cors';
 import helmet from 'helmet';
@@ -61,16 +61,29 @@ async function main() {
   */
   await mainMongoService.init();
 
+  const middlewaresMap = {
+    isAuthentified: (req: Request, res: Response, next: NextFunction) => {
+      console.log('Youpi !');
+      next();
+    },
+    isAdmin: (req: Request, res: Response, next: NextFunction) => {
+      console.log('Houra !')
+      next();
+    },
+    isOwner: (req: Request, res: Response, next: NextFunction) => {
+      console.log('Yep !')
+      next();
+    },
+  };
   /**
    * Apply generated's APIs controllers
    */
-  new RoleAPI().applyAPI(app);
-  
-  new ScopeAPI().applyAPI(app);
-  new CredentialAPI().applyAPI(app);
-  new ProfilAPI().applyAPI(app);
-  new UserAPI().applyAPI(app);
-  new TodoAPI().applyAPI(app);
+  new RoleAPI(middlewaresMap).applyAPI(app);
+  new ScopeAPI(middlewaresMap).applyAPI(app);
+  new CredentialAPI(middlewaresMap).applyAPI(app);
+  new ProfilAPI(middlewaresMap).applyAPI(app);
+  new UserAPI(middlewaresMap).applyAPI(app);
+  new TodoAPI(middlewaresMap).applyAPI(app);
 
   /**
    * Start express server

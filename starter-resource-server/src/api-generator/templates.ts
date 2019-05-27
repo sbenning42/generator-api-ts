@@ -100,6 +100,11 @@ const TS_CreateInputTpl = `
 export interface $0CreateInput {
 $1
 }
+
+//
+// Function used to pick only needed properties
+//
+
 export function pick$0CreateInput<T extends {}>(input: T) {
     return [$2].reduce((createInput, key) => {
         createInput[key] = input[key];
@@ -118,6 +123,10 @@ const TS_UpdateInputTpl = `
 export interface $0ChangesInput {
 $1
 }
+
+//
+// Function used to pick only needed properties
+//
 
 export function pick$0ChangesInput<T extends {}>(input: T) {
     return [$2].reduce((changesInput, key) => {
@@ -638,11 +647,11 @@ export class $0API {
 
     router = Router();
     
-    constructor() {
-        this.makeAPI();
+    constructor(middlewaresMap: { [key: string]: (req: Request, res: Response, next: NextFunction) => void } = {}) {
+        this.makeAPI(middlewaresMap);
     }
 
-    private makeAPI() {
+    private makeAPI(middlewaresMap: { [key: string]: (req: Request, res: Response, next: NextFunction) => void } = {}) {
         this.router
             $2$3$4$5$6$7$8$9;
     }
@@ -659,17 +668,16 @@ export class $0API {
 }
 `;
 
-const TS_GetAllRouterTpl = `.get('/', getAll$0Controller())`;
-const TS_GetByIdRouterTpl = `.get('/:id', getById$0Controller())`;
-const TS_CreateRouterTpl = `.post('/', create$0Controller())`;
-const TS_UpdateRouterTpl = `.put('/:id', update$0Controller())`;
-const TS_DeleteRouterTpl = `.delete('/:id', delete$0Controller())`;
+const TS_MaybeMiddlewareTpl = `$1, `;
 
-const TS_GetRelationRouterTpl = `.get('/:id/$0', get$1$2Controller())`;
-
-const TS_AddRelationRouterTpl = `.put('/:id/$0/add', add$1$2Controller())`;
-
-const TS_RemoveRelationRouterTpl = `.put('/:id/$0/remove', remove$1$2Controller())`;
+const TS_GetAllRouterTpl = `.get('/', $1getAll$0Controller())`;
+const TS_GetByIdRouterTpl = `.get('/:id', $1getById$0Controller())`;
+const TS_CreateRouterTpl = `.post('/', $1create$0Controller())`;
+const TS_UpdateRouterTpl = `.put('/:id', $1update$0Controller())`;
+const TS_DeleteRouterTpl = `.delete('/:id', $1delete$0Controller())`;
+const TS_GetRelationRouterTpl = `.get('/:id/$0', $3get$1$2Controller())`;
+const TS_AddRelationRouterTpl = `.put('/:id/$0/add', $3add$1$2Controller())`;
+const TS_RemoveRelationRouterTpl = `.put('/:id/$0/remove', $3remove$1$2Controller())`;
 
 export const templates = {
     TS_CreateInputPropTpl,
@@ -696,6 +704,7 @@ export const templates = {
     TS_GetRelationRouterTpl,
     TS_AddRelationRouterTpl,
     TS_RemoveRelationRouterTpl,
+    TS_MaybeMiddlewareTpl,
     TS_Prefix
 };
 
