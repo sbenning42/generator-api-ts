@@ -18,6 +18,19 @@ generateAll(
                 scopes: '[Scope]',
                 credential: 'Credential',
                 profil: 'Profil',
+            },
+            query: {
+                getUserCredential: {
+                    skip: true,
+                }
+            },
+            mutation: {
+                addUserCredential: {
+                    skip: true,
+                },
+                removeUserCredential: {
+                    skip: true,
+                }
             }
         },
         {
@@ -61,6 +74,34 @@ generateAll(
             },
             relations: {
                 owner: 'User'
+            },
+            query: {
+                getAllCredential: {
+                    skip: true,
+                },
+                getByIdCredential: {
+                    skip: true,
+                },
+                getCredentialOwner: {
+                    skip: true,
+                },
+            },
+            mutation: {
+                createCredential: {
+                    skip: true,
+                },
+                updateCredential: {
+                    skip: true,
+                },
+                deleteCredential: {
+                    skip: true,
+                },
+                addCredentialOwner: {
+                    skip: true,
+                },
+                removeCredentialOwner: {
+                    skip: true,
+                },
             }
         },
         {

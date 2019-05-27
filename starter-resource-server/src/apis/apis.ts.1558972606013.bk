@@ -1103,12 +1103,15 @@ export class UserAPI {
             .delete('/:id', deleteUserController())
             .get('/:id/roles', getUserRolesController())
             .get('/:id/scopes', getUserScopesController())
+            .get('/:id/credential', getUserCredentialController())
             .get('/:id/profil', getUserProfilController())
             .post('/:id/roles/add', addUserRolesController())
             .post('/:id/scopes/add', addUserScopesController())
+            .post('/:id/credential/add', addUserCredentialController())
             .post('/:id/profil/add', addUserProfilController())
             .post('/:id/roles/remove', removeUserRolesController())
             .post('/:id/scopes/remove', removeUserScopesController())
+            .post('/:id/credential/remove', removeUserCredentialController())
             .post('/:id/profil/remove', removeUserProfilController());
     }
     
@@ -2772,7 +2775,14 @@ export class CredentialAPI {
 
     private makeAPI() {
         this.router
-            ;
+            .get('/', getAllCredentialController())
+            .get('/:id', getByIdCredentialController())
+            .post('/', createCredentialController())
+            .put('/:id', updateCredentialController())
+            .delete('/:id', deleteCredentialController())
+            .get('/:id/owner', getCredentialOwnerController())
+            .post('/:id/owner/add', addCredentialOwnerController())
+            .post('/:id/owner/remove', removeCredentialOwnerController());
     }
     
     applyAPI(app: Application) {

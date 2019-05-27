@@ -1098,17 +1098,20 @@ export class UserAPI {
         this.router
             .get('/', getAllUserController())
             .get('/:id', getByIdUserController())
-            .post('/', createUserController())
-            .put('/:id', updateUserController())
-            .delete('/:id', deleteUserController())
+            .post('/:id/User', createUserController())
+            .put('/:id/User', updateUserController())
+            .delete('/:id/User', deleteUserController())
             .get('/:id/roles', getUserRolesController())
             .get('/:id/scopes', getUserScopesController())
+            .get('/:id/credential', getUserCredentialController())
             .get('/:id/profil', getUserProfilController())
             .post('/:id/roles/add', addUserRolesController())
             .post('/:id/scopes/add', addUserScopesController())
+            .post('/:id/credential/add', addUserCredentialController())
             .post('/:id/profil/add', addUserProfilController())
             .post('/:id/roles/remove', removeUserRolesController())
             .post('/:id/scopes/remove', removeUserScopesController())
+            .post('/:id/credential/remove', removeUserCredentialController())
             .post('/:id/profil/remove', removeUserProfilController());
     }
     
@@ -1658,9 +1661,9 @@ export class RoleAPI {
         this.router
             .get('/', getAllRoleController())
             .get('/:id', getByIdRoleController())
-            .post('/', createRoleController())
-            .put('/:id', updateRoleController())
-            .delete('/:id', deleteRoleController())
+            .post('/:id/Role', createRoleController())
+            .put('/:id/Role', updateRoleController())
+            .delete('/:id/Role', deleteRoleController())
             .get('/:id/users', getRoleUsersController())
             .post('/:id/users/add', addRoleUsersController())
             .post('/:id/users/remove', removeRoleUsersController());
@@ -2212,9 +2215,9 @@ export class ScopeAPI {
         this.router
             .get('/', getAllScopeController())
             .get('/:id', getByIdScopeController())
-            .post('/', createScopeController())
-            .put('/:id', updateScopeController())
-            .delete('/:id', deleteScopeController())
+            .post('/:id/Scope', createScopeController())
+            .put('/:id/Scope', updateScopeController())
+            .delete('/:id/Scope', deleteScopeController())
             .get('/:id/users', getScopeUsersController())
             .post('/:id/users/add', addScopeUsersController())
             .post('/:id/users/remove', removeScopeUsersController());
@@ -2772,7 +2775,14 @@ export class CredentialAPI {
 
     private makeAPI() {
         this.router
-            ;
+            .get('/', getAllCredentialController())
+            .get('/:id', getByIdCredentialController())
+            .post('/:id/Credential', createCredentialController())
+            .put('/:id/Credential', updateCredentialController())
+            .delete('/:id/Credential', deleteCredentialController())
+            .get('/:id/owner', getCredentialOwnerController())
+            .post('/:id/owner/add', addCredentialOwnerController())
+            .post('/:id/owner/remove', removeCredentialOwnerController());
     }
     
     applyAPI(app: Application) {
@@ -3354,9 +3364,9 @@ export class ProfilAPI {
         this.router
             .get('/', getAllProfilController())
             .get('/:id', getByIdProfilController())
-            .post('/', createProfilController())
-            .put('/:id', updateProfilController())
-            .delete('/:id', deleteProfilController())
+            .post('/:id/Profil', createProfilController())
+            .put('/:id/Profil', updateProfilController())
+            .delete('/:id/Profil', deleteProfilController())
             .get('/:id/owner', getProfilOwnerController())
             .post('/:id/owner/add', addProfilOwnerController())
             .post('/:id/owner/remove', removeProfilOwnerController());
@@ -3916,9 +3926,9 @@ export class TodoAPI {
         this.router
             .get('/', getAllTodoController())
             .get('/:id', getByIdTodoController())
-            .post('/', createTodoController())
-            .put('/:id', updateTodoController())
-            .delete('/:id', deleteTodoController())
+            .post('/:id/Todo', createTodoController())
+            .put('/:id/Todo', updateTodoController())
+            .delete('/:id/Todo', deleteTodoController())
             .get('/:id/owner', getTodoOwnerController())
             .post('/:id/owner/add', addTodoOwnerController())
             .post('/:id/owner/remove', removeTodoOwnerController());

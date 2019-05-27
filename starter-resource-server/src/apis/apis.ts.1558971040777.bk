@@ -1047,7 +1047,6 @@ export function removeUserProfilController() {
 }
 
 
-/*
 
 export class UserAPI {
 
@@ -1082,41 +1081,6 @@ export class UserAPI {
         app.use('/users', this.router);
     }
 }
-
-*/
-
-
-export class UserAPI {
-
-    router = Router();
-    
-    constructor() {
-        this.makeAPI();
-    }
-
-    private makeAPI() {
-        this.router
-            .get('/', getAllUserController())
-            .get('/:id', getByIdUserController())
-            .post('/', createUserController())
-            .put('/:id', updateUserController())
-            .delete('/:id', deleteUserController())
-            .get('/:id/roles', getUserRolesController())
-            .get('/:id/scopes', getUserScopesController())
-            .get('/:id/profil', getUserProfilController())
-            .post('/:id/roles/add', addUserRolesController())
-            .post('/:id/scopes/add', addUserScopesController())
-            .post('/:id/profil/add', addUserProfilController())
-            .post('/:id/roles/remove', removeUserRolesController())
-            .post('/:id/scopes/remove', removeUserScopesController())
-            .post('/:id/profil/remove', removeUserProfilController());
-    }
-    
-    applyAPI(app: Application) {
-        app.use('/users', this.router);
-    }
-}
-
 
 
 
@@ -1616,7 +1580,6 @@ export function removeRoleUsersController() {
 }
 
 
-/*
 
 export class RoleAPI {
 
@@ -1642,35 +1605,6 @@ export class RoleAPI {
         app.use('/roles', this.router);
     }
 }
-
-*/
-
-
-export class RoleAPI {
-
-    router = Router();
-    
-    constructor() {
-        this.makeAPI();
-    }
-
-    private makeAPI() {
-        this.router
-            .get('/', getAllRoleController())
-            .get('/:id', getByIdRoleController())
-            .post('/', createRoleController())
-            .put('/:id', updateRoleController())
-            .delete('/:id', deleteRoleController())
-            .get('/:id/users', getRoleUsersController())
-            .post('/:id/users/add', addRoleUsersController())
-            .post('/:id/users/remove', removeRoleUsersController());
-    }
-    
-    applyAPI(app: Application) {
-        app.use('/roles', this.router);
-    }
-}
-
 
 
 
@@ -2170,7 +2104,6 @@ export function removeScopeUsersController() {
 }
 
 
-/*
 
 export class ScopeAPI {
 
@@ -2196,35 +2129,6 @@ export class ScopeAPI {
         app.use('/scopes', this.router);
     }
 }
-
-*/
-
-
-export class ScopeAPI {
-
-    router = Router();
-    
-    constructor() {
-        this.makeAPI();
-    }
-
-    private makeAPI() {
-        this.router
-            .get('/', getAllScopeController())
-            .get('/:id', getByIdScopeController())
-            .post('/', createScopeController())
-            .put('/:id', updateScopeController())
-            .delete('/:id', deleteScopeController())
-            .get('/:id/users', getScopeUsersController())
-            .post('/:id/users/add', addScopeUsersController())
-            .post('/:id/users/remove', removeScopeUsersController());
-    }
-    
-    applyAPI(app: Application) {
-        app.use('/scopes', this.router);
-    }
-}
-
 
 
 
@@ -2732,7 +2636,6 @@ export function removeCredentialOwnerController() {
 }
 
 
-/*
 
 export class CredentialAPI {
 
@@ -2758,28 +2661,6 @@ export class CredentialAPI {
         app.use('/credentials', this.router);
     }
 }
-
-*/
-
-
-export class CredentialAPI {
-
-    router = Router();
-    
-    constructor() {
-        this.makeAPI();
-    }
-
-    private makeAPI() {
-        this.router
-            ;
-    }
-    
-    applyAPI(app: Application) {
-        app.use('/credentials', this.router);
-    }
-}
-
 
 
 
@@ -3312,7 +3193,6 @@ export function removeProfilOwnerController() {
 }
 
 
-/*
 
 export class ProfilAPI {
 
@@ -3338,35 +3218,6 @@ export class ProfilAPI {
         app.use('/profils', this.router);
     }
 }
-
-*/
-
-
-export class ProfilAPI {
-
-    router = Router();
-    
-    constructor() {
-        this.makeAPI();
-    }
-
-    private makeAPI() {
-        this.router
-            .get('/', getAllProfilController())
-            .get('/:id', getByIdProfilController())
-            .post('/', createProfilController())
-            .put('/:id', updateProfilController())
-            .delete('/:id', deleteProfilController())
-            .get('/:id/owner', getProfilOwnerController())
-            .post('/:id/owner/add', addProfilOwnerController())
-            .post('/:id/owner/remove', removeProfilOwnerController());
-    }
-    
-    applyAPI(app: Application) {
-        app.use('/profils', this.router);
-    }
-}
-
 
 
 
@@ -3874,7 +3725,6 @@ export function removeTodoOwnerController() {
 }
 
 
-/*
 
 export class TodoAPI {
 
@@ -3900,34 +3750,5 @@ export class TodoAPI {
         app.use('/todos', this.router);
     }
 }
-
-*/
-
-
-export class TodoAPI {
-
-    router = Router();
-    
-    constructor() {
-        this.makeAPI();
-    }
-
-    private makeAPI() {
-        this.router
-            .get('/', getAllTodoController())
-            .get('/:id', getByIdTodoController())
-            .post('/', createTodoController())
-            .put('/:id', updateTodoController())
-            .delete('/:id', deleteTodoController())
-            .get('/:id/owner', getTodoOwnerController())
-            .post('/:id/owner/add', addTodoOwnerController())
-            .post('/:id/owner/remove', removeTodoOwnerController());
-    }
-    
-    applyAPI(app: Application) {
-        app.use('/todos', this.router);
-    }
-}
-
 
 

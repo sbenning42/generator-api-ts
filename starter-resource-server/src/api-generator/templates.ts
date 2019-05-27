@@ -563,6 +563,32 @@ export class $0API {
 }
 `;
 
+const TS_SkipableRouterTpl = `
+export class $0API {
+
+    router = Router();
+    
+    constructor() {
+        this.makeAPI();
+    }
+
+    private makeAPI() {
+        this.router
+            $2$3$4$5$6$7$8$9;
+    }
+    
+    applyAPI(app: Application) {
+        app.use('/$1', this.router);
+    }
+}
+`;
+
+const TS_GetAllRouterTpl = `.get('/', getAll$0Controller())`;
+const TS_GetByIdRouterTpl = `.get('/:id', getById$0Controller())`;
+const TS_CreateRouterTpl = `.post('/', create$0Controller())`;
+const TS_UpdateRouterTpl = `.put('/:id', update$0Controller())`;
+const TS_DeleteRouterTpl = `.delete('/:id', delete$0Controller())`;
+
 const TS_GetRelationRouterTpl = `.get('/:id/$0', get$1$2Controller())`;
 
 const TS_AddRelationRouterTpl = `.post('/:id/$0/add', add$1$2Controller())`;
@@ -585,6 +611,12 @@ export const templates = {
     TS_ControllerTpls,
     TS_RelationControllerTpls,
     TS_RouterTpl,
+    TS_SkipableRouterTpl,
+    TS_GetAllRouterTpl,
+    TS_GetByIdRouterTpl,
+    TS_CreateRouterTpl,
+    TS_UpdateRouterTpl,
+    TS_DeleteRouterTpl,
     TS_GetRelationRouterTpl,
     TS_AddRelationRouterTpl,
     TS_RemoveRelationRouterTpl,

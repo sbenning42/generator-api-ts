@@ -87,6 +87,12 @@ export class APIGenerator {
             TS_ControllerTpls,
             TS_RelationControllerTpls,
             TS_RouterTpl,
+            TS_SkipableRouterTpl,
+            TS_GetAllRouterTpl,
+            TS_GetByIdRouterTpl,
+            TS_CreateRouterTpl,
+            TS_UpdateRouterTpl,
+            TS_DeleteRouterTpl,
             TS_GetRelationRouterTpl,
             TS_AddRelationRouterTpl,
             TS_RemoveRelationRouterTpl
@@ -107,7 +113,7 @@ export class APIGenerator {
                 JSON.stringify(v.default),
                 v.unique ? 'true' : 'false',
                 v.hidden ? 'true' : 'false',
-                typeof(v.type) === 'string' ? v.type.replace('[', '').replace(']', '') : undefined
+                typeof(v.type) === 'string' ? (v.type as string).replace('[', '').replace(']', '') : undefined
             ]
         )
             .replace(/\s*unique: false,/g, '')
@@ -123,29 +129,60 @@ export class APIGenerator {
         const relationMiddlewareTpls = replaceThem(TS_RelationMiddlewareTpls, Object.entries(relations), k => [Cname, C(k)]);
         const relationControllerTpls = replaceThem(TS_RelationControllerTpls, Object.entries(relations), k => [Cname, C(k)]);
         const glue = '\n            ';
-        const skipIt = (what: any) => ([k]) => {
-            const e: any[] = Object.entries(what).find(([_k]) => k === _k);
-            return !e || (e && e[1].skip !== true);
-        };
-        const skipQuery = skipIt(query);
-        const skipMutation = skipIt(mutation);
+        const skippedRouterTpl = replaceIt(
+            TS_SkipableRouterTpl,
+            Cname,
+            `${cname}s`,
+            query[`getAll${Cname}`] && query[`getAll${Cname}`].skip ? '' : replaceIt(TS_GetAllRouterTpl, Cname),
+            query[`getById${Cname}`] && query[`getById${Cname}`].skip ? '' : (glue + replaceIt(TS_GetByIdRouterTpl, Cname)),
+            mutation[`create${Cname}`] && mutation[`create${Cname}`].skip ? '' : (glue + replaceIt(TS_CreateRouterTpl, Cname)),
+            mutation[`update${Cname}`] && mutation[`update${Cname}`].skip ? '' : (glue + replaceIt(TS_UpdateRouterTpl, Cname)),
+            mutation[`delete${Cname}`] && mutation[`delete${Cname}`].skip ? '' : (glue + replaceIt(TS_DeleteRouterTpl, Cname)),
+            replaceThem(
+                { tpl: `${glue}${TS_GetRelationRouterTpl}`, glue },
+                Object.entries(relations).filter(([name, type]) => {
+                    const key = Object.keys(query).find(k => k.startsWith(`get${Cname}${C(name)}`));
+                    const getQuery = query[key];
+                    return !getQuery || getQuery.skip !== true;
+                }),
+                k => [k, Cname, C(k)]
+            ),
+            replaceThem(
+                { tpl: `${glue}${TS_AddRelationRouterTpl}`, glue },
+                Object.entries(relations).filter(([name, type]) => {
+                    const key = Object.keys(mutation).find(k => k.startsWith(`add${Cname}${C(name)}`));
+                    const addMutation = mutation[key];
+                    return !addMutation || addMutation.skip !== true;
+                }),
+                k => [k, Cname, C(k)]
+            ),
+            replaceThem(
+                { tpl: `${glue}${TS_RemoveRelationRouterTpl}`, glue },
+                Object.entries(relations).filter(([name, type]) => {
+                    const key = Object.keys(mutation).find(k => k.startsWith(`remove${Cname}${C(name)}`));
+                    const removeMutation = mutation[key];
+                    return !removeMutation || removeMutation.skip !== true;
+                }),
+                k => [k, Cname, C(k)]
+            )
+        ).replace(/\n            \n/g, '\n');
         const routerTpl = replaceIt(
             TS_RouterTpl,
             Cname,
             `${cname}s`,
             replaceThem(
                 { tpl: `${glue}${TS_GetRelationRouterTpl}`, glue },
-                Object.entries(relations).filter(skipQuery as any),
+                Object.entries(relations),
                 k => [k, Cname, C(k)]
             ),
             replaceThem(
                 { tpl: `${glue}${TS_AddRelationRouterTpl}`, glue },
-                Object.entries(relations).filter(skipMutation as any),
+                Object.entries(relations),
                 k => [k, Cname, C(k)]
             ),
             replaceThem(
                 { tpl: `${glue}${TS_RemoveRelationRouterTpl}`, glue },
-                Object.entries(relations).filter(skipMutation as any),
+                Object.entries(relations),
                 k => [k, Cname, C(k)]
             )
         ).replace(/\n            \n/g, '\n');
@@ -184,7 +221,12 @@ ${defs.controllerTpls}
 
 ${defs.relationControllerTpls}
 
+/*
 ${defs.routerTpl}
+*/
+
+${skippedRouterTpl}
+
 
 `, defs];
     }
