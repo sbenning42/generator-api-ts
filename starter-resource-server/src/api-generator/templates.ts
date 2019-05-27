@@ -22,7 +22,62 @@ export function contextMiddleware(req: Request, res: Response, next: NextFunctio
 export function attachCTX(req: Request, key: string, value: any) {
     req['CTX'][key] = value;
     return value;
-}      
+}
+
+export const ResetCCC = "\x1b[0m";
+export const BrightCCC = "\x1b[1m";
+export const DimCCC = "\x1b[2m";
+export const UnderscoreCCC = "\x1b[4m";
+export const BlinkCCC = "\x1b[5m";
+export const ReverseCCC = "\x1b[7m";
+export const HiddenCCC = "\x1b[8m";
+export const FgBlackCCC = "\x1b[30m";
+export const FgRedCCC = "\x1b[31m";
+export const FgGreenCCC = "\x1b[32m";
+export const FgYellowCCC = "\x1b[33m";
+export const FgBlueCCC = "\x1b[34m";
+export const FgMagentaCCC = "\x1b[35m";
+export const FgCyanCCC = "\x1b[36m";
+export const FgWhiteCCC = "\x1b[37m";
+export const BgBlackCCC = "\x1b[40m";
+export const BgRedCCC = "\x1b[41m";
+export const BgGreenCCC = "\x1b[42m";
+export const BgYellowCCC = "\x1b[43m";
+export const BgBlueCCC = "\x1b[44m";
+export const BgMagentaCCC = "\x1b[45m";
+export const BgCyanCCC = "\x1b[46m";
+export const BgWhiteCCC = "\x1b[47m";
+
+export function colorVerb(verb: string) {
+    switch (verb) {
+        case 'GET':
+            return \`\${BrightCCC}\${FgBlueCCC}GET\${ResetCCC}\`;
+        case 'POST':
+            return \`\${BrightCCC}\${FgGreenCCC}POST\${ResetCCC}\`;
+        case 'PUT':
+            return \`\${BrightCCC}\${FgYellowCCC}PUT\${ResetCCC}\`;
+        case 'DELETE':
+            return \`\${BrightCCC}\${FgRedCCC}DELETE\${ResetCCC}\`;
+        default:
+            return verb;
+    }
+}
+export function colorPath(path: string) {
+    const parts = path.split('/').slice(1);
+    parts[0] = \`\${UnderscoreCCC}\${BrightCCC}\${parts[0]}\${ResetCCC}\${UnderscoreCCC}\`;
+    if (parts[1]) {
+        parts[1] = \`\${UnderscoreCCC}\${FgBlueCCC}\${parts[1]}\${ResetCCC}\${UnderscoreCCC}\`;
+    }
+    if (parts[2]) {
+        parts[2] = \`\${UnderscoreCCC}\${BrightCCC}\${FgYellowCCC}\${parts[2]}\${ResetCCC}\${UnderscoreCCC}\`;
+    }
+    if (parts[3] && parts[3] === 'add') {
+        parts[3] = \`\${UnderscoreCCC}\${FgGreenCCC}\${parts[3]}\${ResetCCC}\${UnderscoreCCC}\`;
+    } else if (parts[3] && parts[3] === 'remove') {
+        parts[3] = \`\${UnderscoreCCC}\${FgRedCCC}\${parts[3]}\${ResetCCC}\${UnderscoreCCC}\`;
+    }
+    return \`\${UnderscoreCCC}\${parts.join('/')}\${ResetCCC}\`;
+}
 `.trim();
 
 const TS_TypeTpl = `
@@ -45,6 +100,12 @@ const TS_CreateInputTpl = `
 export interface $0CreateInput {
 $1
 }
+export function pick$0CreateInput<T extends {}>(input: T) {
+    return [$2].reduce((createInput, key) => {
+        createInput[key] = input[key];
+        return createInput;
+    }, {}) as $0CreateInput;
+}
 `.trim();
 
 const TS_CreateInputPropTpl = `    $0: $1;`;
@@ -56,6 +117,13 @@ const TS_UpdateInputTpl = `
 
 export interface $0ChangesInput {
 $1
+}
+
+export function pick$0ChangesInput<T extends {}>(input: T) {
+    return [$2].reduce((changesInput, key) => {
+        changesInput[key] = input[key];
+        return changesInput;
+    }, {}) as $0ChangesInput;
 }
 
 export interface $0UpdateInput {
@@ -186,7 +254,8 @@ export function $0FindByIdLeanExec(
     return $0FindByIdLean(id, projection, options).exec(cb);
 }
 
-export function $0Create(createInput: $0CreateInput) {
+export function $0Create(unsafeCreateInput: $0CreateInput) {
+    const createInput = pick$0CreateInput(unsafeCreateInput);
     const model = new $0Model(createInput);
     return model.save();
 }
@@ -196,27 +265,28 @@ export async function $0CreateLean(createInput: $0CreateInput) {
 }
 
 export function $0FindByIdAndUpdate(
-    { id, changes }: $0UpdateInput,
-    options: any = { new: true }
+    { id, changes: unsafeChanges }: $0UpdateInput,
+    options: any = { new: true, useFindAndModify: false }
 ) {
+    const changes = pick$0ChangesInput(unsafeChanges);
     return $0Model.findByIdAndUpdate(id, { $set: changes }, options);
 }
 export function $0FindByIdAndUpdateLean(
     update: $0UpdateInput,
-    options: any = { new: true }
+    options: any = { new: true, useFindAndModify: false }
 ) {
     return $0FindByIdAndUpdate(update, options).lean();
 }
 export function $0FindByIdAndUpdateExec(
     update: $0UpdateInput,
-    options: any = { new: true },
+    options: any = { new: true, useFindAndModify: false },
     cb?: (err: any, result: any) => void
 ) {
     return $0FindByIdAndUpdate(update, options).exec(cb);
 }
 export function $0FindByIdAndUpdateLeanExec(
     update: $0UpdateInput,
-    options: any = { new: true },
+    options: any = { new: true, useFindAndModify: false },
     cb?: (err: any, result: any) => void
 ) {
     return $0FindByIdAndUpdateLean(update, options).exec(cb);
@@ -295,21 +365,21 @@ export async function $0FindById$1(
 export function $0FindByIdAndAdd$1(
     id: string | ObjectID,
     addId: string | ObjectID,
-    options: any = { new: true }
+    options: any = { new: true, useFindAndModify: false }
 ) {
     return $0Model.findByIdAndUpdate(id, { $push: { $2: addId } }, options);
 }
 export function $0FindByIdAndAdd$1Lean(
     id: string | ObjectID,
     addId: string | ObjectID,
-    options: any = { new: true }
+    options: any = { new: true, useFindAndModify: false }
 ) {
     return $0FindByIdAndAdd$1(id, addId, options).lean();
 }
 export function $0FindByIdAndAdd$1Exec(
     id: string | ObjectID,
     addId: string | ObjectID,
-    options: any = { new: true },
+    options: any = { new: true, useFindAndModify: false },
     cb?: (err: any, result: any) => void
 ) {
     return $0FindByIdAndAdd$1(id, addId, options).exec(cb);
@@ -317,7 +387,7 @@ export function $0FindByIdAndAdd$1Exec(
 export function $0FindByIdAndAdd$1LeanExec(
     id: string | ObjectID,
     addId: string | ObjectID,
-    options: any = { new: true },
+    options: any = { new: true, useFindAndModify: false },
     cb?: (err: any, result: any) => void
 ) {
     return $0FindByIdAndAdd$1Lean(id, addId, options).exec(cb);
@@ -326,21 +396,21 @@ export function $0FindByIdAndAdd$1LeanExec(
 export function $0FindByIdAndRemove$1(
     id: string | ObjectID,
     removeId: string | ObjectID,
-    options: any = { new: true }
+    options: any = {}
 ) {
     return $0Model.findByIdAndUpdate(id, { $pull: { $2: removeId } }, options);
 }
 export function $0FindByIdAndRemove$1Lean(
     id: string | ObjectID,
     removeId: string | ObjectID,
-    options: any = { new: true }
+    options: any = {}
 ) {
     return $0FindByIdAndRemove$1(id, removeId, options).lean();
 }
 export function $0FindByIdAndRemove$1Exec(
     id: string | ObjectID,
     removeId: string | ObjectID,
-    options: any = { new: true },
+    options: any = {},
     cb?: (err: any, result: any) => void
 ) {
     return $0FindByIdAndRemove$1(id, removeId, options).exec(cb);
@@ -348,7 +418,7 @@ export function $0FindByIdAndRemove$1Exec(
 export function $0FindByIdAndRemove$1LeanExec(
     id: string | ObjectID,
     removeId: string | ObjectID,
-    options: any = { new: true },
+    options: any = {},
     cb?: (err: any, result: any) => void
 ) {
     return $0FindByIdAndRemove$1Lean(id, removeId, options).exec(cb);
@@ -393,7 +463,7 @@ export function update$0Middleware() {
         const id = req.params.id;
         const changes: $0ChangesInput = req.body;
         try {
-            attachCTX(req, 'update$0', await $0FindByIdAndUpdate({ id, changes }));
+            attachCTX(req, 'update$0', await $0FindByIdAndUpdateLeanExec({ id, changes }));
         } catch(error) {
             return res.status(400).json({ message: 'Something went wrong.', error });
         }
@@ -404,7 +474,7 @@ export function delete$0Middleware() {
     return async (req: Request, res: Response, next: NextFunction) => {
         const id = req.params.id;
         try {
-            attachCTX(req, 'delete$0', await $0FindByIdAndRemove(id));
+            attachCTX(req, 'delete$0', await $0FindByIdAndRemoveLeanExec(id));
         } catch(error) {
             return res.status(400).json({ message: 'Something went wrong.', error });
         }
@@ -486,7 +556,7 @@ export function update$0Controller() {
         const id = req.params.id;
         const changes: $0ChangesInput = req.body;
         try {
-            res.json(await $0FindByIdAndUpdate({ id, changes }));
+            res.json(await $0FindByIdAndUpdateLeanExec({ id, changes }));
         } catch(error) {
             res.status(400).json({ message: 'Something went wrong.', error });
         }
@@ -496,7 +566,7 @@ export function delete$0Controller() {
     return async (req: Request, res: Response, next: NextFunction) => {
         const id = req.params.id;
         try {
-            res.json(await $0FindByIdAndRemove(id));
+            res.json(await $0FindByIdAndRemoveLeanExec(id));
         } catch(error) {
             res.status(400).json({ message: 'Something went wrong.', error });
         }
@@ -579,6 +649,12 @@ export class $0API {
     
     applyAPI(app: Application) {
         app.use('/$1', this.router);
+        console.log(\`***********     \${BrightCCC}\${'\$1'.toUpperCase()}\${ResetCCC}     ***********\`);
+        console.log('\\n');
+        this.router.stack.forEach(({ route: { path, methods } }) => console.log(
+            \`\${colorVerb(Object.keys(methods)[0].toUpperCase())} => \${colorPath('/$1' + path)}\`
+        ));
+        console.log('\\n\\n');
     }
 }
 `;
@@ -591,9 +667,9 @@ const TS_DeleteRouterTpl = `.delete('/:id', delete$0Controller())`;
 
 const TS_GetRelationRouterTpl = `.get('/:id/$0', get$1$2Controller())`;
 
-const TS_AddRelationRouterTpl = `.post('/:id/$0/add', add$1$2Controller())`;
+const TS_AddRelationRouterTpl = `.put('/:id/$0/add', add$1$2Controller())`;
 
-const TS_RemoveRelationRouterTpl = `.post('/:id/$0/remove', remove$1$2Controller())`;
+const TS_RemoveRelationRouterTpl = `.put('/:id/$0/remove', remove$1$2Controller())`;
 
 export const templates = {
     TS_CreateInputPropTpl,

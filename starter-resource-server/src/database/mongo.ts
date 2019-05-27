@@ -2,7 +2,7 @@ import mongoose, { Mongoose } from 'mongoose';
 
 export class MongoService {
 
-    db: Mongoose;
+    private db: Mongoose;
     
     constructor(public mongoDBURL: string) {}
 

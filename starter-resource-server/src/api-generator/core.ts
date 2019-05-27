@@ -58,14 +58,16 @@ export class APIGenerator {
         const {
             name,
             type = 'array',
-            props, relations,
+            props,
+            relations = {},
             query = {},
             mutation = {},
+            skips = [],
         } = schema;
         const Cname = C(name);
         const cname = c(name);
-        Object.keys(schema.props).forEach(k => schema.props[k] = typeCRUDSchemaInputProp(schema.props[k]));
-        const relationsAsProps = Object.keys(schema.relations).map(k => [k, typeCRUDSchemaInputProp(schema.relations[k])]);
+        Object.keys(props).forEach(k => props[k] = typeCRUDSchemaInputProp(props[k]));
+        const relationsAsProps = Object.keys(relations).map(k => [k, typeCRUDSchemaInputProp(relations[k])]);
         const propsAndRelationsAsProps = [
             ['_id', { type: String, required: true }],
             ...Object.entries(props),
@@ -100,9 +102,21 @@ export class APIGenerator {
         const typePropsTpl = replaceThem(TS_TypePropTpl, propsAndRelationsAsProps, ent2Prop());
         const typeTpl = replaceIt(TS_TypeTpl, Cname, typePropsTpl);
         const createInputPropsTpl = replaceThem(TS_CreateInputPropTpl, Object.entries(props), ent2Prop({m:false}));
-        const createInputTpl = replaceIt(TS_CreateInputTpl, Cname, createInputPropsTpl);
+        const createInputTpl = replaceIt(
+            TS_CreateInputTpl,
+            Cname,
+            createInputPropsTpl,
+            Object.keys(props).map(k => `'${k}'`).toString()
+        );
         const updateInputPropsTpl = replaceThem(TS_UpdateInputPropTpl, Object.entries(props), ent2Prop({r:false,m:false,fR:true}));
-        const updateInputTpl = replaceIt(TS_UpdateInputTpl, Cname, updateInputPropsTpl);
+        const updateInputTpl = replaceIt(
+            TS_UpdateInputTpl,
+            Cname,
+            updateInputPropsTpl,
+            Object.keys(props)
+                .filter(k => !props[k].hidden)
+                .map(k => `'${k}'`).toString()
+        );
         const schemaPropsTpl = replaceThem(
             { tpl: TS_SchemaPropTpl, glue: '\n        ' },
             propsAndRelationsAsProps.filter(([k]) => k !== '_id'),
@@ -120,7 +134,7 @@ export class APIGenerator {
             .replace(/\s*required: false,/g, '')
             .replace(/\s*hidden: false,/g, '')
             .replace(/\s*default: undefined,/g, '')
-            .replace(/\s*ref: undefined,/g, '');
+            .replace(/\s*ref: 'undefined',/g, '');
         const schemaTpl = replaceIt(TS_SchemaTpl, Cname, schemaPropsTpl);
         const utilsTpl = replaceIt(TS_UtilsTpl, Cname);
         const relationUtilsTpls = replaceThem(TS_RelationUtilsTpl, Object.entries(relations), k => [Cname, C(k), k]);
@@ -133,56 +147,83 @@ export class APIGenerator {
             TS_SkipableRouterTpl,
             Cname,
             `${cname}s`,
-            query[`getAll${Cname}`] && query[`getAll${Cname}`].skip ? '' : replaceIt(TS_GetAllRouterTpl, Cname),
-            query[`getById${Cname}`] && query[`getById${Cname}`].skip ? '' : (glue + replaceIt(TS_GetByIdRouterTpl, Cname)),
-            mutation[`create${Cname}`] && mutation[`create${Cname}`].skip ? '' : (glue + replaceIt(TS_CreateRouterTpl, Cname)),
-            mutation[`update${Cname}`] && mutation[`update${Cname}`].skip ? '' : (glue + replaceIt(TS_UpdateRouterTpl, Cname)),
-            mutation[`delete${Cname}`] && mutation[`delete${Cname}`].skip ? '' : (glue + replaceIt(TS_DeleteRouterTpl, Cname)),
-            replaceThem(
-                { tpl: `${glue}${TS_GetRelationRouterTpl}`, glue },
-                Object.entries(relations).filter(([name, type]) => {
-                    const key = Object.keys(query).find(k => k.startsWith(`get${Cname}${C(name)}`));
-                    const getQuery = query[key];
-                    return !getQuery || getQuery.skip !== true;
-                }),
-                k => [k, Cname, C(k)]
-            ),
-            replaceThem(
-                { tpl: `${glue}${TS_AddRelationRouterTpl}`, glue },
-                Object.entries(relations).filter(([name, type]) => {
-                    const key = Object.keys(mutation).find(k => k.startsWith(`add${Cname}${C(name)}`));
-                    const addMutation = mutation[key];
-                    return !addMutation || addMutation.skip !== true;
-                }),
-                k => [k, Cname, C(k)]
-            ),
-            replaceThem(
-                { tpl: `${glue}${TS_RemoveRelationRouterTpl}`, glue },
-                Object.entries(relations).filter(([name, type]) => {
-                    const key = Object.keys(mutation).find(k => k.startsWith(`remove${Cname}${C(name)}`));
-                    const removeMutation = mutation[key];
-                    return !removeMutation || removeMutation.skip !== true;
-                }),
-                k => [k, Cname, C(k)]
+            (
+                (query[`getAll${Cname}`] && query[`getAll${Cname}`].skip)
+                    || skips.includes('all')
+                    || skips.includes('query')
+                    || skips.includes(`getAll${Cname}`)
             )
-        ).replace(/\n            \n/g, '\n');
-        const routerTpl = replaceIt(
-            TS_RouterTpl,
-            Cname,
-            `${cname}s`,
+                ? ''
+                : replaceIt(TS_GetAllRouterTpl, Cname),
+            (
+                (query[`getById${Cname}`] && query[`getById${Cname}`].skip)
+                    || skips.includes('all')
+                    || skips.includes('query')
+                    || skips.includes(`getById${Cname}`)
+            )
+                ? ''
+                : (glue + replaceIt(TS_GetByIdRouterTpl, Cname)),
+            (
+                (mutation[`create${Cname}`] && mutation[`create${Cname}`].skip)
+                    || skips.includes('all')
+                    || skips.includes('mutation')
+                    || skips.includes(`create${Cname}`)
+            )    
+                ? ''
+                : (glue + replaceIt(TS_CreateRouterTpl, Cname)),
+            (
+                (mutation[`update${Cname}`] && mutation[`update${Cname}`].skip)
+                    || skips.includes('all')
+                    || skips.includes('mutation')
+                    || skips.includes(`update${Cname}`)
+            )
+                ? ''
+                : (glue + replaceIt(TS_UpdateRouterTpl, Cname)),
+            (
+                (mutation[`delete${Cname}`] && mutation[`delete${Cname}`].skip)
+                    || skips.includes('all')
+                    || skips.includes('mutation')
+                    || skips.includes(`delete${Cname}`)
+            )
+                ? ''
+                : (glue + replaceIt(TS_DeleteRouterTpl, Cname)),
             replaceThem(
                 { tpl: `${glue}${TS_GetRelationRouterTpl}`, glue },
-                Object.entries(relations),
+                Object.entries(relations).filter(([name, type]) => {
+                    const key = Object.keys(query).find(k => k === `get${Cname}${C(name)}`);
+                    const getQuery = query[key];
+                    return !(skips.includes('all')
+                        || skips.includes('query')
+                        || skips.includes(`get${Cname}${C(name)}`))
+                        && (!getQuery
+                        || getQuery.skip !== true);
+                }),
                 k => [k, Cname, C(k)]
             ),
             replaceThem(
                 { tpl: `${glue}${TS_AddRelationRouterTpl}`, glue },
-                Object.entries(relations),
+                Object.entries(relations).filter(([name, type]) => {
+                    const key = Object.keys(mutation).find(k => k === `add${Cname}${C(name)}`);
+                    const addMutation = mutation[key];
+                    return !(skips.includes('all')
+                        && skips.includes('mutation')
+                        && skips.includes(`add${Cname}${C(name)}`))
+                        && (!addMutation
+                        || addMutation.skip !== true);
+                }),
                 k => [k, Cname, C(k)]
             ),
             replaceThem(
                 { tpl: `${glue}${TS_RemoveRelationRouterTpl}`, glue },
-                Object.entries(relations),
+                Object.entries(relations).filter(([name, type]) => {
+                    const key = Object.keys(mutation).find(k => k === `remove${Cname}${C(name)}`);
+                    const removeMutation = mutation[key];
+                    return !(skips.includes('all')
+                        && skips.includes('mutation')
+                        && skips.includes(`remove${Cname}${C(name)}`))
+                        && (!removeMutation
+                        || removeMutation.skip !== true);
+                }),
                 k => [k, Cname, C(k)]
             )
         ).replace(/\n            \n/g, '\n');
@@ -197,7 +238,6 @@ export class APIGenerator {
             relationMiddlewareTpls,
             controllerTpls,
             relationControllerTpls,
-            routerTpl
         }
         return [`
 
@@ -220,10 +260,6 @@ ${defs.relationMiddlewareTpls}
 ${defs.controllerTpls}
 
 ${defs.relationControllerTpls}
-
-/*
-${defs.routerTpl}
-*/
 
 ${skippedRouterTpl}
 
@@ -281,6 +317,7 @@ export interface CRUDSchemaInput<O={}, R={}> {
     relations?: CRUDSchemaInputRelations<R>;
     query?: CRUDSchemaInputQueries;
     mutation?: CRUDSchemaInputMutations;
+    skips?: string[];
 }
 
 import fs from 'fs';

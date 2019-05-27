@@ -23,6 +23,606 @@ export function attachCTX(req: Request, key: string, value: any) {
     return value;
 }
 
+export const ResetCCC = "[0m";
+export const BrightCCC = "[1m";
+export const DimCCC = "[2m";
+export const UnderscoreCCC = "[4m";
+export const BlinkCCC = "[5m";
+export const ReverseCCC = "[7m";
+export const HiddenCCC = "[8m";
+export const FgBlackCCC = "[30m";
+export const FgRedCCC = "[31m";
+export const FgGreenCCC = "[32m";
+export const FgYellowCCC = "[33m";
+export const FgBlueCCC = "[34m";
+export const FgMagentaCCC = "[35m";
+export const FgCyanCCC = "[36m";
+export const FgWhiteCCC = "[37m";
+export const BgBlackCCC = "[40m";
+export const BgRedCCC = "[41m";
+export const BgGreenCCC = "[42m";
+export const BgYellowCCC = "[43m";
+export const BgBlueCCC = "[44m";
+export const BgMagentaCCC = "[45m";
+export const BgCyanCCC = "[46m";
+export const BgWhiteCCC = "[47m";
+
+export function colorVerb(verb: string) {
+    switch (verb) {
+        case 'GET':
+            return `${BrightCCC}${FgBlueCCC}GET${ResetCCC}`;
+        case 'POST':
+            return `${BrightCCC}${FgGreenCCC}POST${ResetCCC}`;
+        case 'PUT':
+            return `${BrightCCC}${FgYellowCCC}PUT${ResetCCC}`;
+        case 'DELETE':
+            return `${BrightCCC}${FgRedCCC}DELETE${ResetCCC}`;
+        default:
+            return verb;
+    }
+}
+export function colorPath(path: string) {
+    const parts = path.split('/').slice(1);
+    parts[0] = `${UnderscoreCCC}${BrightCCC}${parts[0]}${ResetCCC}${UnderscoreCCC}`;
+    if (parts[1]) {
+        parts[1] = `${UnderscoreCCC}${FgBlueCCC}${parts[1]}${ResetCCC}${UnderscoreCCC}`;
+    }
+    if (parts[2]) {
+        parts[2] = `${UnderscoreCCC}${BrightCCC}${FgYellowCCC}${parts[2]}${ResetCCC}${UnderscoreCCC}`;
+    }
+    if (parts[3] && parts[3] === 'add') {
+        parts[3] = `${UnderscoreCCC}${FgGreenCCC}${parts[3]}${ResetCCC}${UnderscoreCCC}`;
+    } else if (parts[3] && parts[3] === 'remove') {
+        parts[3] = `${UnderscoreCCC}${FgRedCCC}${parts[3]}${ResetCCC}${UnderscoreCCC}`;
+    }
+    return `${UnderscoreCCC}${parts.join('/')}${ResetCCC}`;
+}
+
+//  
+// Base entity interface
+//
+
+export interface Role {
+    _id: string;
+    name: string;
+    users?: [User];
+}
+
+//  
+// Input payload interface for entity creation
+//
+
+export interface RoleCreateInput {
+    name: string;
+}
+export function pickRoleCreateInput<T extends {}>(input: T) {
+    return ['name'].reduce((createInput, key) => {
+        createInput[key] = input[key];
+        return createInput;
+    }, {}) as RoleCreateInput;
+}
+
+//  
+// Input payload interface for entity update
+//
+
+export interface RoleChangesInput {
+    name?: string;
+}
+
+export function pickRoleChangesInput<T extends {}>(input: T) {
+    return ['name'].reduce((changesInput, key) => {
+        changesInput[key] = input[key];
+        return changesInput;
+    }, {}) as RoleChangesInput;
+}
+
+export interface RoleUpdateInput {
+    id: string;
+    changes: RoleChangesInput;
+}
+
+//  
+// Mongoose Schema/Model for this entity
+//
+
+export const RoleSchema = new mongoose.Schema(
+    {
+        name: {
+            type: String,
+            required: true,
+            unique: true,
+        },
+        users: {
+            type: [ObjectId],
+            ref: 'User',
+        },
+    },
+    {
+        minimize: false,
+    }
+);
+export const RoleModel = mongoose.model('Role', RoleSchema);
+
+export function RoleFindMany(
+    conditions: any = {},
+    projection?: any,
+    options: any = {}
+) {
+    return RoleModel.find(conditions, projection, options);
+}
+export function RoleFindManyLean(
+    conditions: any = {},
+    projection?: any,
+    options: any = {}
+) {
+    return RoleFindMany(conditions, projection, options).lean();
+}
+export function RoleFindManyExec(
+    conditions: any = {},
+    projection?: any,
+    options: any = {},
+    cb?: (err: any, result: any) => void
+) {
+    return RoleFindMany(conditions, projection, options).exec(cb);
+}
+export function RoleFindManyLeanExec(
+    conditions: any = {},
+    projection?: any,
+    options: any = {},
+    cb?: (err: any, result: any) => void
+) {
+    return RoleFindManyLean(conditions, projection, options).exec(cb);
+}
+
+export function RoleFindOne(
+    conditions: any = {},
+    projection?: any,
+    options: any = {}
+) {
+    return RoleModel.findOne(conditions, projection, options);
+}
+export function RoleFindOneLean(
+    conditions: any = {},
+    projection?: any,
+    options: any = {}
+) {
+    return RoleFindOne(conditions, projection, options).lean();
+}
+export function RoleFindOneExec(
+    conditions: any = {},
+    projection?: any,
+    options: any = {},
+    cb?: (err: any, result: any) => void
+) {
+    return RoleFindOne(conditions, projection, options).exec(cb);
+}
+export function RoleFindOneLeanExec(
+    conditions: any = {},
+    projection?: any,
+    options: any = {},
+    cb?: (err: any, result: any) => void
+) {
+    return RoleFindOneLean(conditions, projection, options).exec(cb);
+}
+
+export function RoleFindById(
+    id: string | ObjectID,
+    projection?: any,
+    options: any = {}
+) {
+    return RoleModel.findById(id, projection, options);
+}
+export function RoleFindByIdLean(
+    id: string | ObjectID,
+    projection?: any,
+    options: any = {}
+) {
+    return RoleFindById(id, projection, options).lean();
+}
+export function RoleFindByIdExec(
+    id: string | ObjectID,
+    projection?: any,
+    options: any = {},
+    cb?: (err: any, result: any) => void
+) {
+    return RoleFindById(id, projection, options).exec(cb);
+}
+export function RoleFindByIdLeanExec(
+    id: string | ObjectID,
+    projection?: any,
+    options: any = {},
+    cb?: (err: any, result: any) => void
+) {
+    return RoleFindByIdLean(id, projection, options).exec(cb);
+}
+
+export function RoleCreate(unsafeCreateInput: RoleCreateInput) {
+    const createInput = pickRoleCreateInput(unsafeCreateInput);
+    const model = new RoleModel(createInput);
+    return model.save();
+}
+export async function RoleCreateLean(createInput: RoleCreateInput) {
+    const object = await RoleCreate(createInput);
+    return object.toObject();
+}
+
+export function RoleFindByIdAndUpdate(
+    { id, changes: unsafeChanges }: RoleUpdateInput,
+    options: any = { new: true, useFindAndModify: false }
+) {
+    const changes = pickRoleChangesInput(unsafeChanges);
+    return RoleModel.findByIdAndUpdate(id, { $set: changes }, options);
+}
+export function RoleFindByIdAndUpdateLean(
+    update: RoleUpdateInput,
+    options: any = { new: true, useFindAndModify: false }
+) {
+    return RoleFindByIdAndUpdate(update, options).lean();
+}
+export function RoleFindByIdAndUpdateExec(
+    update: RoleUpdateInput,
+    options: any = { new: true, useFindAndModify: false },
+    cb?: (err: any, result: any) => void
+) {
+    return RoleFindByIdAndUpdate(update, options).exec(cb);
+}
+export function RoleFindByIdAndUpdateLeanExec(
+    update: RoleUpdateInput,
+    options: any = { new: true, useFindAndModify: false },
+    cb?: (err: any, result: any) => void
+) {
+    return RoleFindByIdAndUpdateLean(update, options).exec(cb);
+}
+
+export function RoleFindByIdAndRemove(
+    id: string | ObjectID,
+    options: any = {}
+) {
+    return RoleModel.findByIdAndRemove(id, options);
+}
+export function RoleFindByIdAndRemoveLean(
+    id: string | ObjectID,
+    options: any = {}
+) {
+    return RoleFindByIdAndRemove(id, options).lean();
+}
+export function RoleFindByIdAndRemoveExec(
+    id: string | ObjectID,
+    options: any = {},
+    cb?: (err: any, result: any) => void
+) {
+    return RoleFindByIdAndRemove(id, options).exec(cb);
+}
+export function RoleFindByIdAndRemoveLeanExec(
+    id: string | ObjectID,
+    options: any = {},
+    cb?: (err: any, result: any) => void
+) {
+    return RoleFindByIdAndRemoveLean(id, options).exec(cb);
+}
+
+
+export function RoleFindByIdPopulateUsers(
+    id: string | ObjectID,
+    projection?: any,
+    options: any = {}
+) {
+    return RoleModel.findById(id, projection, options).populate('users');
+}
+export function RoleFindByIdPopulateUsersLean(
+    id: string | ObjectID,
+    projection?: any,
+    options: any = {}
+) {
+    return RoleFindByIdPopulateUsers(id, projection, options).lean();
+}
+export function RoleFindByIdPopulateUsersExec(
+    id: string | ObjectID,
+    projection?: any,
+    options: any = {},
+    cb?: (err: any, result: any) => void
+) {
+    return RoleFindByIdPopulateUsers(id, projection, options).exec(cb);
+}
+export function RoleFindByIdPopulateUsersLeanExec(
+    id: string | ObjectID,
+    projection?: any,
+    options: any = {},
+    cb?: (err: any, result: any) => void
+) {
+    return RoleFindByIdPopulateUsersLean(id, projection, options).exec(cb);
+}
+
+export async function RoleFindByIdUsers(
+    id: string | ObjectID,
+    projection?: any,
+    options: any = {},
+) {
+    const object = await RoleFindByIdPopulateUsersLeanExec(id, projection, options);
+    return object ? object.users : undefined;
+}
+
+export function RoleFindByIdAndAddUsers(
+    id: string | ObjectID,
+    addId: string | ObjectID,
+    options: any = { new: true, useFindAndModify: false }
+) {
+    return RoleModel.findByIdAndUpdate(id, { $push: { users: addId } }, options);
+}
+export function RoleFindByIdAndAddUsersLean(
+    id: string | ObjectID,
+    addId: string | ObjectID,
+    options: any = { new: true, useFindAndModify: false }
+) {
+    return RoleFindByIdAndAddUsers(id, addId, options).lean();
+}
+export function RoleFindByIdAndAddUsersExec(
+    id: string | ObjectID,
+    addId: string | ObjectID,
+    options: any = { new: true, useFindAndModify: false },
+    cb?: (err: any, result: any) => void
+) {
+    return RoleFindByIdAndAddUsers(id, addId, options).exec(cb);
+}
+export function RoleFindByIdAndAddUsersLeanExec(
+    id: string | ObjectID,
+    addId: string | ObjectID,
+    options: any = { new: true, useFindAndModify: false },
+    cb?: (err: any, result: any) => void
+) {
+    return RoleFindByIdAndAddUsersLean(id, addId, options).exec(cb);
+}
+
+export function RoleFindByIdAndRemoveUsers(
+    id: string | ObjectID,
+    removeId: string | ObjectID,
+    options: any = {}
+) {
+    return RoleModel.findByIdAndUpdate(id, { $pull: { users: removeId } }, options);
+}
+export function RoleFindByIdAndRemoveUsersLean(
+    id: string | ObjectID,
+    removeId: string | ObjectID,
+    options: any = {}
+) {
+    return RoleFindByIdAndRemoveUsers(id, removeId, options).lean();
+}
+export function RoleFindByIdAndRemoveUsersExec(
+    id: string | ObjectID,
+    removeId: string | ObjectID,
+    options: any = {},
+    cb?: (err: any, result: any) => void
+) {
+    return RoleFindByIdAndRemoveUsers(id, removeId, options).exec(cb);
+}
+export function RoleFindByIdAndRemoveUsersLeanExec(
+    id: string | ObjectID,
+    removeId: string | ObjectID,
+    options: any = {},
+    cb?: (err: any, result: any) => void
+) {
+    return RoleFindByIdAndRemoveUsersLean(id, removeId, options).exec(cb);
+}
+
+
+export function getAllRoleMiddleware() {
+    return async (req: Request, res: Response, next: NextFunction) => {
+        try {
+            attachCTX(req, 'getAllRole', await RoleFindManyLeanExec());
+        } catch(error) {
+            return res.status(400).json({ message: 'Something went wrong.', error });
+        }
+        next();
+    };
+}
+export function getByIdRoleMiddleware() {
+    return async (req: Request, res: Response, next: NextFunction) => {
+        const id = req.params.id;
+        try {
+            attachCTX(req, 'getByIdRole', await RoleFindByIdLeanExec(id));
+        } catch(error) {
+            return res.status(400).json({ message: 'Something went wrong.', error });
+        }
+        next();
+    };
+}
+export function createRoleMiddleware() {
+    return async (req: Request, res: Response, next: NextFunction) => {
+        const createInput: RoleCreateInput = req.body;
+        try {
+            attachCTX(req, 'createRole', await RoleCreateLean(createInput));            
+        } catch(error) {
+            return res.status(400).json({ message: 'Something went wrong.', error });
+        }
+        next();
+    };
+}
+export function updateRoleMiddleware() {
+    return async (req: Request, res: Response, next: NextFunction) => {
+        const id = req.params.id;
+        const changes: RoleChangesInput = req.body;
+        try {
+            attachCTX(req, 'updateRole', await RoleFindByIdAndUpdateLeanExec({ id, changes }));
+        } catch(error) {
+            return res.status(400).json({ message: 'Something went wrong.', error });
+        }
+        next();
+    };
+}
+export function deleteRoleMiddleware() {
+    return async (req: Request, res: Response, next: NextFunction) => {
+        const id = req.params.id;
+        try {
+            attachCTX(req, 'deleteRole', await RoleFindByIdAndRemoveLeanExec(id));
+        } catch(error) {
+            return res.status(400).json({ message: 'Something went wrong.', error });
+        }
+        next();
+    };
+}
+
+
+export function getRoleUsersMiddleware() {
+    return async (req: Request, res: Response, next: NextFunction) => {
+        const id = req.params.id;
+        try {
+            attachCTX(req, 'getRoleUsers', await RoleFindByIdUsers(id));
+        } catch(error) {
+            return res.status(400).json({ message: 'Something went wrong.', error });
+        }
+        next();
+    };
+}
+export function addRoleUsersMiddleware() {
+    return async (req: Request, res: Response, next: NextFunction) => {
+        const id = req.params.id;
+        const { id: addId } = req.body;
+        try {
+            attachCTX(req, 'addRoleUsers', await RoleFindByIdAndAddUsersLeanExec(id, addId));
+        } catch(error) {
+            return res.status(400).json({ message: 'Something went wrong.', error });
+        }
+        next();
+    };
+}
+export function removeRoleUsersMiddleware() {
+    return async (req: Request, res: Response, next: NextFunction) => {
+        const id = req.params.id;
+        const { id: removeId } = req.body;
+        try {
+            attachCTX(req, 'removeRoleUsers', await RoleFindByIdAndRemoveUsersLeanExec(id, removeId));
+        } catch(error) {
+            return res.status(400).json({ message: 'Something went wrong.', error });
+        }
+        next();
+    };
+}
+
+
+export function getAllRoleController() {
+    return async (req: Request, res: Response, next: NextFunction) => {
+        try {
+            res.json(await RoleFindManyLeanExec());
+        } catch(error) {
+            res.status(400).json({ message: 'Something went wrong.', error });
+        }
+    };
+}
+export function getByIdRoleController() {
+    return async (req: Request, res: Response, next: NextFunction) => {
+        const id = req.params.id;
+        try {
+            res.json(await RoleFindByIdLeanExec(id));
+        } catch(error) {
+            res.status(400).json({ message: 'Something went wrong.', error });
+        }
+    };
+}
+export function createRoleController() {
+    return async (req: Request, res: Response, next: NextFunction) => {
+        const createInput: RoleCreateInput = req.body;
+        try {
+            res.json(await RoleCreateLean(createInput));
+        } catch(error) {
+            res.status(400).json({ message: 'Something went wrong.', error });
+        }
+    };
+}
+export function updateRoleController() {
+    return async (req: Request, res: Response, next: NextFunction) => {
+        const id = req.params.id;
+        const changes: RoleChangesInput = req.body;
+        try {
+            res.json(await RoleFindByIdAndUpdateLeanExec({ id, changes }));
+        } catch(error) {
+            res.status(400).json({ message: 'Something went wrong.', error });
+        }
+    };
+}
+export function deleteRoleController() {
+    return async (req: Request, res: Response, next: NextFunction) => {
+        const id = req.params.id;
+        try {
+            res.json(await RoleFindByIdAndRemoveLeanExec(id));
+        } catch(error) {
+            res.status(400).json({ message: 'Something went wrong.', error });
+        }
+    };
+}
+
+
+export function getRoleUsersController() {
+    return async (req: Request, res: Response, next: NextFunction) => {
+        const id = req.params.id;
+        try {
+            res.json(await RoleFindByIdUsers(id));
+        } catch(error) {
+            res.status(400).json({ message: 'Something went wrong.', error });
+        }
+    };
+}
+export function addRoleUsersController() {
+    return async (req: Request, res: Response, next: NextFunction) => {
+        const id = req.params.id;
+        const { id: addId } = req.body;
+        try {
+            res.json(await RoleFindByIdAndAddUsersLeanExec(id, addId));
+        } catch(error) {
+            res.status(400).json({ message: 'Something went wrong.', error });
+        }
+    };
+}
+export function removeRoleUsersController() {
+    return async (req: Request, res: Response, next: NextFunction) => {
+        const id = req.params.id;
+        const { id: removeId } = req.body;
+        try {
+            res.json(await RoleFindByIdAndRemoveUsersLeanExec(id, removeId));
+        } catch(error) {
+            res.status(400).json({ message: 'Something went wrong.', error });
+        }
+    };
+}
+
+
+
+export class RoleAPI {
+
+    router = Router();
+    
+    constructor() {
+        this.makeAPI();
+    }
+
+    private makeAPI() {
+        this.router
+            .get('/', getAllRoleController())
+            .get('/:id', getByIdRoleController())
+            .post('/', createRoleController())
+            .put('/:id', updateRoleController())
+            .delete('/:id', deleteRoleController())
+            .get('/:id/users', getRoleUsersController())
+            .put('/:id/users/add', addRoleUsersController())
+            .put('/:id/users/remove', removeRoleUsersController());
+    }
+    
+    applyAPI(app: Application) {
+        app.use('/roles', this.router);
+        console.log(`***********     ${BrightCCC}${'roles'.toUpperCase()}${ResetCCC}     ***********`);
+        console.log('\n');
+        this.router.stack.forEach(({ route: { path, methods } }) => console.log(
+            `${colorVerb(Object.keys(methods)[0].toUpperCase())} => ${colorPath('/roles' + path)}`
+        ));
+        console.log('\n\n');
+    }
+}
+
+
+
+
+
+
 //  
 // Base entity interface
 //
@@ -42,6 +642,12 @@ export interface User {
 export interface UserCreateInput {
 
 }
+export function pickUserCreateInput<T extends {}>(input: T) {
+    return [].reduce((createInput, key) => {
+        createInput[key] = input[key];
+        return createInput;
+    }, {}) as UserCreateInput;
+}
 
 //  
 // Input payload interface for entity update
@@ -49,6 +655,13 @@ export interface UserCreateInput {
 
 export interface UserChangesInput {
 
+}
+
+export function pickUserChangesInput<T extends {}>(input: T) {
+    return [].reduce((changesInput, key) => {
+        changesInput[key] = input[key];
+        return changesInput;
+    }, {}) as UserChangesInput;
 }
 
 export interface UserUpdateInput {
@@ -178,7 +791,8 @@ export function UserFindByIdLeanExec(
     return UserFindByIdLean(id, projection, options).exec(cb);
 }
 
-export function UserCreate(createInput: UserCreateInput) {
+export function UserCreate(unsafeCreateInput: UserCreateInput) {
+    const createInput = pickUserCreateInput(unsafeCreateInput);
     const model = new UserModel(createInput);
     return model.save();
 }
@@ -188,27 +802,28 @@ export async function UserCreateLean(createInput: UserCreateInput) {
 }
 
 export function UserFindByIdAndUpdate(
-    { id, changes }: UserUpdateInput,
-    options: any = { new: true }
+    { id, changes: unsafeChanges }: UserUpdateInput,
+    options: any = { new: true, useFindAndModify: false }
 ) {
+    const changes = pickUserChangesInput(unsafeChanges);
     return UserModel.findByIdAndUpdate(id, { $set: changes }, options);
 }
 export function UserFindByIdAndUpdateLean(
     update: UserUpdateInput,
-    options: any = { new: true }
+    options: any = { new: true, useFindAndModify: false }
 ) {
     return UserFindByIdAndUpdate(update, options).lean();
 }
 export function UserFindByIdAndUpdateExec(
     update: UserUpdateInput,
-    options: any = { new: true },
+    options: any = { new: true, useFindAndModify: false },
     cb?: (err: any, result: any) => void
 ) {
     return UserFindByIdAndUpdate(update, options).exec(cb);
 }
 export function UserFindByIdAndUpdateLeanExec(
     update: UserUpdateInput,
-    options: any = { new: true },
+    options: any = { new: true, useFindAndModify: false },
     cb?: (err: any, result: any) => void
 ) {
     return UserFindByIdAndUpdateLean(update, options).exec(cb);
@@ -285,21 +900,21 @@ export async function UserFindByIdRoles(
 export function UserFindByIdAndAddRoles(
     id: string | ObjectID,
     addId: string | ObjectID,
-    options: any = { new: true }
+    options: any = { new: true, useFindAndModify: false }
 ) {
     return UserModel.findByIdAndUpdate(id, { $push: { roles: addId } }, options);
 }
 export function UserFindByIdAndAddRolesLean(
     id: string | ObjectID,
     addId: string | ObjectID,
-    options: any = { new: true }
+    options: any = { new: true, useFindAndModify: false }
 ) {
     return UserFindByIdAndAddRoles(id, addId, options).lean();
 }
 export function UserFindByIdAndAddRolesExec(
     id: string | ObjectID,
     addId: string | ObjectID,
-    options: any = { new: true },
+    options: any = { new: true, useFindAndModify: false },
     cb?: (err: any, result: any) => void
 ) {
     return UserFindByIdAndAddRoles(id, addId, options).exec(cb);
@@ -307,7 +922,7 @@ export function UserFindByIdAndAddRolesExec(
 export function UserFindByIdAndAddRolesLeanExec(
     id: string | ObjectID,
     addId: string | ObjectID,
-    options: any = { new: true },
+    options: any = { new: true, useFindAndModify: false },
     cb?: (err: any, result: any) => void
 ) {
     return UserFindByIdAndAddRolesLean(id, addId, options).exec(cb);
@@ -316,21 +931,21 @@ export function UserFindByIdAndAddRolesLeanExec(
 export function UserFindByIdAndRemoveRoles(
     id: string | ObjectID,
     removeId: string | ObjectID,
-    options: any = { new: true }
+    options: any = {}
 ) {
     return UserModel.findByIdAndUpdate(id, { $pull: { roles: removeId } }, options);
 }
 export function UserFindByIdAndRemoveRolesLean(
     id: string | ObjectID,
     removeId: string | ObjectID,
-    options: any = { new: true }
+    options: any = {}
 ) {
     return UserFindByIdAndRemoveRoles(id, removeId, options).lean();
 }
 export function UserFindByIdAndRemoveRolesExec(
     id: string | ObjectID,
     removeId: string | ObjectID,
-    options: any = { new: true },
+    options: any = {},
     cb?: (err: any, result: any) => void
 ) {
     return UserFindByIdAndRemoveRoles(id, removeId, options).exec(cb);
@@ -338,7 +953,7 @@ export function UserFindByIdAndRemoveRolesExec(
 export function UserFindByIdAndRemoveRolesLeanExec(
     id: string | ObjectID,
     removeId: string | ObjectID,
-    options: any = { new: true },
+    options: any = {},
     cb?: (err: any, result: any) => void
 ) {
     return UserFindByIdAndRemoveRolesLean(id, removeId, options).exec(cb);
@@ -388,21 +1003,21 @@ export async function UserFindByIdScopes(
 export function UserFindByIdAndAddScopes(
     id: string | ObjectID,
     addId: string | ObjectID,
-    options: any = { new: true }
+    options: any = { new: true, useFindAndModify: false }
 ) {
     return UserModel.findByIdAndUpdate(id, { $push: { scopes: addId } }, options);
 }
 export function UserFindByIdAndAddScopesLean(
     id: string | ObjectID,
     addId: string | ObjectID,
-    options: any = { new: true }
+    options: any = { new: true, useFindAndModify: false }
 ) {
     return UserFindByIdAndAddScopes(id, addId, options).lean();
 }
 export function UserFindByIdAndAddScopesExec(
     id: string | ObjectID,
     addId: string | ObjectID,
-    options: any = { new: true },
+    options: any = { new: true, useFindAndModify: false },
     cb?: (err: any, result: any) => void
 ) {
     return UserFindByIdAndAddScopes(id, addId, options).exec(cb);
@@ -410,7 +1025,7 @@ export function UserFindByIdAndAddScopesExec(
 export function UserFindByIdAndAddScopesLeanExec(
     id: string | ObjectID,
     addId: string | ObjectID,
-    options: any = { new: true },
+    options: any = { new: true, useFindAndModify: false },
     cb?: (err: any, result: any) => void
 ) {
     return UserFindByIdAndAddScopesLean(id, addId, options).exec(cb);
@@ -419,21 +1034,21 @@ export function UserFindByIdAndAddScopesLeanExec(
 export function UserFindByIdAndRemoveScopes(
     id: string | ObjectID,
     removeId: string | ObjectID,
-    options: any = { new: true }
+    options: any = {}
 ) {
     return UserModel.findByIdAndUpdate(id, { $pull: { scopes: removeId } }, options);
 }
 export function UserFindByIdAndRemoveScopesLean(
     id: string | ObjectID,
     removeId: string | ObjectID,
-    options: any = { new: true }
+    options: any = {}
 ) {
     return UserFindByIdAndRemoveScopes(id, removeId, options).lean();
 }
 export function UserFindByIdAndRemoveScopesExec(
     id: string | ObjectID,
     removeId: string | ObjectID,
-    options: any = { new: true },
+    options: any = {},
     cb?: (err: any, result: any) => void
 ) {
     return UserFindByIdAndRemoveScopes(id, removeId, options).exec(cb);
@@ -441,7 +1056,7 @@ export function UserFindByIdAndRemoveScopesExec(
 export function UserFindByIdAndRemoveScopesLeanExec(
     id: string | ObjectID,
     removeId: string | ObjectID,
-    options: any = { new: true },
+    options: any = {},
     cb?: (err: any, result: any) => void
 ) {
     return UserFindByIdAndRemoveScopesLean(id, removeId, options).exec(cb);
@@ -491,21 +1106,21 @@ export async function UserFindByIdCredential(
 export function UserFindByIdAndAddCredential(
     id: string | ObjectID,
     addId: string | ObjectID,
-    options: any = { new: true }
+    options: any = { new: true, useFindAndModify: false }
 ) {
     return UserModel.findByIdAndUpdate(id, { $push: { credential: addId } }, options);
 }
 export function UserFindByIdAndAddCredentialLean(
     id: string | ObjectID,
     addId: string | ObjectID,
-    options: any = { new: true }
+    options: any = { new: true, useFindAndModify: false }
 ) {
     return UserFindByIdAndAddCredential(id, addId, options).lean();
 }
 export function UserFindByIdAndAddCredentialExec(
     id: string | ObjectID,
     addId: string | ObjectID,
-    options: any = { new: true },
+    options: any = { new: true, useFindAndModify: false },
     cb?: (err: any, result: any) => void
 ) {
     return UserFindByIdAndAddCredential(id, addId, options).exec(cb);
@@ -513,7 +1128,7 @@ export function UserFindByIdAndAddCredentialExec(
 export function UserFindByIdAndAddCredentialLeanExec(
     id: string | ObjectID,
     addId: string | ObjectID,
-    options: any = { new: true },
+    options: any = { new: true, useFindAndModify: false },
     cb?: (err: any, result: any) => void
 ) {
     return UserFindByIdAndAddCredentialLean(id, addId, options).exec(cb);
@@ -522,21 +1137,21 @@ export function UserFindByIdAndAddCredentialLeanExec(
 export function UserFindByIdAndRemoveCredential(
     id: string | ObjectID,
     removeId: string | ObjectID,
-    options: any = { new: true }
+    options: any = {}
 ) {
     return UserModel.findByIdAndUpdate(id, { $pull: { credential: removeId } }, options);
 }
 export function UserFindByIdAndRemoveCredentialLean(
     id: string | ObjectID,
     removeId: string | ObjectID,
-    options: any = { new: true }
+    options: any = {}
 ) {
     return UserFindByIdAndRemoveCredential(id, removeId, options).lean();
 }
 export function UserFindByIdAndRemoveCredentialExec(
     id: string | ObjectID,
     removeId: string | ObjectID,
-    options: any = { new: true },
+    options: any = {},
     cb?: (err: any, result: any) => void
 ) {
     return UserFindByIdAndRemoveCredential(id, removeId, options).exec(cb);
@@ -544,7 +1159,7 @@ export function UserFindByIdAndRemoveCredentialExec(
 export function UserFindByIdAndRemoveCredentialLeanExec(
     id: string | ObjectID,
     removeId: string | ObjectID,
-    options: any = { new: true },
+    options: any = {},
     cb?: (err: any, result: any) => void
 ) {
     return UserFindByIdAndRemoveCredentialLean(id, removeId, options).exec(cb);
@@ -594,21 +1209,21 @@ export async function UserFindByIdProfil(
 export function UserFindByIdAndAddProfil(
     id: string | ObjectID,
     addId: string | ObjectID,
-    options: any = { new: true }
+    options: any = { new: true, useFindAndModify: false }
 ) {
     return UserModel.findByIdAndUpdate(id, { $push: { profil: addId } }, options);
 }
 export function UserFindByIdAndAddProfilLean(
     id: string | ObjectID,
     addId: string | ObjectID,
-    options: any = { new: true }
+    options: any = { new: true, useFindAndModify: false }
 ) {
     return UserFindByIdAndAddProfil(id, addId, options).lean();
 }
 export function UserFindByIdAndAddProfilExec(
     id: string | ObjectID,
     addId: string | ObjectID,
-    options: any = { new: true },
+    options: any = { new: true, useFindAndModify: false },
     cb?: (err: any, result: any) => void
 ) {
     return UserFindByIdAndAddProfil(id, addId, options).exec(cb);
@@ -616,7 +1231,7 @@ export function UserFindByIdAndAddProfilExec(
 export function UserFindByIdAndAddProfilLeanExec(
     id: string | ObjectID,
     addId: string | ObjectID,
-    options: any = { new: true },
+    options: any = { new: true, useFindAndModify: false },
     cb?: (err: any, result: any) => void
 ) {
     return UserFindByIdAndAddProfilLean(id, addId, options).exec(cb);
@@ -625,21 +1240,21 @@ export function UserFindByIdAndAddProfilLeanExec(
 export function UserFindByIdAndRemoveProfil(
     id: string | ObjectID,
     removeId: string | ObjectID,
-    options: any = { new: true }
+    options: any = {}
 ) {
     return UserModel.findByIdAndUpdate(id, { $pull: { profil: removeId } }, options);
 }
 export function UserFindByIdAndRemoveProfilLean(
     id: string | ObjectID,
     removeId: string | ObjectID,
-    options: any = { new: true }
+    options: any = {}
 ) {
     return UserFindByIdAndRemoveProfil(id, removeId, options).lean();
 }
 export function UserFindByIdAndRemoveProfilExec(
     id: string | ObjectID,
     removeId: string | ObjectID,
-    options: any = { new: true },
+    options: any = {},
     cb?: (err: any, result: any) => void
 ) {
     return UserFindByIdAndRemoveProfil(id, removeId, options).exec(cb);
@@ -647,7 +1262,7 @@ export function UserFindByIdAndRemoveProfilExec(
 export function UserFindByIdAndRemoveProfilLeanExec(
     id: string | ObjectID,
     removeId: string | ObjectID,
-    options: any = { new: true },
+    options: any = {},
     cb?: (err: any, result: any) => void
 ) {
     return UserFindByIdAndRemoveProfilLean(id, removeId, options).exec(cb);
@@ -691,7 +1306,7 @@ export function updateUserMiddleware() {
         const id = req.params.id;
         const changes: UserChangesInput = req.body;
         try {
-            attachCTX(req, 'updateUser', await UserFindByIdAndUpdate({ id, changes }));
+            attachCTX(req, 'updateUser', await UserFindByIdAndUpdateLeanExec({ id, changes }));
         } catch(error) {
             return res.status(400).json({ message: 'Something went wrong.', error });
         }
@@ -702,7 +1317,7 @@ export function deleteUserMiddleware() {
     return async (req: Request, res: Response, next: NextFunction) => {
         const id = req.params.id;
         try {
-            attachCTX(req, 'deleteUser', await UserFindByIdAndRemove(id));
+            attachCTX(req, 'deleteUser', await UserFindByIdAndRemoveLeanExec(id));
         } catch(error) {
             return res.status(400).json({ message: 'Something went wrong.', error });
         }
@@ -893,7 +1508,7 @@ export function updateUserController() {
         const id = req.params.id;
         const changes: UserChangesInput = req.body;
         try {
-            res.json(await UserFindByIdAndUpdate({ id, changes }));
+            res.json(await UserFindByIdAndUpdateLeanExec({ id, changes }));
         } catch(error) {
             res.status(400).json({ message: 'Something went wrong.', error });
         }
@@ -903,7 +1518,7 @@ export function deleteUserController() {
     return async (req: Request, res: Response, next: NextFunction) => {
         const id = req.params.id;
         try {
-            res.json(await UserFindByIdAndRemove(id));
+            res.json(await UserFindByIdAndRemoveLeanExec(id));
         } catch(error) {
             res.status(400).json({ message: 'Something went wrong.', error });
         }
@@ -1047,44 +1662,6 @@ export function removeUserProfilController() {
 }
 
 
-/*
-
-export class UserAPI {
-
-    router = Router();
-    
-    constructor() {
-        this.makeAPI();
-    }
-
-    private makeAPI() {
-        this.router
-            .get('/', getAllUserController())
-            .get('/:id', getByIdUserController())
-            .post('/', createUserController())
-            .put('/:id', updateUserController())
-            .delete('/:id', deleteUserController())
-            .get('/:id/roles', getUserRolesController())
-            .get('/:id/scopes', getUserScopesController())
-            .get('/:id/credential', getUserCredentialController())
-            .get('/:id/profil', getUserProfilController())
-            .post('/:id/roles/add', addUserRolesController())
-            .post('/:id/scopes/add', addUserScopesController())
-            .post('/:id/credential/add', addUserCredentialController())
-            .post('/:id/profil/add', addUserProfilController())
-            .post('/:id/roles/remove', removeUserRolesController())
-            .post('/:id/scopes/remove', removeUserScopesController())
-            .post('/:id/credential/remove', removeUserCredentialController())
-            .post('/:id/profil/remove', removeUserProfilController());
-    }
-    
-    applyAPI(app: Application) {
-        app.use('/users', this.router);
-    }
-}
-
-*/
-
 
 export class UserAPI {
 
@@ -1104,570 +1681,24 @@ export class UserAPI {
             .get('/:id/roles', getUserRolesController())
             .get('/:id/scopes', getUserScopesController())
             .get('/:id/profil', getUserProfilController())
-            .post('/:id/roles/add', addUserRolesController())
-            .post('/:id/scopes/add', addUserScopesController())
-            .post('/:id/profil/add', addUserProfilController())
-            .post('/:id/roles/remove', removeUserRolesController())
-            .post('/:id/scopes/remove', removeUserScopesController())
-            .post('/:id/profil/remove', removeUserProfilController());
+            .put('/:id/roles/add', addUserRolesController())
+            .put('/:id/scopes/add', addUserScopesController())
+            .put('/:id/credential/add', addUserCredentialController())
+            .put('/:id/profil/add', addUserProfilController())
+            .put('/:id/roles/remove', removeUserRolesController())
+            .put('/:id/scopes/remove', removeUserScopesController())
+            .put('/:id/credential/remove', removeUserCredentialController())
+            .put('/:id/profil/remove', removeUserProfilController());
     }
     
     applyAPI(app: Application) {
         app.use('/users', this.router);
-    }
-}
-
-
-
-
-
-
-//  
-// Base entity interface
-//
-
-export interface Role {
-    _id: string;
-    name: string;
-    users?: [User];
-}
-
-//  
-// Input payload interface for entity creation
-//
-
-export interface RoleCreateInput {
-    name: string;
-}
-
-//  
-// Input payload interface for entity update
-//
-
-export interface RoleChangesInput {
-    name?: string;
-}
-
-export interface RoleUpdateInput {
-    id: string;
-    changes: RoleChangesInput;
-}
-
-//  
-// Mongoose Schema/Model for this entity
-//
-
-export const RoleSchema = new mongoose.Schema(
-    {
-        name: {
-            type: String,
-            required: true,
-            unique: true,
-            ref: 'undefined',
-        },
-        users: {
-            type: [ObjectId],
-            ref: 'User',
-        },
-    },
-    {
-        minimize: false,
-    }
-);
-export const RoleModel = mongoose.model('Role', RoleSchema);
-
-export function RoleFindMany(
-    conditions: any = {},
-    projection?: any,
-    options: any = {}
-) {
-    return RoleModel.find(conditions, projection, options);
-}
-export function RoleFindManyLean(
-    conditions: any = {},
-    projection?: any,
-    options: any = {}
-) {
-    return RoleFindMany(conditions, projection, options).lean();
-}
-export function RoleFindManyExec(
-    conditions: any = {},
-    projection?: any,
-    options: any = {},
-    cb?: (err: any, result: any) => void
-) {
-    return RoleFindMany(conditions, projection, options).exec(cb);
-}
-export function RoleFindManyLeanExec(
-    conditions: any = {},
-    projection?: any,
-    options: any = {},
-    cb?: (err: any, result: any) => void
-) {
-    return RoleFindManyLean(conditions, projection, options).exec(cb);
-}
-
-export function RoleFindOne(
-    conditions: any = {},
-    projection?: any,
-    options: any = {}
-) {
-    return RoleModel.findOne(conditions, projection, options);
-}
-export function RoleFindOneLean(
-    conditions: any = {},
-    projection?: any,
-    options: any = {}
-) {
-    return RoleFindOne(conditions, projection, options).lean();
-}
-export function RoleFindOneExec(
-    conditions: any = {},
-    projection?: any,
-    options: any = {},
-    cb?: (err: any, result: any) => void
-) {
-    return RoleFindOne(conditions, projection, options).exec(cb);
-}
-export function RoleFindOneLeanExec(
-    conditions: any = {},
-    projection?: any,
-    options: any = {},
-    cb?: (err: any, result: any) => void
-) {
-    return RoleFindOneLean(conditions, projection, options).exec(cb);
-}
-
-export function RoleFindById(
-    id: string | ObjectID,
-    projection?: any,
-    options: any = {}
-) {
-    return RoleModel.findById(id, projection, options);
-}
-export function RoleFindByIdLean(
-    id: string | ObjectID,
-    projection?: any,
-    options: any = {}
-) {
-    return RoleFindById(id, projection, options).lean();
-}
-export function RoleFindByIdExec(
-    id: string | ObjectID,
-    projection?: any,
-    options: any = {},
-    cb?: (err: any, result: any) => void
-) {
-    return RoleFindById(id, projection, options).exec(cb);
-}
-export function RoleFindByIdLeanExec(
-    id: string | ObjectID,
-    projection?: any,
-    options: any = {},
-    cb?: (err: any, result: any) => void
-) {
-    return RoleFindByIdLean(id, projection, options).exec(cb);
-}
-
-export function RoleCreate(createInput: RoleCreateInput) {
-    const model = new RoleModel(createInput);
-    return model.save();
-}
-export async function RoleCreateLean(createInput: RoleCreateInput) {
-    const object = await RoleCreate(createInput);
-    return object.toObject();
-}
-
-export function RoleFindByIdAndUpdate(
-    { id, changes }: RoleUpdateInput,
-    options: any = { new: true }
-) {
-    return RoleModel.findByIdAndUpdate(id, { $set: changes }, options);
-}
-export function RoleFindByIdAndUpdateLean(
-    update: RoleUpdateInput,
-    options: any = { new: true }
-) {
-    return RoleFindByIdAndUpdate(update, options).lean();
-}
-export function RoleFindByIdAndUpdateExec(
-    update: RoleUpdateInput,
-    options: any = { new: true },
-    cb?: (err: any, result: any) => void
-) {
-    return RoleFindByIdAndUpdate(update, options).exec(cb);
-}
-export function RoleFindByIdAndUpdateLeanExec(
-    update: RoleUpdateInput,
-    options: any = { new: true },
-    cb?: (err: any, result: any) => void
-) {
-    return RoleFindByIdAndUpdateLean(update, options).exec(cb);
-}
-
-export function RoleFindByIdAndRemove(
-    id: string | ObjectID,
-    options: any = {}
-) {
-    return RoleModel.findByIdAndRemove(id, options);
-}
-export function RoleFindByIdAndRemoveLean(
-    id: string | ObjectID,
-    options: any = {}
-) {
-    return RoleFindByIdAndRemove(id, options).lean();
-}
-export function RoleFindByIdAndRemoveExec(
-    id: string | ObjectID,
-    options: any = {},
-    cb?: (err: any, result: any) => void
-) {
-    return RoleFindByIdAndRemove(id, options).exec(cb);
-}
-export function RoleFindByIdAndRemoveLeanExec(
-    id: string | ObjectID,
-    options: any = {},
-    cb?: (err: any, result: any) => void
-) {
-    return RoleFindByIdAndRemoveLean(id, options).exec(cb);
-}
-
-
-export function RoleFindByIdPopulateUsers(
-    id: string | ObjectID,
-    projection?: any,
-    options: any = {}
-) {
-    return RoleModel.findById(id, projection, options).populate('users');
-}
-export function RoleFindByIdPopulateUsersLean(
-    id: string | ObjectID,
-    projection?: any,
-    options: any = {}
-) {
-    return RoleFindByIdPopulateUsers(id, projection, options).lean();
-}
-export function RoleFindByIdPopulateUsersExec(
-    id: string | ObjectID,
-    projection?: any,
-    options: any = {},
-    cb?: (err: any, result: any) => void
-) {
-    return RoleFindByIdPopulateUsers(id, projection, options).exec(cb);
-}
-export function RoleFindByIdPopulateUsersLeanExec(
-    id: string | ObjectID,
-    projection?: any,
-    options: any = {},
-    cb?: (err: any, result: any) => void
-) {
-    return RoleFindByIdPopulateUsersLean(id, projection, options).exec(cb);
-}
-
-export async function RoleFindByIdUsers(
-    id: string | ObjectID,
-    projection?: any,
-    options: any = {},
-) {
-    const object = await RoleFindByIdPopulateUsersLeanExec(id, projection, options);
-    return object ? object.users : undefined;
-}
-
-export function RoleFindByIdAndAddUsers(
-    id: string | ObjectID,
-    addId: string | ObjectID,
-    options: any = { new: true }
-) {
-    return RoleModel.findByIdAndUpdate(id, { $push: { users: addId } }, options);
-}
-export function RoleFindByIdAndAddUsersLean(
-    id: string | ObjectID,
-    addId: string | ObjectID,
-    options: any = { new: true }
-) {
-    return RoleFindByIdAndAddUsers(id, addId, options).lean();
-}
-export function RoleFindByIdAndAddUsersExec(
-    id: string | ObjectID,
-    addId: string | ObjectID,
-    options: any = { new: true },
-    cb?: (err: any, result: any) => void
-) {
-    return RoleFindByIdAndAddUsers(id, addId, options).exec(cb);
-}
-export function RoleFindByIdAndAddUsersLeanExec(
-    id: string | ObjectID,
-    addId: string | ObjectID,
-    options: any = { new: true },
-    cb?: (err: any, result: any) => void
-) {
-    return RoleFindByIdAndAddUsersLean(id, addId, options).exec(cb);
-}
-
-export function RoleFindByIdAndRemoveUsers(
-    id: string | ObjectID,
-    removeId: string | ObjectID,
-    options: any = { new: true }
-) {
-    return RoleModel.findByIdAndUpdate(id, { $pull: { users: removeId } }, options);
-}
-export function RoleFindByIdAndRemoveUsersLean(
-    id: string | ObjectID,
-    removeId: string | ObjectID,
-    options: any = { new: true }
-) {
-    return RoleFindByIdAndRemoveUsers(id, removeId, options).lean();
-}
-export function RoleFindByIdAndRemoveUsersExec(
-    id: string | ObjectID,
-    removeId: string | ObjectID,
-    options: any = { new: true },
-    cb?: (err: any, result: any) => void
-) {
-    return RoleFindByIdAndRemoveUsers(id, removeId, options).exec(cb);
-}
-export function RoleFindByIdAndRemoveUsersLeanExec(
-    id: string | ObjectID,
-    removeId: string | ObjectID,
-    options: any = { new: true },
-    cb?: (err: any, result: any) => void
-) {
-    return RoleFindByIdAndRemoveUsersLean(id, removeId, options).exec(cb);
-}
-
-
-export function getAllRoleMiddleware() {
-    return async (req: Request, res: Response, next: NextFunction) => {
-        try {
-            attachCTX(req, 'getAllRole', await RoleFindManyLeanExec());
-        } catch(error) {
-            return res.status(400).json({ message: 'Something went wrong.', error });
-        }
-        next();
-    };
-}
-export function getByIdRoleMiddleware() {
-    return async (req: Request, res: Response, next: NextFunction) => {
-        const id = req.params.id;
-        try {
-            attachCTX(req, 'getByIdRole', await RoleFindByIdLeanExec(id));
-        } catch(error) {
-            return res.status(400).json({ message: 'Something went wrong.', error });
-        }
-        next();
-    };
-}
-export function createRoleMiddleware() {
-    return async (req: Request, res: Response, next: NextFunction) => {
-        const createInput: RoleCreateInput = req.body;
-        try {
-            attachCTX(req, 'createRole', await RoleCreateLean(createInput));            
-        } catch(error) {
-            return res.status(400).json({ message: 'Something went wrong.', error });
-        }
-        next();
-    };
-}
-export function updateRoleMiddleware() {
-    return async (req: Request, res: Response, next: NextFunction) => {
-        const id = req.params.id;
-        const changes: RoleChangesInput = req.body;
-        try {
-            attachCTX(req, 'updateRole', await RoleFindByIdAndUpdate({ id, changes }));
-        } catch(error) {
-            return res.status(400).json({ message: 'Something went wrong.', error });
-        }
-        next();
-    };
-}
-export function deleteRoleMiddleware() {
-    return async (req: Request, res: Response, next: NextFunction) => {
-        const id = req.params.id;
-        try {
-            attachCTX(req, 'deleteRole', await RoleFindByIdAndRemove(id));
-        } catch(error) {
-            return res.status(400).json({ message: 'Something went wrong.', error });
-        }
-        next();
-    };
-}
-
-
-export function getRoleUsersMiddleware() {
-    return async (req: Request, res: Response, next: NextFunction) => {
-        const id = req.params.id;
-        try {
-            attachCTX(req, 'getRoleUsers', await RoleFindByIdUsers(id));
-        } catch(error) {
-            return res.status(400).json({ message: 'Something went wrong.', error });
-        }
-        next();
-    };
-}
-export function addRoleUsersMiddleware() {
-    return async (req: Request, res: Response, next: NextFunction) => {
-        const id = req.params.id;
-        const { id: addId } = req.body;
-        try {
-            attachCTX(req, 'addRoleUsers', await RoleFindByIdAndAddUsersLeanExec(id, addId));
-        } catch(error) {
-            return res.status(400).json({ message: 'Something went wrong.', error });
-        }
-        next();
-    };
-}
-export function removeRoleUsersMiddleware() {
-    return async (req: Request, res: Response, next: NextFunction) => {
-        const id = req.params.id;
-        const { id: removeId } = req.body;
-        try {
-            attachCTX(req, 'removeRoleUsers', await RoleFindByIdAndRemoveUsersLeanExec(id, removeId));
-        } catch(error) {
-            return res.status(400).json({ message: 'Something went wrong.', error });
-        }
-        next();
-    };
-}
-
-
-export function getAllRoleController() {
-    return async (req: Request, res: Response, next: NextFunction) => {
-        try {
-            res.json(await RoleFindManyLeanExec());
-        } catch(error) {
-            res.status(400).json({ message: 'Something went wrong.', error });
-        }
-    };
-}
-export function getByIdRoleController() {
-    return async (req: Request, res: Response, next: NextFunction) => {
-        const id = req.params.id;
-        try {
-            res.json(await RoleFindByIdLeanExec(id));
-        } catch(error) {
-            res.status(400).json({ message: 'Something went wrong.', error });
-        }
-    };
-}
-export function createRoleController() {
-    return async (req: Request, res: Response, next: NextFunction) => {
-        const createInput: RoleCreateInput = req.body;
-        try {
-            res.json(await RoleCreateLean(createInput));
-        } catch(error) {
-            res.status(400).json({ message: 'Something went wrong.', error });
-        }
-    };
-}
-export function updateRoleController() {
-    return async (req: Request, res: Response, next: NextFunction) => {
-        const id = req.params.id;
-        const changes: RoleChangesInput = req.body;
-        try {
-            res.json(await RoleFindByIdAndUpdate({ id, changes }));
-        } catch(error) {
-            res.status(400).json({ message: 'Something went wrong.', error });
-        }
-    };
-}
-export function deleteRoleController() {
-    return async (req: Request, res: Response, next: NextFunction) => {
-        const id = req.params.id;
-        try {
-            res.json(await RoleFindByIdAndRemove(id));
-        } catch(error) {
-            res.status(400).json({ message: 'Something went wrong.', error });
-        }
-    };
-}
-
-
-export function getRoleUsersController() {
-    return async (req: Request, res: Response, next: NextFunction) => {
-        const id = req.params.id;
-        try {
-            res.json(await RoleFindByIdUsers(id));
-        } catch(error) {
-            res.status(400).json({ message: 'Something went wrong.', error });
-        }
-    };
-}
-export function addRoleUsersController() {
-    return async (req: Request, res: Response, next: NextFunction) => {
-        const id = req.params.id;
-        const { id: addId } = req.body;
-        try {
-            res.json(await RoleFindByIdAndAddUsersLeanExec(id, addId));
-        } catch(error) {
-            res.status(400).json({ message: 'Something went wrong.', error });
-        }
-    };
-}
-export function removeRoleUsersController() {
-    return async (req: Request, res: Response, next: NextFunction) => {
-        const id = req.params.id;
-        const { id: removeId } = req.body;
-        try {
-            res.json(await RoleFindByIdAndRemoveUsersLeanExec(id, removeId));
-        } catch(error) {
-            res.status(400).json({ message: 'Something went wrong.', error });
-        }
-    };
-}
-
-
-/*
-
-export class RoleAPI {
-
-    router = Router();
-    
-    constructor() {
-        this.makeAPI();
-    }
-
-    private makeAPI() {
-        this.router
-            .get('/', getAllRoleController())
-            .get('/:id', getByIdRoleController())
-            .post('/', createRoleController())
-            .put('/:id', updateRoleController())
-            .delete('/:id', deleteRoleController())
-            .get('/:id/users', getRoleUsersController())
-            .post('/:id/users/add', addRoleUsersController())
-            .post('/:id/users/remove', removeRoleUsersController());
-    }
-    
-    applyAPI(app: Application) {
-        app.use('/roles', this.router);
-    }
-}
-
-*/
-
-
-export class RoleAPI {
-
-    router = Router();
-    
-    constructor() {
-        this.makeAPI();
-    }
-
-    private makeAPI() {
-        this.router
-            .get('/', getAllRoleController())
-            .get('/:id', getByIdRoleController())
-            .post('/', createRoleController())
-            .put('/:id', updateRoleController())
-            .delete('/:id', deleteRoleController())
-            .get('/:id/users', getRoleUsersController())
-            .post('/:id/users/add', addRoleUsersController())
-            .post('/:id/users/remove', removeRoleUsersController());
-    }
-    
-    applyAPI(app: Application) {
-        app.use('/roles', this.router);
+        console.log(`***********     ${BrightCCC}${'users'.toUpperCase()}${ResetCCC}     ***********`);
+        console.log('\n');
+        this.router.stack.forEach(({ route: { path, methods } }) => console.log(
+            `${colorVerb(Object.keys(methods)[0].toUpperCase())} => ${colorPath('/users' + path)}`
+        ));
+        console.log('\n\n');
     }
 }
 
@@ -1693,6 +1724,12 @@ export interface Scope {
 export interface ScopeCreateInput {
     name: string;
 }
+export function pickScopeCreateInput<T extends {}>(input: T) {
+    return ['name'].reduce((createInput, key) => {
+        createInput[key] = input[key];
+        return createInput;
+    }, {}) as ScopeCreateInput;
+}
 
 //  
 // Input payload interface for entity update
@@ -1700,6 +1737,13 @@ export interface ScopeCreateInput {
 
 export interface ScopeChangesInput {
     name?: string;
+}
+
+export function pickScopeChangesInput<T extends {}>(input: T) {
+    return ['name'].reduce((changesInput, key) => {
+        changesInput[key] = input[key];
+        return changesInput;
+    }, {}) as ScopeChangesInput;
 }
 
 export interface ScopeUpdateInput {
@@ -1717,7 +1761,6 @@ export const ScopeSchema = new mongoose.Schema(
             type: String,
             required: true,
             unique: true,
-            ref: 'undefined',
         },
         users: {
             type: [ObjectId],
@@ -1823,7 +1866,8 @@ export function ScopeFindByIdLeanExec(
     return ScopeFindByIdLean(id, projection, options).exec(cb);
 }
 
-export function ScopeCreate(createInput: ScopeCreateInput) {
+export function ScopeCreate(unsafeCreateInput: ScopeCreateInput) {
+    const createInput = pickScopeCreateInput(unsafeCreateInput);
     const model = new ScopeModel(createInput);
     return model.save();
 }
@@ -1833,27 +1877,28 @@ export async function ScopeCreateLean(createInput: ScopeCreateInput) {
 }
 
 export function ScopeFindByIdAndUpdate(
-    { id, changes }: ScopeUpdateInput,
-    options: any = { new: true }
+    { id, changes: unsafeChanges }: ScopeUpdateInput,
+    options: any = { new: true, useFindAndModify: false }
 ) {
+    const changes = pickScopeChangesInput(unsafeChanges);
     return ScopeModel.findByIdAndUpdate(id, { $set: changes }, options);
 }
 export function ScopeFindByIdAndUpdateLean(
     update: ScopeUpdateInput,
-    options: any = { new: true }
+    options: any = { new: true, useFindAndModify: false }
 ) {
     return ScopeFindByIdAndUpdate(update, options).lean();
 }
 export function ScopeFindByIdAndUpdateExec(
     update: ScopeUpdateInput,
-    options: any = { new: true },
+    options: any = { new: true, useFindAndModify: false },
     cb?: (err: any, result: any) => void
 ) {
     return ScopeFindByIdAndUpdate(update, options).exec(cb);
 }
 export function ScopeFindByIdAndUpdateLeanExec(
     update: ScopeUpdateInput,
-    options: any = { new: true },
+    options: any = { new: true, useFindAndModify: false },
     cb?: (err: any, result: any) => void
 ) {
     return ScopeFindByIdAndUpdateLean(update, options).exec(cb);
@@ -1930,21 +1975,21 @@ export async function ScopeFindByIdUsers(
 export function ScopeFindByIdAndAddUsers(
     id: string | ObjectID,
     addId: string | ObjectID,
-    options: any = { new: true }
+    options: any = { new: true, useFindAndModify: false }
 ) {
     return ScopeModel.findByIdAndUpdate(id, { $push: { users: addId } }, options);
 }
 export function ScopeFindByIdAndAddUsersLean(
     id: string | ObjectID,
     addId: string | ObjectID,
-    options: any = { new: true }
+    options: any = { new: true, useFindAndModify: false }
 ) {
     return ScopeFindByIdAndAddUsers(id, addId, options).lean();
 }
 export function ScopeFindByIdAndAddUsersExec(
     id: string | ObjectID,
     addId: string | ObjectID,
-    options: any = { new: true },
+    options: any = { new: true, useFindAndModify: false },
     cb?: (err: any, result: any) => void
 ) {
     return ScopeFindByIdAndAddUsers(id, addId, options).exec(cb);
@@ -1952,7 +1997,7 @@ export function ScopeFindByIdAndAddUsersExec(
 export function ScopeFindByIdAndAddUsersLeanExec(
     id: string | ObjectID,
     addId: string | ObjectID,
-    options: any = { new: true },
+    options: any = { new: true, useFindAndModify: false },
     cb?: (err: any, result: any) => void
 ) {
     return ScopeFindByIdAndAddUsersLean(id, addId, options).exec(cb);
@@ -1961,21 +2006,21 @@ export function ScopeFindByIdAndAddUsersLeanExec(
 export function ScopeFindByIdAndRemoveUsers(
     id: string | ObjectID,
     removeId: string | ObjectID,
-    options: any = { new: true }
+    options: any = {}
 ) {
     return ScopeModel.findByIdAndUpdate(id, { $pull: { users: removeId } }, options);
 }
 export function ScopeFindByIdAndRemoveUsersLean(
     id: string | ObjectID,
     removeId: string | ObjectID,
-    options: any = { new: true }
+    options: any = {}
 ) {
     return ScopeFindByIdAndRemoveUsers(id, removeId, options).lean();
 }
 export function ScopeFindByIdAndRemoveUsersExec(
     id: string | ObjectID,
     removeId: string | ObjectID,
-    options: any = { new: true },
+    options: any = {},
     cb?: (err: any, result: any) => void
 ) {
     return ScopeFindByIdAndRemoveUsers(id, removeId, options).exec(cb);
@@ -1983,7 +2028,7 @@ export function ScopeFindByIdAndRemoveUsersExec(
 export function ScopeFindByIdAndRemoveUsersLeanExec(
     id: string | ObjectID,
     removeId: string | ObjectID,
-    options: any = { new: true },
+    options: any = {},
     cb?: (err: any, result: any) => void
 ) {
     return ScopeFindByIdAndRemoveUsersLean(id, removeId, options).exec(cb);
@@ -2027,7 +2072,7 @@ export function updateScopeMiddleware() {
         const id = req.params.id;
         const changes: ScopeChangesInput = req.body;
         try {
-            attachCTX(req, 'updateScope', await ScopeFindByIdAndUpdate({ id, changes }));
+            attachCTX(req, 'updateScope', await ScopeFindByIdAndUpdateLeanExec({ id, changes }));
         } catch(error) {
             return res.status(400).json({ message: 'Something went wrong.', error });
         }
@@ -2038,7 +2083,7 @@ export function deleteScopeMiddleware() {
     return async (req: Request, res: Response, next: NextFunction) => {
         const id = req.params.id;
         try {
-            attachCTX(req, 'deleteScope', await ScopeFindByIdAndRemove(id));
+            attachCTX(req, 'deleteScope', await ScopeFindByIdAndRemoveLeanExec(id));
         } catch(error) {
             return res.status(400).json({ message: 'Something went wrong.', error });
         }
@@ -2118,7 +2163,7 @@ export function updateScopeController() {
         const id = req.params.id;
         const changes: ScopeChangesInput = req.body;
         try {
-            res.json(await ScopeFindByIdAndUpdate({ id, changes }));
+            res.json(await ScopeFindByIdAndUpdateLeanExec({ id, changes }));
         } catch(error) {
             res.status(400).json({ message: 'Something went wrong.', error });
         }
@@ -2128,7 +2173,7 @@ export function deleteScopeController() {
     return async (req: Request, res: Response, next: NextFunction) => {
         const id = req.params.id;
         try {
-            res.json(await ScopeFindByIdAndRemove(id));
+            res.json(await ScopeFindByIdAndRemoveLeanExec(id));
         } catch(error) {
             res.status(400).json({ message: 'Something went wrong.', error });
         }
@@ -2170,7 +2215,6 @@ export function removeScopeUsersController() {
 }
 
 
-/*
 
 export class ScopeAPI {
 
@@ -2188,40 +2232,18 @@ export class ScopeAPI {
             .put('/:id', updateScopeController())
             .delete('/:id', deleteScopeController())
             .get('/:id/users', getScopeUsersController())
-            .post('/:id/users/add', addScopeUsersController())
-            .post('/:id/users/remove', removeScopeUsersController());
+            .put('/:id/users/add', addScopeUsersController())
+            .put('/:id/users/remove', removeScopeUsersController());
     }
     
     applyAPI(app: Application) {
         app.use('/scopes', this.router);
-    }
-}
-
-*/
-
-
-export class ScopeAPI {
-
-    router = Router();
-    
-    constructor() {
-        this.makeAPI();
-    }
-
-    private makeAPI() {
-        this.router
-            .get('/', getAllScopeController())
-            .get('/:id', getByIdScopeController())
-            .post('/', createScopeController())
-            .put('/:id', updateScopeController())
-            .delete('/:id', deleteScopeController())
-            .get('/:id/users', getScopeUsersController())
-            .post('/:id/users/add', addScopeUsersController())
-            .post('/:id/users/remove', removeScopeUsersController());
-    }
-    
-    applyAPI(app: Application) {
-        app.use('/scopes', this.router);
+        console.log(`***********     ${BrightCCC}${'scopes'.toUpperCase()}${ResetCCC}     ***********`);
+        console.log('\n');
+        this.router.stack.forEach(({ route: { path, methods } }) => console.log(
+            `${colorVerb(Object.keys(methods)[0].toUpperCase())} => ${colorPath('/scopes' + path)}`
+        ));
+        console.log('\n\n');
     }
 }
 
@@ -2249,6 +2271,12 @@ export interface CredentialCreateInput {
     username: string;
     password: string;
 }
+export function pickCredentialCreateInput<T extends {}>(input: T) {
+    return ['username','password'].reduce((createInput, key) => {
+        createInput[key] = input[key];
+        return createInput;
+    }, {}) as CredentialCreateInput;
+}
 
 //  
 // Input payload interface for entity update
@@ -2257,6 +2285,13 @@ export interface CredentialCreateInput {
 export interface CredentialChangesInput {
     username?: string;
     password?: string;
+}
+
+export function pickCredentialChangesInput<T extends {}>(input: T) {
+    return ['username'].reduce((changesInput, key) => {
+        changesInput[key] = input[key];
+        return changesInput;
+    }, {}) as CredentialChangesInput;
 }
 
 export interface CredentialUpdateInput {
@@ -2274,12 +2309,11 @@ export const CredentialSchema = new mongoose.Schema(
             type: String,
             required: true,
             unique: true,
-            ref: 'undefined',
         },
         password: {
             type: String,
             required: true,
-            ref: 'undefined',
+            hidden: true,
         },
         owner: {
             type: ObjectId,
@@ -2385,7 +2419,8 @@ export function CredentialFindByIdLeanExec(
     return CredentialFindByIdLean(id, projection, options).exec(cb);
 }
 
-export function CredentialCreate(createInput: CredentialCreateInput) {
+export function CredentialCreate(unsafeCreateInput: CredentialCreateInput) {
+    const createInput = pickCredentialCreateInput(unsafeCreateInput);
     const model = new CredentialModel(createInput);
     return model.save();
 }
@@ -2395,27 +2430,28 @@ export async function CredentialCreateLean(createInput: CredentialCreateInput) {
 }
 
 export function CredentialFindByIdAndUpdate(
-    { id, changes }: CredentialUpdateInput,
-    options: any = { new: true }
+    { id, changes: unsafeChanges }: CredentialUpdateInput,
+    options: any = { new: true, useFindAndModify: false }
 ) {
+    const changes = pickCredentialChangesInput(unsafeChanges);
     return CredentialModel.findByIdAndUpdate(id, { $set: changes }, options);
 }
 export function CredentialFindByIdAndUpdateLean(
     update: CredentialUpdateInput,
-    options: any = { new: true }
+    options: any = { new: true, useFindAndModify: false }
 ) {
     return CredentialFindByIdAndUpdate(update, options).lean();
 }
 export function CredentialFindByIdAndUpdateExec(
     update: CredentialUpdateInput,
-    options: any = { new: true },
+    options: any = { new: true, useFindAndModify: false },
     cb?: (err: any, result: any) => void
 ) {
     return CredentialFindByIdAndUpdate(update, options).exec(cb);
 }
 export function CredentialFindByIdAndUpdateLeanExec(
     update: CredentialUpdateInput,
-    options: any = { new: true },
+    options: any = { new: true, useFindAndModify: false },
     cb?: (err: any, result: any) => void
 ) {
     return CredentialFindByIdAndUpdateLean(update, options).exec(cb);
@@ -2492,21 +2528,21 @@ export async function CredentialFindByIdOwner(
 export function CredentialFindByIdAndAddOwner(
     id: string | ObjectID,
     addId: string | ObjectID,
-    options: any = { new: true }
+    options: any = { new: true, useFindAndModify: false }
 ) {
     return CredentialModel.findByIdAndUpdate(id, { $push: { owner: addId } }, options);
 }
 export function CredentialFindByIdAndAddOwnerLean(
     id: string | ObjectID,
     addId: string | ObjectID,
-    options: any = { new: true }
+    options: any = { new: true, useFindAndModify: false }
 ) {
     return CredentialFindByIdAndAddOwner(id, addId, options).lean();
 }
 export function CredentialFindByIdAndAddOwnerExec(
     id: string | ObjectID,
     addId: string | ObjectID,
-    options: any = { new: true },
+    options: any = { new: true, useFindAndModify: false },
     cb?: (err: any, result: any) => void
 ) {
     return CredentialFindByIdAndAddOwner(id, addId, options).exec(cb);
@@ -2514,7 +2550,7 @@ export function CredentialFindByIdAndAddOwnerExec(
 export function CredentialFindByIdAndAddOwnerLeanExec(
     id: string | ObjectID,
     addId: string | ObjectID,
-    options: any = { new: true },
+    options: any = { new: true, useFindAndModify: false },
     cb?: (err: any, result: any) => void
 ) {
     return CredentialFindByIdAndAddOwnerLean(id, addId, options).exec(cb);
@@ -2523,21 +2559,21 @@ export function CredentialFindByIdAndAddOwnerLeanExec(
 export function CredentialFindByIdAndRemoveOwner(
     id: string | ObjectID,
     removeId: string | ObjectID,
-    options: any = { new: true }
+    options: any = {}
 ) {
     return CredentialModel.findByIdAndUpdate(id, { $pull: { owner: removeId } }, options);
 }
 export function CredentialFindByIdAndRemoveOwnerLean(
     id: string | ObjectID,
     removeId: string | ObjectID,
-    options: any = { new: true }
+    options: any = {}
 ) {
     return CredentialFindByIdAndRemoveOwner(id, removeId, options).lean();
 }
 export function CredentialFindByIdAndRemoveOwnerExec(
     id: string | ObjectID,
     removeId: string | ObjectID,
-    options: any = { new: true },
+    options: any = {},
     cb?: (err: any, result: any) => void
 ) {
     return CredentialFindByIdAndRemoveOwner(id, removeId, options).exec(cb);
@@ -2545,7 +2581,7 @@ export function CredentialFindByIdAndRemoveOwnerExec(
 export function CredentialFindByIdAndRemoveOwnerLeanExec(
     id: string | ObjectID,
     removeId: string | ObjectID,
-    options: any = { new: true },
+    options: any = {},
     cb?: (err: any, result: any) => void
 ) {
     return CredentialFindByIdAndRemoveOwnerLean(id, removeId, options).exec(cb);
@@ -2589,7 +2625,7 @@ export function updateCredentialMiddleware() {
         const id = req.params.id;
         const changes: CredentialChangesInput = req.body;
         try {
-            attachCTX(req, 'updateCredential', await CredentialFindByIdAndUpdate({ id, changes }));
+            attachCTX(req, 'updateCredential', await CredentialFindByIdAndUpdateLeanExec({ id, changes }));
         } catch(error) {
             return res.status(400).json({ message: 'Something went wrong.', error });
         }
@@ -2600,7 +2636,7 @@ export function deleteCredentialMiddleware() {
     return async (req: Request, res: Response, next: NextFunction) => {
         const id = req.params.id;
         try {
-            attachCTX(req, 'deleteCredential', await CredentialFindByIdAndRemove(id));
+            attachCTX(req, 'deleteCredential', await CredentialFindByIdAndRemoveLeanExec(id));
         } catch(error) {
             return res.status(400).json({ message: 'Something went wrong.', error });
         }
@@ -2680,7 +2716,7 @@ export function updateCredentialController() {
         const id = req.params.id;
         const changes: CredentialChangesInput = req.body;
         try {
-            res.json(await CredentialFindByIdAndUpdate({ id, changes }));
+            res.json(await CredentialFindByIdAndUpdateLeanExec({ id, changes }));
         } catch(error) {
             res.status(400).json({ message: 'Something went wrong.', error });
         }
@@ -2690,7 +2726,7 @@ export function deleteCredentialController() {
     return async (req: Request, res: Response, next: NextFunction) => {
         const id = req.params.id;
         try {
-            res.json(await CredentialFindByIdAndRemove(id));
+            res.json(await CredentialFindByIdAndRemoveLeanExec(id));
         } catch(error) {
             res.status(400).json({ message: 'Something went wrong.', error });
         }
@@ -2732,7 +2768,6 @@ export function removeCredentialOwnerController() {
 }
 
 
-/*
 
 export class CredentialAPI {
 
@@ -2744,39 +2779,18 @@ export class CredentialAPI {
 
     private makeAPI() {
         this.router
-            .get('/', getAllCredentialController())
-            .get('/:id', getByIdCredentialController())
-            .post('/', createCredentialController())
-            .put('/:id', updateCredentialController())
-            .delete('/:id', deleteCredentialController())
-            .get('/:id/owner', getCredentialOwnerController())
-            .post('/:id/owner/add', addCredentialOwnerController())
-            .post('/:id/owner/remove', removeCredentialOwnerController());
+            .put('/:id/owner/add', addCredentialOwnerController())
+            .put('/:id/owner/remove', removeCredentialOwnerController());
     }
     
     applyAPI(app: Application) {
         app.use('/credentials', this.router);
-    }
-}
-
-*/
-
-
-export class CredentialAPI {
-
-    router = Router();
-    
-    constructor() {
-        this.makeAPI();
-    }
-
-    private makeAPI() {
-        this.router
-            ;
-    }
-    
-    applyAPI(app: Application) {
-        app.use('/credentials', this.router);
+        console.log(`***********     ${BrightCCC}${'credentials'.toUpperCase()}${ResetCCC}     ***********`);
+        console.log('\n');
+        this.router.stack.forEach(({ route: { path, methods } }) => console.log(
+            `${colorVerb(Object.keys(methods)[0].toUpperCase())} => ${colorPath('/credentials' + path)}`
+        ));
+        console.log('\n\n');
     }
 }
 
@@ -2810,6 +2824,12 @@ export interface ProfilCreateInput {
     birthdate: Date;
     json?: any;
 }
+export function pickProfilCreateInput<T extends {}>(input: T) {
+    return ['username','email','name','birthdate','json'].reduce((createInput, key) => {
+        createInput[key] = input[key];
+        return createInput;
+    }, {}) as ProfilCreateInput;
+}
 
 //  
 // Input payload interface for entity update
@@ -2821,6 +2841,13 @@ export interface ProfilChangesInput {
     name?: string;
     birthdate?: Date;
     json?: any;
+}
+
+export function pickProfilChangesInput<T extends {}>(input: T) {
+    return ['username','email','name','birthdate','json'].reduce((changesInput, key) => {
+        changesInput[key] = input[key];
+        return changesInput;
+    }, {}) as ProfilChangesInput;
 }
 
 export interface ProfilUpdateInput {
@@ -2838,28 +2865,23 @@ export const ProfilSchema = new mongoose.Schema(
             type: String,
             required: true,
             unique: true,
-            ref: 'undefined',
         },
         email: {
             type: String,
             required: true,
             unique: true,
-            ref: 'undefined',
         },
         name: {
             type: String,
             required: true,
-            ref: 'undefined',
         },
         birthdate: {
             type: Date,
             required: true,
-            ref: 'undefined',
         },
         json: {
             type: Mixed,
             default: {},
-            ref: 'undefined',
         },
         owner: {
             type: ObjectId,
@@ -2965,7 +2987,8 @@ export function ProfilFindByIdLeanExec(
     return ProfilFindByIdLean(id, projection, options).exec(cb);
 }
 
-export function ProfilCreate(createInput: ProfilCreateInput) {
+export function ProfilCreate(unsafeCreateInput: ProfilCreateInput) {
+    const createInput = pickProfilCreateInput(unsafeCreateInput);
     const model = new ProfilModel(createInput);
     return model.save();
 }
@@ -2975,27 +2998,28 @@ export async function ProfilCreateLean(createInput: ProfilCreateInput) {
 }
 
 export function ProfilFindByIdAndUpdate(
-    { id, changes }: ProfilUpdateInput,
-    options: any = { new: true }
+    { id, changes: unsafeChanges }: ProfilUpdateInput,
+    options: any = { new: true, useFindAndModify: false }
 ) {
+    const changes = pickProfilChangesInput(unsafeChanges);
     return ProfilModel.findByIdAndUpdate(id, { $set: changes }, options);
 }
 export function ProfilFindByIdAndUpdateLean(
     update: ProfilUpdateInput,
-    options: any = { new: true }
+    options: any = { new: true, useFindAndModify: false }
 ) {
     return ProfilFindByIdAndUpdate(update, options).lean();
 }
 export function ProfilFindByIdAndUpdateExec(
     update: ProfilUpdateInput,
-    options: any = { new: true },
+    options: any = { new: true, useFindAndModify: false },
     cb?: (err: any, result: any) => void
 ) {
     return ProfilFindByIdAndUpdate(update, options).exec(cb);
 }
 export function ProfilFindByIdAndUpdateLeanExec(
     update: ProfilUpdateInput,
-    options: any = { new: true },
+    options: any = { new: true, useFindAndModify: false },
     cb?: (err: any, result: any) => void
 ) {
     return ProfilFindByIdAndUpdateLean(update, options).exec(cb);
@@ -3072,21 +3096,21 @@ export async function ProfilFindByIdOwner(
 export function ProfilFindByIdAndAddOwner(
     id: string | ObjectID,
     addId: string | ObjectID,
-    options: any = { new: true }
+    options: any = { new: true, useFindAndModify: false }
 ) {
     return ProfilModel.findByIdAndUpdate(id, { $push: { owner: addId } }, options);
 }
 export function ProfilFindByIdAndAddOwnerLean(
     id: string | ObjectID,
     addId: string | ObjectID,
-    options: any = { new: true }
+    options: any = { new: true, useFindAndModify: false }
 ) {
     return ProfilFindByIdAndAddOwner(id, addId, options).lean();
 }
 export function ProfilFindByIdAndAddOwnerExec(
     id: string | ObjectID,
     addId: string | ObjectID,
-    options: any = { new: true },
+    options: any = { new: true, useFindAndModify: false },
     cb?: (err: any, result: any) => void
 ) {
     return ProfilFindByIdAndAddOwner(id, addId, options).exec(cb);
@@ -3094,7 +3118,7 @@ export function ProfilFindByIdAndAddOwnerExec(
 export function ProfilFindByIdAndAddOwnerLeanExec(
     id: string | ObjectID,
     addId: string | ObjectID,
-    options: any = { new: true },
+    options: any = { new: true, useFindAndModify: false },
     cb?: (err: any, result: any) => void
 ) {
     return ProfilFindByIdAndAddOwnerLean(id, addId, options).exec(cb);
@@ -3103,21 +3127,21 @@ export function ProfilFindByIdAndAddOwnerLeanExec(
 export function ProfilFindByIdAndRemoveOwner(
     id: string | ObjectID,
     removeId: string | ObjectID,
-    options: any = { new: true }
+    options: any = {}
 ) {
     return ProfilModel.findByIdAndUpdate(id, { $pull: { owner: removeId } }, options);
 }
 export function ProfilFindByIdAndRemoveOwnerLean(
     id: string | ObjectID,
     removeId: string | ObjectID,
-    options: any = { new: true }
+    options: any = {}
 ) {
     return ProfilFindByIdAndRemoveOwner(id, removeId, options).lean();
 }
 export function ProfilFindByIdAndRemoveOwnerExec(
     id: string | ObjectID,
     removeId: string | ObjectID,
-    options: any = { new: true },
+    options: any = {},
     cb?: (err: any, result: any) => void
 ) {
     return ProfilFindByIdAndRemoveOwner(id, removeId, options).exec(cb);
@@ -3125,7 +3149,7 @@ export function ProfilFindByIdAndRemoveOwnerExec(
 export function ProfilFindByIdAndRemoveOwnerLeanExec(
     id: string | ObjectID,
     removeId: string | ObjectID,
-    options: any = { new: true },
+    options: any = {},
     cb?: (err: any, result: any) => void
 ) {
     return ProfilFindByIdAndRemoveOwnerLean(id, removeId, options).exec(cb);
@@ -3169,7 +3193,7 @@ export function updateProfilMiddleware() {
         const id = req.params.id;
         const changes: ProfilChangesInput = req.body;
         try {
-            attachCTX(req, 'updateProfil', await ProfilFindByIdAndUpdate({ id, changes }));
+            attachCTX(req, 'updateProfil', await ProfilFindByIdAndUpdateLeanExec({ id, changes }));
         } catch(error) {
             return res.status(400).json({ message: 'Something went wrong.', error });
         }
@@ -3180,7 +3204,7 @@ export function deleteProfilMiddleware() {
     return async (req: Request, res: Response, next: NextFunction) => {
         const id = req.params.id;
         try {
-            attachCTX(req, 'deleteProfil', await ProfilFindByIdAndRemove(id));
+            attachCTX(req, 'deleteProfil', await ProfilFindByIdAndRemoveLeanExec(id));
         } catch(error) {
             return res.status(400).json({ message: 'Something went wrong.', error });
         }
@@ -3260,7 +3284,7 @@ export function updateProfilController() {
         const id = req.params.id;
         const changes: ProfilChangesInput = req.body;
         try {
-            res.json(await ProfilFindByIdAndUpdate({ id, changes }));
+            res.json(await ProfilFindByIdAndUpdateLeanExec({ id, changes }));
         } catch(error) {
             res.status(400).json({ message: 'Something went wrong.', error });
         }
@@ -3270,7 +3294,7 @@ export function deleteProfilController() {
     return async (req: Request, res: Response, next: NextFunction) => {
         const id = req.params.id;
         try {
-            res.json(await ProfilFindByIdAndRemove(id));
+            res.json(await ProfilFindByIdAndRemoveLeanExec(id));
         } catch(error) {
             res.status(400).json({ message: 'Something went wrong.', error });
         }
@@ -3312,7 +3336,6 @@ export function removeProfilOwnerController() {
 }
 
 
-/*
 
 export class ProfilAPI {
 
@@ -3330,40 +3353,18 @@ export class ProfilAPI {
             .put('/:id', updateProfilController())
             .delete('/:id', deleteProfilController())
             .get('/:id/owner', getProfilOwnerController())
-            .post('/:id/owner/add', addProfilOwnerController())
-            .post('/:id/owner/remove', removeProfilOwnerController());
+            .put('/:id/owner/add', addProfilOwnerController())
+            .put('/:id/owner/remove', removeProfilOwnerController());
     }
     
     applyAPI(app: Application) {
         app.use('/profils', this.router);
-    }
-}
-
-*/
-
-
-export class ProfilAPI {
-
-    router = Router();
-    
-    constructor() {
-        this.makeAPI();
-    }
-
-    private makeAPI() {
-        this.router
-            .get('/', getAllProfilController())
-            .get('/:id', getByIdProfilController())
-            .post('/', createProfilController())
-            .put('/:id', updateProfilController())
-            .delete('/:id', deleteProfilController())
-            .get('/:id/owner', getProfilOwnerController())
-            .post('/:id/owner/add', addProfilOwnerController())
-            .post('/:id/owner/remove', removeProfilOwnerController());
-    }
-    
-    applyAPI(app: Application) {
-        app.use('/profils', this.router);
+        console.log(`***********     ${BrightCCC}${'profils'.toUpperCase()}${ResetCCC}     ***********`);
+        console.log('\n');
+        this.router.stack.forEach(({ route: { path, methods } }) => console.log(
+            `${colorVerb(Object.keys(methods)[0].toUpperCase())} => ${colorPath('/profils' + path)}`
+        ));
+        console.log('\n\n');
     }
 }
 
@@ -3391,6 +3392,12 @@ export interface TodoCreateInput {
     title: string;
     done: boolean;
 }
+export function pickTodoCreateInput<T extends {}>(input: T) {
+    return ['title','done'].reduce((createInput, key) => {
+        createInput[key] = input[key];
+        return createInput;
+    }, {}) as TodoCreateInput;
+}
 
 //  
 // Input payload interface for entity update
@@ -3399,6 +3406,13 @@ export interface TodoCreateInput {
 export interface TodoChangesInput {
     title?: string;
     done?: boolean;
+}
+
+export function pickTodoChangesInput<T extends {}>(input: T) {
+    return ['title','done'].reduce((changesInput, key) => {
+        changesInput[key] = input[key];
+        return changesInput;
+    }, {}) as TodoChangesInput;
 }
 
 export interface TodoUpdateInput {
@@ -3416,12 +3430,10 @@ export const TodoSchema = new mongoose.Schema(
             type: String,
             required: true,
             unique: true,
-            ref: 'undefined',
         },
         done: {
             type: Boolean,
             required: true,
-            ref: 'undefined',
         },
         owner: {
             type: ObjectId,
@@ -3527,7 +3539,8 @@ export function TodoFindByIdLeanExec(
     return TodoFindByIdLean(id, projection, options).exec(cb);
 }
 
-export function TodoCreate(createInput: TodoCreateInput) {
+export function TodoCreate(unsafeCreateInput: TodoCreateInput) {
+    const createInput = pickTodoCreateInput(unsafeCreateInput);
     const model = new TodoModel(createInput);
     return model.save();
 }
@@ -3537,27 +3550,28 @@ export async function TodoCreateLean(createInput: TodoCreateInput) {
 }
 
 export function TodoFindByIdAndUpdate(
-    { id, changes }: TodoUpdateInput,
-    options: any = { new: true }
+    { id, changes: unsafeChanges }: TodoUpdateInput,
+    options: any = { new: true, useFindAndModify: false }
 ) {
+    const changes = pickTodoChangesInput(unsafeChanges);
     return TodoModel.findByIdAndUpdate(id, { $set: changes }, options);
 }
 export function TodoFindByIdAndUpdateLean(
     update: TodoUpdateInput,
-    options: any = { new: true }
+    options: any = { new: true, useFindAndModify: false }
 ) {
     return TodoFindByIdAndUpdate(update, options).lean();
 }
 export function TodoFindByIdAndUpdateExec(
     update: TodoUpdateInput,
-    options: any = { new: true },
+    options: any = { new: true, useFindAndModify: false },
     cb?: (err: any, result: any) => void
 ) {
     return TodoFindByIdAndUpdate(update, options).exec(cb);
 }
 export function TodoFindByIdAndUpdateLeanExec(
     update: TodoUpdateInput,
-    options: any = { new: true },
+    options: any = { new: true, useFindAndModify: false },
     cb?: (err: any, result: any) => void
 ) {
     return TodoFindByIdAndUpdateLean(update, options).exec(cb);
@@ -3634,21 +3648,21 @@ export async function TodoFindByIdOwner(
 export function TodoFindByIdAndAddOwner(
     id: string | ObjectID,
     addId: string | ObjectID,
-    options: any = { new: true }
+    options: any = { new: true, useFindAndModify: false }
 ) {
     return TodoModel.findByIdAndUpdate(id, { $push: { owner: addId } }, options);
 }
 export function TodoFindByIdAndAddOwnerLean(
     id: string | ObjectID,
     addId: string | ObjectID,
-    options: any = { new: true }
+    options: any = { new: true, useFindAndModify: false }
 ) {
     return TodoFindByIdAndAddOwner(id, addId, options).lean();
 }
 export function TodoFindByIdAndAddOwnerExec(
     id: string | ObjectID,
     addId: string | ObjectID,
-    options: any = { new: true },
+    options: any = { new: true, useFindAndModify: false },
     cb?: (err: any, result: any) => void
 ) {
     return TodoFindByIdAndAddOwner(id, addId, options).exec(cb);
@@ -3656,7 +3670,7 @@ export function TodoFindByIdAndAddOwnerExec(
 export function TodoFindByIdAndAddOwnerLeanExec(
     id: string | ObjectID,
     addId: string | ObjectID,
-    options: any = { new: true },
+    options: any = { new: true, useFindAndModify: false },
     cb?: (err: any, result: any) => void
 ) {
     return TodoFindByIdAndAddOwnerLean(id, addId, options).exec(cb);
@@ -3665,21 +3679,21 @@ export function TodoFindByIdAndAddOwnerLeanExec(
 export function TodoFindByIdAndRemoveOwner(
     id: string | ObjectID,
     removeId: string | ObjectID,
-    options: any = { new: true }
+    options: any = {}
 ) {
     return TodoModel.findByIdAndUpdate(id, { $pull: { owner: removeId } }, options);
 }
 export function TodoFindByIdAndRemoveOwnerLean(
     id: string | ObjectID,
     removeId: string | ObjectID,
-    options: any = { new: true }
+    options: any = {}
 ) {
     return TodoFindByIdAndRemoveOwner(id, removeId, options).lean();
 }
 export function TodoFindByIdAndRemoveOwnerExec(
     id: string | ObjectID,
     removeId: string | ObjectID,
-    options: any = { new: true },
+    options: any = {},
     cb?: (err: any, result: any) => void
 ) {
     return TodoFindByIdAndRemoveOwner(id, removeId, options).exec(cb);
@@ -3687,7 +3701,7 @@ export function TodoFindByIdAndRemoveOwnerExec(
 export function TodoFindByIdAndRemoveOwnerLeanExec(
     id: string | ObjectID,
     removeId: string | ObjectID,
-    options: any = { new: true },
+    options: any = {},
     cb?: (err: any, result: any) => void
 ) {
     return TodoFindByIdAndRemoveOwnerLean(id, removeId, options).exec(cb);
@@ -3731,7 +3745,7 @@ export function updateTodoMiddleware() {
         const id = req.params.id;
         const changes: TodoChangesInput = req.body;
         try {
-            attachCTX(req, 'updateTodo', await TodoFindByIdAndUpdate({ id, changes }));
+            attachCTX(req, 'updateTodo', await TodoFindByIdAndUpdateLeanExec({ id, changes }));
         } catch(error) {
             return res.status(400).json({ message: 'Something went wrong.', error });
         }
@@ -3742,7 +3756,7 @@ export function deleteTodoMiddleware() {
     return async (req: Request, res: Response, next: NextFunction) => {
         const id = req.params.id;
         try {
-            attachCTX(req, 'deleteTodo', await TodoFindByIdAndRemove(id));
+            attachCTX(req, 'deleteTodo', await TodoFindByIdAndRemoveLeanExec(id));
         } catch(error) {
             return res.status(400).json({ message: 'Something went wrong.', error });
         }
@@ -3822,7 +3836,7 @@ export function updateTodoController() {
         const id = req.params.id;
         const changes: TodoChangesInput = req.body;
         try {
-            res.json(await TodoFindByIdAndUpdate({ id, changes }));
+            res.json(await TodoFindByIdAndUpdateLeanExec({ id, changes }));
         } catch(error) {
             res.status(400).json({ message: 'Something went wrong.', error });
         }
@@ -3832,7 +3846,7 @@ export function deleteTodoController() {
     return async (req: Request, res: Response, next: NextFunction) => {
         const id = req.params.id;
         try {
-            res.json(await TodoFindByIdAndRemove(id));
+            res.json(await TodoFindByIdAndRemoveLeanExec(id));
         } catch(error) {
             res.status(400).json({ message: 'Something went wrong.', error });
         }
@@ -3874,7 +3888,6 @@ export function removeTodoOwnerController() {
 }
 
 
-/*
 
 export class TodoAPI {
 
@@ -3892,40 +3905,18 @@ export class TodoAPI {
             .put('/:id', updateTodoController())
             .delete('/:id', deleteTodoController())
             .get('/:id/owner', getTodoOwnerController())
-            .post('/:id/owner/add', addTodoOwnerController())
-            .post('/:id/owner/remove', removeTodoOwnerController());
+            .put('/:id/owner/add', addTodoOwnerController())
+            .put('/:id/owner/remove', removeTodoOwnerController());
     }
     
     applyAPI(app: Application) {
         app.use('/todos', this.router);
-    }
-}
-
-*/
-
-
-export class TodoAPI {
-
-    router = Router();
-    
-    constructor() {
-        this.makeAPI();
-    }
-
-    private makeAPI() {
-        this.router
-            .get('/', getAllTodoController())
-            .get('/:id', getByIdTodoController())
-            .post('/', createTodoController())
-            .put('/:id', updateTodoController())
-            .delete('/:id', deleteTodoController())
-            .get('/:id/owner', getTodoOwnerController())
-            .post('/:id/owner/add', addTodoOwnerController())
-            .post('/:id/owner/remove', removeTodoOwnerController());
-    }
-    
-    applyAPI(app: Application) {
-        app.use('/todos', this.router);
+        console.log(`***********     ${BrightCCC}${'todos'.toUpperCase()}${ResetCCC}     ***********`);
+        console.log('\n');
+        this.router.stack.forEach(({ route: { path, methods } }) => console.log(
+            `${colorVerb(Object.keys(methods)[0].toUpperCase())} => ${colorPath('/todos' + path)}`
+        ));
+        console.log('\n\n');
     }
 }
 
