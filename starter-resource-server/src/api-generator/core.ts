@@ -284,6 +284,8 @@ export class APIGenerator {
             )
         ).replace(/\n            \n/g, '\n');
         const defs = {
+            Cname,
+            cname,
             typeTpl,
             createInputTpl,
             updateInputTpl,
@@ -294,6 +296,7 @@ export class APIGenerator {
             relationMiddlewareTpls,
             controllerTpls,
             relationControllerTpls,
+            skippedRouterTpl
         }
         return [`
 
@@ -376,37 +379,4 @@ export interface CRUDSchemaInput<O={}, R={}> {
     skips?: string[];
 }
 
-import fs from 'fs';
-
-export function generateAll(
-    schemas: CRUDSchemaInput[],
-    path: string,
-    backup: boolean = true,
-) {
-
-    const G = new APIGenerator;
-    const prefix = templates.TS_Prefix;
-    const definitions = schemas.map(schema => G.generate(schema)[0]).join('\n');
-
-    if (backup) {
-        function backupAll() {
-            try {
-                const old = fs.readFileSync(`${path}`, 'utf8');
-                if (old) {
-                    fs.writeFileSync(`${path}.${Date.now()}.bk`, old, { encoding: 'utf8', flag: 'w' });
-                }
-            } catch (error) {
-                return console.error('Something Went wrong.', error);                
-            }
-        }
-        backupAll();
-    }
-
-    try {
-        fs.writeFileSync(`${path}`, prefix + definitions, { encoding: 'utf8', flag: 'w' });
-    } catch (error) {
-        return console.error('Something Went wrong.', error);
-    }
-
-}
 

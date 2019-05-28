@@ -1,4 +1,4 @@
-import { generateAll } from "./api-generator/core";
+import { generateAll } from "./api-generator/generate";
 
 import dotenv from "dotenv";
 dotenv.config();

@@ -23,20 +23,12 @@ import passport from 'passport';
  * MongoDB config
  */
 import { mainMongoService } from './database/mongo';
-
-/**
- * Generated APIs
- */
-import {
-  RoleAPI,
-  
-  ScopeAPI,
-  CredentialAPI,
-  ProfilAPI,
-  UserAPI,
-  TodoAPI
-
-} from './apis/apis';
+import { RoleAPI } from './apis/role/role';
+import { ScopeAPI } from './apis/scope/scope';
+import { CredentialAPI } from './apis/credential/credential';
+import { ProfilAPI } from './apis/profil/profil';
+import { UserAPI } from './apis/user/user';
+import { TodoAPI } from './apis/todo/todo';
 
 /**
  * Use async main function to get access to `await` keyword
@@ -78,12 +70,14 @@ async function main() {
   /**
    * Apply generated's APIs controllers
    */
+  
   new RoleAPI(middlewaresMap).applyAPI(app);
   new ScopeAPI(middlewaresMap).applyAPI(app);
   new CredentialAPI(middlewaresMap).applyAPI(app);
   new ProfilAPI(middlewaresMap).applyAPI(app);
   new UserAPI(middlewaresMap).applyAPI(app);
   new TodoAPI(middlewaresMap).applyAPI(app);
+
 
   /**
    * Start express server

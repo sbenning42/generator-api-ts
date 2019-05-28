@@ -12,6 +12,10 @@ import { ObjectID } from 'mongodb';
 const ObjectId = mongoose.Schema.Types.ObjectId;
 const Mixed = mongoose.Schema.Types.Mixed;
 
+
+`;
+
+const TS_Suffix = `
 export function contextMiddleware(req: Request, res: Response, next: NextFunction) {
     req['CTX'] = req['CTX'] ? req['CTX'] : {};
     req['CTX'].req = req;
@@ -705,7 +709,8 @@ export const templates = {
     TS_AddRelationRouterTpl,
     TS_RemoveRelationRouterTpl,
     TS_MaybeMiddlewareTpl,
-    TS_Prefix
+    TS_Prefix,
+    TS_Suffix
 };
 
 export function replaceIt(tpl: string, ...args: string[]) {
