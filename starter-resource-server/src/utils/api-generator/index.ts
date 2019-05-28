@@ -1,0 +1,51 @@
+export {
+    generateAll,
+    BgCyanCCC,
+    FgCyanCCC,
+    BgBlackCCC,
+    BgBlueCCC,
+    BgGreenCCC,
+    BgMagentaCCC,
+    BgRedCCC,
+    BgWhiteCCC,
+    BgYellowCCC,
+    BlinkCCC,
+    BrightCCC,
+    DimCCC,
+    FgBlackCCC,
+    FgBlueCCC,
+    FgGreenCCC,
+    FgMagentaCCC,
+    FgRedCCC,
+    FgWhiteCCC,
+    FgYellowCCC,
+    HiddenCCC,
+    ResetCCC,
+    ReverseCCC,
+    UnderscoreCCC,
+    colorVerb,
+    colorPath
+} from './generate';
+
+export {
+    templates,
+    replaceIt,
+    replaceThem,
+} from './templates';
+
+export {
+    APIGenerator,
+    CRUDSchemaInput,
+    CRUDSchemaInputAction,
+    CRUDSchemaInputActionAuth,
+    CRUDSchemaInputMutation,
+    CRUDSchemaInputMutations,
+    CRUDSchemaInputProp,
+    CRUDSchemaInputPropType,
+    CRUDSchemaInputPropTyped,
+    CRUDSchemaInputProps,
+    CRUDSchemaInputQueries,
+    CRUDSchemaInputQuery,
+    CRUDSchemaInputRelations,
+    typeCRUDSchemaInputProp,
+} from './core';

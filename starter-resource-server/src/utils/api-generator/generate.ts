@@ -3,7 +3,7 @@ import fs from 'fs';
 import { CRUDSchemaInput, APIGenerator } from './core';
 import { templates } from './templates';
 
-export interface Templates {
+export interface APITemplates {
     Cname: string,
     cname: string,
     typeTpl: string;
@@ -28,7 +28,7 @@ export function generateAll(
     const G = new APIGenerator;
     const prefix = templates.TS_Prefix;
     const suffix = templates.TS_Suffix;
-    const generations = schemas.map(schema => G.generate(schema)[1] as Templates);
+    const generations = schemas.map(schema => G.generate(schema)[1] as APITemplates);
 
     const types = generations.map(generation => {
         const {
@@ -38,10 +38,6 @@ export function generateAll(
             updateInputTpl,
             schemaTpl,
         } = generation;
-        delete generation.typeTpl;
-        delete generation.createInputTpl;
-        delete generation.updateInputTpl;
-        delete generation.schemaTpl;
         return {
             Cname, tpl: `
 ${typeTpl}
@@ -80,7 +76,7 @@ import {
 } from '../types';
 
 /**
- * Utilitaries functions
+ * Utilitaries
  */
 
 ${utilsTpl}
@@ -88,7 +84,7 @@ ${utilsTpl}
 ${relationUtilsTpls}
 
 /**
- * Middlewares functions
+ * Middlewares
  */
 
 ${middlewareTpls}
@@ -96,7 +92,7 @@ ${middlewareTpls}
 ${relationMiddlewareTpls}
 
 /**
- * Controllers functions
+ * Controllers
  */
 
 ${controllerTpls}
