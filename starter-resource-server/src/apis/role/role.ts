@@ -531,43 +531,43 @@ export class RoleAPI {
         console.log('\n\n');
     }
 }
-export function contextMiddleware(req: Request, res: Response, next: NextFunction) {
+function contextMiddleware(req: Request, res: Response, next: NextFunction) {
     req['CTX'] = req['CTX'] ? req['CTX'] : {};
     req['CTX'].req = req;
     req['CTX'].res = res;
     next();
 };
 
-export function attachCTX(req: Request, key: string, value: any) {
+function attachCTX(req: Request, key: string, value: any) {
     req['CTX'][key] = value;
     return value;
 }
 
-export const ResetCCC = "[0m";
-export const BrightCCC = "[1m";
-export const DimCCC = "[2m";
-export const UnderscoreCCC = "[4m";
-export const BlinkCCC = "[5m";
-export const ReverseCCC = "[7m";
-export const HiddenCCC = "[8m";
-export const FgBlackCCC = "[30m";
-export const FgRedCCC = "[31m";
-export const FgGreenCCC = "[32m";
-export const FgYellowCCC = "[33m";
-export const FgBlueCCC = "[34m";
-export const FgMagentaCCC = "[35m";
-export const FgCyanCCC = "[36m";
-export const FgWhiteCCC = "[37m";
-export const BgBlackCCC = "[40m";
-export const BgRedCCC = "[41m";
-export const BgGreenCCC = "[42m";
-export const BgYellowCCC = "[43m";
-export const BgBlueCCC = "[44m";
-export const BgMagentaCCC = "[45m";
-export const BgCyanCCC = "[46m";
-export const BgWhiteCCC = "[47m";
+const ResetCCC = "[0m";
+const BrightCCC = "[1m";
+const DimCCC = "[2m";
+const UnderscoreCCC = "[4m";
+const BlinkCCC = "[5m";
+const ReverseCCC = "[7m";
+const HiddenCCC = "[8m";
+const FgBlackCCC = "[30m";
+const FgRedCCC = "[31m";
+const FgGreenCCC = "[32m";
+const FgYellowCCC = "[33m";
+const FgBlueCCC = "[34m";
+const FgMagentaCCC = "[35m";
+const FgCyanCCC = "[36m";
+const FgWhiteCCC = "[37m";
+const BgBlackCCC = "[40m";
+const BgRedCCC = "[41m";
+const BgGreenCCC = "[42m";
+const BgYellowCCC = "[43m";
+const BgBlueCCC = "[44m";
+const BgMagentaCCC = "[45m";
+const BgCyanCCC = "[46m";
+const BgWhiteCCC = "[47m";
 
-export function colorVerb(verb: string) {
+function colorVerb(verb: string) {
     switch (verb) {
         case 'GET':
             return `${BrightCCC}${FgBlueCCC}GET${ResetCCC}`;
@@ -581,7 +581,7 @@ export function colorVerb(verb: string) {
             return verb;
     }
 }
-export function colorPath(path: string) {
+function colorPath(path: string) {
     const parts = path.split('/').slice(1);
     parts[0] = `${UnderscoreCCC}${BrightCCC}${parts[0]}${ResetCCC}${UnderscoreCCC}`;
     if (parts[1]) {

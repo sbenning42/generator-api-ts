@@ -16,43 +16,43 @@ const Mixed = mongoose.Schema.Types.Mixed;
 `;
 
 const TS_Suffix = `
-export function contextMiddleware(req: Request, res: Response, next: NextFunction) {
+function contextMiddleware(req: Request, res: Response, next: NextFunction) {
     req['CTX'] = req['CTX'] ? req['CTX'] : {};
     req['CTX'].req = req;
     req['CTX'].res = res;
     next();
 };
 
-export function attachCTX(req: Request, key: string, value: any) {
+function attachCTX(req: Request, key: string, value: any) {
     req['CTX'][key] = value;
     return value;
 }
 
-export const ResetCCC = "\x1b[0m";
-export const BrightCCC = "\x1b[1m";
-export const DimCCC = "\x1b[2m";
-export const UnderscoreCCC = "\x1b[4m";
-export const BlinkCCC = "\x1b[5m";
-export const ReverseCCC = "\x1b[7m";
-export const HiddenCCC = "\x1b[8m";
-export const FgBlackCCC = "\x1b[30m";
-export const FgRedCCC = "\x1b[31m";
-export const FgGreenCCC = "\x1b[32m";
-export const FgYellowCCC = "\x1b[33m";
-export const FgBlueCCC = "\x1b[34m";
-export const FgMagentaCCC = "\x1b[35m";
-export const FgCyanCCC = "\x1b[36m";
-export const FgWhiteCCC = "\x1b[37m";
-export const BgBlackCCC = "\x1b[40m";
-export const BgRedCCC = "\x1b[41m";
-export const BgGreenCCC = "\x1b[42m";
-export const BgYellowCCC = "\x1b[43m";
-export const BgBlueCCC = "\x1b[44m";
-export const BgMagentaCCC = "\x1b[45m";
-export const BgCyanCCC = "\x1b[46m";
-export const BgWhiteCCC = "\x1b[47m";
+const ResetCCC = "\x1b[0m";
+const BrightCCC = "\x1b[1m";
+const DimCCC = "\x1b[2m";
+const UnderscoreCCC = "\x1b[4m";
+const BlinkCCC = "\x1b[5m";
+const ReverseCCC = "\x1b[7m";
+const HiddenCCC = "\x1b[8m";
+const FgBlackCCC = "\x1b[30m";
+const FgRedCCC = "\x1b[31m";
+const FgGreenCCC = "\x1b[32m";
+const FgYellowCCC = "\x1b[33m";
+const FgBlueCCC = "\x1b[34m";
+const FgMagentaCCC = "\x1b[35m";
+const FgCyanCCC = "\x1b[36m";
+const FgWhiteCCC = "\x1b[37m";
+const BgBlackCCC = "\x1b[40m";
+const BgRedCCC = "\x1b[41m";
+const BgGreenCCC = "\x1b[42m";
+const BgYellowCCC = "\x1b[43m";
+const BgBlueCCC = "\x1b[44m";
+const BgMagentaCCC = "\x1b[45m";
+const BgCyanCCC = "\x1b[46m";
+const BgWhiteCCC = "\x1b[47m";
 
-export function colorVerb(verb: string) {
+function colorVerb(verb: string) {
     switch (verb) {
         case 'GET':
             return \`\${BrightCCC}\${FgBlueCCC}GET\${ResetCCC}\`;
@@ -66,7 +66,7 @@ export function colorVerb(verb: string) {
             return verb;
     }
 }
-export function colorPath(path: string) {
+function colorPath(path: string) {
     const parts = path.split('/').slice(1);
     parts[0] = \`\${UnderscoreCCC}\${BrightCCC}\${parts[0]}\${ResetCCC}\${UnderscoreCCC}\`;
     if (parts[1]) {
