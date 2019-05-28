@@ -1,6 +1,6 @@
 /**
  * Load `.env` file
- * Get `.env`'s process config
+ * Get `.env`'s config
  */
 import dotenv from 'dotenv';
 
