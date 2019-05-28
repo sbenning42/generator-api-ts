@@ -104,7 +104,7 @@ ${skippedRouterTpl}
         };
     });
 
-    const typesStr = types.reduce((all, { tpl, Cname }) => `${all ? `${all}\n` : ''}\n/**********     ${Cname.toUpperCase()}     **********/\n${tpl}`, '');
+    const typesStr = types.reduce((all, { tpl, Cname }) => `${all ? `${all}\n` : ''}\n/**********     ${Cname.toUpperCase()}     **********/\n\n\n${tpl}`, '');
 
     if (backup && fs.existsSync(path)) {
         function backupAll() {
@@ -127,10 +127,10 @@ ${skippedRouterTpl}
     const generated = [];
 
     try {
-        fs.writeFileSync(`${path}/types.ts`, prefix + typesStr + '\n' + suffix, { encoding: 'utf8', flag: 'w' });
+        fs.writeFileSync(`${path}/types.ts`, prefix + typesStr, { encoding: 'utf8', flag: 'w' });
         generated.push(`\nGenerated ${BrightCCC}TS types${ResetCCC} at => ${UnderscoreCCC}${path}/types.ts${ResetCCC}`);
         modules.forEach(({ Cname, tpl }) => {
-            const name = `\n/**********     ${Cname.toUpperCase()}     **********/\n`;
+            const name = `\n/**********     ${Cname.toUpperCase()}     **********/\n\n\n`;
             if (!fs.existsSync(`${path}/${Cname.toLowerCase()}`)) {
                 fs.mkdirSync(`${path}/${Cname.toLowerCase()}`, 0o755);
             }

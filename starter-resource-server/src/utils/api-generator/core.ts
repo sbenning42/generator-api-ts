@@ -1,8 +1,9 @@
 import { templates, replaceThem, replaceIt } from "./templates";
+import { Request, Response, NextFunction } from "express";
 
 export class APIGenerator {
 
-    generate<O={}, R={}>(schema: CRUDSchemaInput<O, R>) {
+    generate<O extends {}={}, R extends {}={}>(schema: CRUDSchemaInput<O, R>) {
         const C = (s: string) => `${s.slice(0, 1).toUpperCase()}${s.slice(1)}`;
         const c = (s: string) => `${s.slice(0, 1).toLowerCase()}${s.slice(1)}`;
         const requireIt = (s: string, isRequired: boolean = false) => `${s}${isRequired ? '' : '?'}`;
@@ -242,8 +243,8 @@ export class APIGenerator {
                     const key = Object.keys(mutation).find(_k => _k === `add${Cname}${C(name)}`);
                     const addMutation = mutation[key];
                     return !(skips.includes('all')
-                        && skips.includes('mutation')
-                        && skips.includes(`add${Cname}${C(name)}`))
+                        || skips.includes('mutation')
+                        || skips.includes(`add${Cname}${C(name)}`))
                         && (!addMutation
                         || addMutation.skip !== true);
                 }),
@@ -265,8 +266,8 @@ export class APIGenerator {
                     const key = Object.keys(mutation).find(_k => _k === `remove${Cname}${C(name)}`);
                     const removeMutation = mutation[key];
                     return !(skips.includes('all')
-                        && skips.includes('mutation')
-                        && skips.includes(`remove${Cname}${C(name)}`))
+                        || skips.includes('mutation')
+                        || skips.includes(`remove${Cname}${C(name)}`))
                         && (!removeMutation
                         || removeMutation.skip !== true);
                 }),
@@ -349,8 +350,8 @@ export function typeCRUDSchemaInputProp(inputProp: CRUDSchemaInputProp) {
     return inputProp;
 }
 
-export type CRUDSchemaInputProps<O={}> = { [K in keyof O]: CRUDSchemaInputProp };
-export type CRUDSchemaInputRelations<O={}> = { [K in keyof O]: string };
+export type CRUDSchemaInputProps<O extends {}> = { [K in keyof O]: CRUDSchemaInputProp };
+export type CRUDSchemaInputRelations<O extends {}> = { [K in keyof O]: string };
 
 export interface CRUDSchemaInputActionAuth {
     private?: boolean;
@@ -369,7 +370,7 @@ export type CRUDSchemaInputMutation = CRUDSchemaInputAction;
 export type CRUDSchemaInputQueries = { [key: string]: CRUDSchemaInputQuery };
 export type CRUDSchemaInputMutations = { [key: string]: CRUDSchemaInputMutation };
 
-export interface CRUDSchemaInput<O={}, R={}> {
+export interface CRUDSchemaInput<O extends {}={}, R extends {}={}> {
     type?: 'array'; // @todo: could be 'array'|'object' to handle non-collection entities
     name: string;
     props: CRUDSchemaInputProps<O>;
@@ -379,4 +380,9 @@ export interface CRUDSchemaInput<O={}, R={}> {
     skips?: string[];
 }
 
-
+export function contextMiddleware(req: Request, res: Response, next: NextFunction) {
+    req['CTX'] = req['CTX'] ? req['CTX'] : {};
+    req['CTX'].req = req;
+    req['CTX'].res = res;
+    next();
+};

@@ -29,6 +29,11 @@ import passport from 'passport';
 
 import { l } from './utils/logger';
 import { mainMongoService } from './database/mongo';
+import { UserAPI } from './apis/user/user';
+import { RoleAPI } from './apis/role/role';
+import { middlewaresMap } from './middlewares';
+import { createUserController } from './controllers/create-user';
+import { hasTokenLogMiddleware } from './middlewares/has-token-log';
 
 /**
  * Use async main function to get access to `await` keyword
@@ -58,7 +63,9 @@ async function main() {
   /**
    * Apply generated's APIs controllers
    */
-  
+  new UserAPI(middlewaresMap).applyAPI(app);
+  new RoleAPI(middlewaresMap).applyAPI(app);
+  app.post('/users', hasTokenLogMiddleware, createUserController);
 
   /**
    * Start `express` server

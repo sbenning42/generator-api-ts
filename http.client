@@ -1,2 +1,6 @@
-GET http://localhost:4266 HTTP/1.1
+POST http://localhost:4266/roles HTTP/1.1
 content-type: application/json
+
+{
+    "name": "user"
+}

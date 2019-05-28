@@ -16,12 +16,6 @@ const Mixed = mongoose.Schema.Types.Mixed;
 `;
 
 const TS_Suffix = `
-function contextMiddleware(req: Request, res: Response, next: NextFunction) {
-    req['CTX'] = req['CTX'] ? req['CTX'] : {};
-    req['CTX'].req = req;
-    req['CTX'].res = res;
-    next();
-};
 
 function attachCTX(req: Request, key: string, value: any) {
     req['CTX'][key] = value;
@@ -102,6 +96,7 @@ const TS_CreateInputTpl = `
 //
 
 export interface $0CreateInput {
+    _id?: string,
 $1
 }
 
@@ -110,6 +105,11 @@ $1
 //
 
 export function pick$0CreateInput<T extends {}>(input: T) {
+    if (input._id !== undefined
+        && input._id !== null
+    ) {
+        input._id = typeof(input._id) === 'string' ? new ObjectID(input._id) : input._id;
+    }
     return [$2].reduce((createInput, key) => {
         createInput[key] = input[key];
         return createInput;

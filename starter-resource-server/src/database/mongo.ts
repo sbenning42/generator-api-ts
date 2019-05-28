@@ -7,7 +7,12 @@ export class MongoService {
     constructor(public mongoDBURL: string) {}
 
     async init() {
-        return this.db = await mongoose.connect(this.mongoDBURL, { useNewUrlParser: true });
+        return this.db = await mongoose.connect(
+            this.mongoDBURL,
+            {
+                useNewUrlParser: true,
+                useFindAndModify: false,
+            });
     }
 
     async getDB() {
@@ -18,4 +23,4 @@ export class MongoService {
     }
 }
 
-export const mainMongoService = new MongoService(process.env.MONGO_URI);
+export const mainMongoService = new MongoService(process.env.MONGO_URL);
