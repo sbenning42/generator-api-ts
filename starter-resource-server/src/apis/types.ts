@@ -6,7 +6,7 @@ import {
     Router,
     Application
 } from 'express';
-import mongoose from 'mongoose';
+import mongoose, { Document, Query } from 'mongoose';
 import { ObjectID } from 'mongodb';
         
 const ObjectId = mongoose.Schema.Types.ObjectId;
@@ -42,7 +42,7 @@ export interface UserCreateInput {
 // Function used to pick only needed properties
 //
 
-export function pickUserCreateInput<T extends {}>(input: T) {
+export function pickUserCreateInput<T extends { _id?: string|ObjectID }>(input: T) {
     if (input._id !== undefined
         && input._id !== null
     ) {
@@ -94,16 +94,16 @@ export const UserSchema = new mongoose.Schema(
             type: String,
             required: true,
         },
-        roles: {
-            type: [ObjectId],
+        roles: [{
+            type: ObjectId,
             ref: 'Role',
-        },
+        }],
     },
     {
         minimize: false,
     }
 );
-export const UserModel = mongoose.model('User', UserSchema);
+export const UserModel = mongoose.model<Document & User>('User', UserSchema);
 
 /**********     ROLE     **********/
 
@@ -131,7 +131,7 @@ export interface RoleCreateInput {
 // Function used to pick only needed properties
 //
 
-export function pickRoleCreateInput<T extends {}>(input: T) {
+export function pickRoleCreateInput<T extends { _id?: string|ObjectID }>(input: T) {
     if (input._id !== undefined
         && input._id !== null
     ) {
@@ -178,13 +178,13 @@ export const RoleSchema = new mongoose.Schema(
             required: true,
             unique: true,
         },
-        users: {
-            type: [ObjectId],
+        users: [{
+            type: ObjectId,
             ref: 'User',
-        },
+        }],
     },
     {
         minimize: false,
     }
 );
-export const RoleModel = mongoose.model('Role', RoleSchema);
+export const RoleModel = mongoose.model<Document & Role>('Role', RoleSchema);

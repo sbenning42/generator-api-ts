@@ -6,7 +6,7 @@ import {
     Router,
     Application
 } from 'express';
-import mongoose from 'mongoose';
+import mongoose, { Document, Query } from 'mongoose';
 import { ObjectID } from 'mongodb';
         
 const ObjectId = mongoose.Schema.Types.ObjectId;
@@ -104,7 +104,7 @@ $1
 // Function used to pick only needed properties
 //
 
-export function pick$0CreateInput<T extends {}>(input: T) {
+export function pick$0CreateInput<T extends { _id?: string|ObjectID }>(input: T) {
     if (input._id !== undefined
         && input._id !== null
     ) {
@@ -160,7 +160,7 @@ export const $0Schema = new mongoose.Schema(
         minimize: false,
     }
 );
-export const $0Model = mongoose.model('$0', $0Schema);
+export const $0Model = mongoose.model<Document & $0>('$0', $0Schema);
 `.trim();
 
 const TS_SchemaPropTpl = `$0: {
@@ -171,6 +171,16 @@ const TS_SchemaPropTpl = `$0: {
             hidden: $5,
             ref: '$6',
         },`;
+
+
+const TS_SchemaArrayPropTpl = `$0: [{
+            type: $1,
+            required: $2,
+            default: $3,
+            unique: $4,
+            hidden: $5,
+            ref: '$6',
+        }],`;
 
 
 const TS_UtilsTpl = `
@@ -186,7 +196,7 @@ export function $0FindManyLean(
     projection?: any,
     options: any = {}
 ) {
-    return $0FindMany(conditions, projection, options).lean();
+    return $0FindMany(conditions, projection, options).lean() as Query<$0[]>;
 }
 export function $0FindManyExec(
     conditions: any = {},
@@ -217,7 +227,7 @@ export function $0FindOneLean(
     projection?: any,
     options: any = {}
 ) {
-    return $0FindOne(conditions, projection, options).lean();
+    return $0FindOne(conditions, projection, options).lean() as Query<$0>;
 }
 export function $0FindOneExec(
     conditions: any = {},
@@ -248,7 +258,7 @@ export function $0FindByIdLean(
     projection?: any,
     options: any = {}
 ) {
-    return $0FindById(id, projection, options).lean();
+    return $0FindById(id, projection, options).lean() as Query<$0>;
 }
 export function $0FindByIdExec(
     id: string | ObjectID,
@@ -274,32 +284,32 @@ export function $0Create(unsafeCreateInput: $0CreateInput) {
 }
 export async function $0CreateLean(createInput: $0CreateInput) {
     const object = await $0Create(createInput);
-    return object.toObject();
+    return object.toObject() as $0;
 }
 
 export function $0FindByIdAndUpdate(
     { id, changes: unsafeChanges }: $0UpdateInput,
-    options: any = { new: true, useFindAndModify: false }
+    options: any = { new: true }
 ) {
     const changes = pick$0ChangesInput(unsafeChanges);
     return $0Model.findByIdAndUpdate(id, { $set: changes }, options);
 }
 export function $0FindByIdAndUpdateLean(
     update: $0UpdateInput,
-    options: any = { new: true, useFindAndModify: false }
+    options: any = { new: true }
 ) {
-    return $0FindByIdAndUpdate(update, options).lean();
+    return $0FindByIdAndUpdate(update, options).lean() as Query<$0>;
 }
 export function $0FindByIdAndUpdateExec(
     update: $0UpdateInput,
-    options: any = { new: true, useFindAndModify: false },
+    options: any = { new: true },
     cb?: (err: any, result: any) => void
 ) {
     return $0FindByIdAndUpdate(update, options).exec(cb);
 }
 export function $0FindByIdAndUpdateLeanExec(
     update: $0UpdateInput,
-    options: any = { new: true, useFindAndModify: false },
+    options: any = { new: true },
     cb?: (err: any, result: any) => void
 ) {
     return $0FindByIdAndUpdateLean(update, options).exec(cb);
@@ -315,7 +325,7 @@ export function $0FindByIdAndRemoveLean(
     id: string | ObjectID,
     options: any = {}
 ) {
-    return $0FindByIdAndRemove(id, options).lean();
+    return $0FindByIdAndRemove(id, options).lean() as Query<$0>;
 }
 export function $0FindByIdAndRemoveExec(
     id: string | ObjectID,
@@ -342,12 +352,12 @@ export function $0FindByIdPopulate$1(
 ) {
     return $0Model.findById(id, projection, options).populate('$2');
 }
-export function $0FindByIdPopulate$1Lean(
+export function $0FindByIdPopulate$1Lean<T = any>(
     id: string | ObjectID,
     projection?: any,
     options: any = {}
 ) {
-    return $0FindByIdPopulate$1(id, projection, options).lean();
+    return $0FindByIdPopulate$1(id, projection, options).lean() as Query<$0 & { $2: T }>;
 }
 export function $0FindByIdPopulate$1Exec(
     id: string | ObjectID,
@@ -357,42 +367,42 @@ export function $0FindByIdPopulate$1Exec(
 ) {
     return $0FindByIdPopulate$1(id, projection, options).exec(cb);
 }
-export function $0FindByIdPopulate$1LeanExec(
+export function $0FindByIdPopulate$1LeanExec<T = any>(
     id: string | ObjectID,
     projection?: any,
     options: any = {},
     cb?: (err: any, result: any) => void
 ) {
-    return $0FindByIdPopulate$1Lean(id, projection, options).exec(cb);
+    return $0FindByIdPopulate$1Lean<T>(id, projection, options).exec(cb);
 }
 
-export async function $0FindById$1(
+export async function $0FindById$1<T = any>(
     id: string | ObjectID,
     projection?: any,
     options: any = {},
 ) {
-    const object = await $0FindByIdPopulate$1LeanExec(id, projection, options);
+    const object = await $0FindByIdPopulate$1LeanExec<T>(id, projection, options);
     return object ? object.$2 : undefined;
 }
 
 export function $0FindByIdAndAdd$1(
     id: string | ObjectID,
     addId: string | ObjectID,
-    options: any = { new: true, useFindAndModify: false }
+    options: any = { new: true }
 ) {
     return $0Model.findByIdAndUpdate(id, { $push: { $2: addId } }, options);
 }
 export function $0FindByIdAndAdd$1Lean(
     id: string | ObjectID,
     addId: string | ObjectID,
-    options: any = { new: true, useFindAndModify: false }
+    options: any = { new: true }
 ) {
-    return $0FindByIdAndAdd$1(id, addId, options).lean();
+    return $0FindByIdAndAdd$1(id, addId, options).lean() as Query<$0>;
 }
 export function $0FindByIdAndAdd$1Exec(
     id: string | ObjectID,
     addId: string | ObjectID,
-    options: any = { new: true, useFindAndModify: false },
+    options: any = { new: true },
     cb?: (err: any, result: any) => void
 ) {
     return $0FindByIdAndAdd$1(id, addId, options).exec(cb);
@@ -400,7 +410,7 @@ export function $0FindByIdAndAdd$1Exec(
 export function $0FindByIdAndAdd$1LeanExec(
     id: string | ObjectID,
     addId: string | ObjectID,
-    options: any = { new: true, useFindAndModify: false },
+    options: any = { new: true },
     cb?: (err: any, result: any) => void
 ) {
     return $0FindByIdAndAdd$1Lean(id, addId, options).exec(cb);
@@ -418,7 +428,7 @@ export function $0FindByIdAndRemove$1Lean(
     removeId: string | ObjectID,
     options: any = {}
 ) {
-    return $0FindByIdAndRemove$1(id, removeId, options).lean();
+    return $0FindByIdAndRemove$1(id, removeId, options).lean() as Query<$0>;
 }
 export function $0FindByIdAndRemove$1Exec(
     id: string | ObjectID,
@@ -687,6 +697,7 @@ export const templates = {
     TS_CreateInputPropTpl,
     TS_CreateInputTpl,
     TS_SchemaPropTpl,
+    TS_SchemaArrayPropTpl,
     TS_SchemaTpl,
     TS_TypePropTpl,
     TS_TypeTpl,

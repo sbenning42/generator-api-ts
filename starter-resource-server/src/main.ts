@@ -41,7 +41,13 @@ import { hasTokenLogMiddleware } from './middlewares/has-token-log';
 async function main() {
 
   const app = express();
-  
+
+  /**
+   * Wait for database to connect
+  */
+  await mainMongoService.init();
+  l.info(`Connected to MongoDB at ${MONGO_URL}`);
+
   /**
    * Apply some standard setup's middlewares
    */
@@ -54,17 +60,14 @@ async function main() {
   );
 
   /**
-   * Wait for database to connect
-  */
-  await mainMongoService.init();
-
-  l.info(`Connected to MongoDB at ${MONGO_URL}`);
-
-  /**
    * Apply generated's APIs controllers
    */
   new UserAPI(middlewaresMap).applyAPI(app);
   new RoleAPI(middlewaresMap).applyAPI(app);
+
+  /**
+   * Define our own controllers
+   */
   app.post('/users', hasTokenLogMiddleware, createUserController);
 
   /**

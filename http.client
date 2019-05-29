@@ -1,6 +1,7 @@
-POST http://localhost:4266/roles HTTP/1.1
+get http://localhost:4266/roles/5ced9b111d80ce458ce41be9/users HTTP/1.1
 content-type: application/json
 
 {
-    "name": "user"
+    "username": "sam",
+    "password": "sben42"
 }

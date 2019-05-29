@@ -6,7 +6,7 @@ import {
     Router,
     Application
 } from 'express';
-import mongoose from 'mongoose';
+import mongoose, { Document, Query } from 'mongoose';
 import { ObjectID } from 'mongodb';
         
 const ObjectId = mongoose.Schema.Types.ObjectId;
@@ -43,7 +43,7 @@ export function UserFindManyLean(
     projection?: any,
     options: any = {}
 ) {
-    return UserFindMany(conditions, projection, options).lean();
+    return UserFindMany(conditions, projection, options).lean() as Query<User[]>;
 }
 export function UserFindManyExec(
     conditions: any = {},
@@ -74,7 +74,7 @@ export function UserFindOneLean(
     projection?: any,
     options: any = {}
 ) {
-    return UserFindOne(conditions, projection, options).lean();
+    return UserFindOne(conditions, projection, options).lean() as Query<User>;
 }
 export function UserFindOneExec(
     conditions: any = {},
@@ -105,7 +105,7 @@ export function UserFindByIdLean(
     projection?: any,
     options: any = {}
 ) {
-    return UserFindById(id, projection, options).lean();
+    return UserFindById(id, projection, options).lean() as Query<User>;
 }
 export function UserFindByIdExec(
     id: string | ObjectID,
@@ -131,32 +131,32 @@ export function UserCreate(unsafeCreateInput: UserCreateInput) {
 }
 export async function UserCreateLean(createInput: UserCreateInput) {
     const object = await UserCreate(createInput);
-    return object.toObject();
+    return object.toObject() as User;
 }
 
 export function UserFindByIdAndUpdate(
     { id, changes: unsafeChanges }: UserUpdateInput,
-    options: any = { new: true, useFindAndModify: false }
+    options: any = { new: true }
 ) {
     const changes = pickUserChangesInput(unsafeChanges);
     return UserModel.findByIdAndUpdate(id, { $set: changes }, options);
 }
 export function UserFindByIdAndUpdateLean(
     update: UserUpdateInput,
-    options: any = { new: true, useFindAndModify: false }
+    options: any = { new: true }
 ) {
-    return UserFindByIdAndUpdate(update, options).lean();
+    return UserFindByIdAndUpdate(update, options).lean() as Query<User>;
 }
 export function UserFindByIdAndUpdateExec(
     update: UserUpdateInput,
-    options: any = { new: true, useFindAndModify: false },
+    options: any = { new: true },
     cb?: (err: any, result: any) => void
 ) {
     return UserFindByIdAndUpdate(update, options).exec(cb);
 }
 export function UserFindByIdAndUpdateLeanExec(
     update: UserUpdateInput,
-    options: any = { new: true, useFindAndModify: false },
+    options: any = { new: true },
     cb?: (err: any, result: any) => void
 ) {
     return UserFindByIdAndUpdateLean(update, options).exec(cb);
@@ -172,7 +172,7 @@ export function UserFindByIdAndRemoveLean(
     id: string | ObjectID,
     options: any = {}
 ) {
-    return UserFindByIdAndRemove(id, options).lean();
+    return UserFindByIdAndRemove(id, options).lean() as Query<User>;
 }
 export function UserFindByIdAndRemoveExec(
     id: string | ObjectID,
@@ -197,12 +197,12 @@ export function UserFindByIdPopulateRoles(
 ) {
     return UserModel.findById(id, projection, options).populate('roles');
 }
-export function UserFindByIdPopulateRolesLean(
+export function UserFindByIdPopulateRolesLean<T = any>(
     id: string | ObjectID,
     projection?: any,
     options: any = {}
 ) {
-    return UserFindByIdPopulateRoles(id, projection, options).lean();
+    return UserFindByIdPopulateRoles(id, projection, options).lean() as Query<User & { roles: T }>;
 }
 export function UserFindByIdPopulateRolesExec(
     id: string | ObjectID,
@@ -212,42 +212,42 @@ export function UserFindByIdPopulateRolesExec(
 ) {
     return UserFindByIdPopulateRoles(id, projection, options).exec(cb);
 }
-export function UserFindByIdPopulateRolesLeanExec(
+export function UserFindByIdPopulateRolesLeanExec<T = any>(
     id: string | ObjectID,
     projection?: any,
     options: any = {},
     cb?: (err: any, result: any) => void
 ) {
-    return UserFindByIdPopulateRolesLean(id, projection, options).exec(cb);
+    return UserFindByIdPopulateRolesLean<T>(id, projection, options).exec(cb);
 }
 
-export async function UserFindByIdRoles(
+export async function UserFindByIdRoles<T = any>(
     id: string | ObjectID,
     projection?: any,
     options: any = {},
 ) {
-    const object = await UserFindByIdPopulateRolesLeanExec(id, projection, options);
+    const object = await UserFindByIdPopulateRolesLeanExec<T>(id, projection, options);
     return object ? object.roles : undefined;
 }
 
 export function UserFindByIdAndAddRoles(
     id: string | ObjectID,
     addId: string | ObjectID,
-    options: any = { new: true, useFindAndModify: false }
+    options: any = { new: true }
 ) {
     return UserModel.findByIdAndUpdate(id, { $push: { roles: addId } }, options);
 }
 export function UserFindByIdAndAddRolesLean(
     id: string | ObjectID,
     addId: string | ObjectID,
-    options: any = { new: true, useFindAndModify: false }
+    options: any = { new: true }
 ) {
-    return UserFindByIdAndAddRoles(id, addId, options).lean();
+    return UserFindByIdAndAddRoles(id, addId, options).lean() as Query<User>;
 }
 export function UserFindByIdAndAddRolesExec(
     id: string | ObjectID,
     addId: string | ObjectID,
-    options: any = { new: true, useFindAndModify: false },
+    options: any = { new: true },
     cb?: (err: any, result: any) => void
 ) {
     return UserFindByIdAndAddRoles(id, addId, options).exec(cb);
@@ -255,7 +255,7 @@ export function UserFindByIdAndAddRolesExec(
 export function UserFindByIdAndAddRolesLeanExec(
     id: string | ObjectID,
     addId: string | ObjectID,
-    options: any = { new: true, useFindAndModify: false },
+    options: any = { new: true },
     cb?: (err: any, result: any) => void
 ) {
     return UserFindByIdAndAddRolesLean(id, addId, options).exec(cb);
@@ -273,7 +273,7 @@ export function UserFindByIdAndRemoveRolesLean(
     removeId: string | ObjectID,
     options: any = {}
 ) {
-    return UserFindByIdAndRemoveRoles(id, removeId, options).lean();
+    return UserFindByIdAndRemoveRoles(id, removeId, options).lean() as Query<User>;
 }
 export function UserFindByIdAndRemoveRolesExec(
     id: string | ObjectID,

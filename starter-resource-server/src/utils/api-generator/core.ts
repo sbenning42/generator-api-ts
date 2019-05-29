@@ -7,9 +7,9 @@ export class APIGenerator {
         const C = (s: string) => `${s.slice(0, 1).toUpperCase()}${s.slice(1)}`;
         const c = (s: string) => `${s.slice(0, 1).toLowerCase()}${s.slice(1)}`;
         const requireIt = (s: string, isRequired: boolean = false) => `${s}${isRequired ? '' : '?'}`;
-        const gT = (_t: CRUDSchemaInputPropType) => {
-            const iA = Array.isArray(_t);
-            const t = iA ? _t[0] : _t;
+        const gT = (_t: CRUDSchemaInputPropType, _iA: boolean = false) => {
+            const iA = Array.isArray(_t) || _iA;
+            const t = iA && !_iA ? _t[0] : _t;
             switch (true) {
                 case t === Boolean:
                     return `boolean${iA ? '[]' : ''}`;
@@ -28,33 +28,28 @@ export class APIGenerator {
         const gTR = (rt: string) => {
             switch (rt) {
                 case 'boolean':
-                    return 'Boolean';
                 case 'boolean[]':
-                    return '[Boolean]';
+                    return 'Boolean';
                 case 'number':
-                    return 'Number';
                 case 'number[]':
-                    return '[Number]';
+                    return 'Number';
                 case 'string':
-                    return 'String';
                 case 'string[]':
-                    return '[String]';
+                    return 'String';
                 case 'Date':
-                    return 'Date';
                 case 'Date[]':
-                    return '[Date]';
+                    return 'Date';
                 case 'any':
-                    return 'Mixed';
                 case 'any[]':
-                    return '[Mixed]';
+                    return 'Mixed';
                 default:
-                    return rt.includes('[') ? `[ObjectId]` : `ObjectId`
+                    return `ObjectId`;
             }
         };
-        const mGT = (t: any) => typeof(t) === 'string' ? t : gT(t);
-        const ent2Prop = ({ r=true, m=true, fR=false }={}) => (k: string, v: CRUDSchemaInputPropTyped) => [
+        const mGT = (t: any, _iA: boolean = false) => typeof(t) === 'string' ? t : gT(t, _iA);
+        const ent2Prop = ({ r=true, m=true, fR=false, _iA=false }={}) => (k: string, v: CRUDSchemaInputPropTyped) => [
             r ? requireIt(k, v.required) : (fR ? requireIt(k) : k),
-            m ? mGT(v.type) : gT(v.type)
+            m ? mGT(v.type, _iA) : gT(v.type, _iA)
         ];
         const {
             name,
@@ -78,6 +73,7 @@ export class APIGenerator {
             TS_CreateInputPropTpl,
             TS_CreateInputTpl,
             TS_SchemaPropTpl,
+            TS_SchemaArrayPropTpl,
             TS_SchemaTpl,
             TS_TypePropTpl,
             TS_TypeTpl,
@@ -121,7 +117,14 @@ export class APIGenerator {
         );
         const schemaPropsTpl = replaceThem(
             { tpl: TS_SchemaPropTpl, glue: '\n        ' },
-            propsAndRelationsAsProps.filter(([k]) => k !== '_id'),
+            propsAndRelationsAsProps.filter(
+                ([k, v]) => k !== '_id'
+                    && !Array.isArray(v.type)
+                    && !(
+                        typeof(v.type) === 'string'
+                        && (v.type as string).includes('[')
+                    )
+            ),
             (k: string, v: CRUDSchemaInputPropTyped) => [
                 k,
                 gTR(mGT(v.type)),
@@ -137,9 +140,33 @@ export class APIGenerator {
             .replace(/\s*hidden: false,/g, '')
             .replace(/\s*default: undefined,/g, '')
             .replace(/\s*ref: 'undefined',/g, '');
-        const schemaTpl = replaceIt(TS_SchemaTpl, Cname, schemaPropsTpl);
+        const schemaPropArraysTpl = replaceThem(
+            { tpl: TS_SchemaArrayPropTpl, glue: '\n        ' },
+            propsAndRelationsAsProps.filter(
+                ([k, v]) => Array.isArray(v.type)
+                    || (
+                        typeof(v.type) === 'string'
+                        && (v.type as string).includes('[')
+                    )
+            ),
+            (k: string, v: CRUDSchemaInputPropTyped) => [
+                k,
+                gTR(mGT(v.type)),
+                v.required ? 'true' : 'false',
+                JSON.stringify(v.default),
+                v.unique ? 'true' : 'false',
+                v.hidden ? 'true' : 'false',
+                typeof(v.type) === 'string' ? (v.type as string).replace('[', '').replace(']', '') : undefined
+            ]
+        )
+            .replace(/\s*unique: false,/g, '')
+            .replace(/\s*required: false,/g, '')
+            .replace(/\s*hidden: false,/g, '')
+            .replace(/\s*default: undefined,/g, '')
+            .replace(/\s*ref: 'undefined',/g, '');
+        const schemaTpl = replaceIt(TS_SchemaTpl, Cname, `${schemaPropsTpl}${schemaPropsTpl ? '\n' : ''}        ${schemaPropArraysTpl}`);
         const utilsTpl = replaceIt(TS_UtilsTpl, Cname);
-        const relationUtilsTpls = replaceThem(TS_RelationUtilsTpl, Object.entries(relations), k => [Cname, C(k), k]);
+        const relationUtilsTpls = replaceThem(TS_RelationUtilsTpl, Object.entries(relations), (k, v) => [Cname, C(k), k, v]);
         const middlewareTpls = replaceIt(TS_MiddlewareTpls, Cname);
         const controllerTpls = replaceIt(TS_ControllerTpls, Cname);
         const relationMiddlewareTpls = replaceThem(TS_RelationMiddlewareTpls, Object.entries(relations), k => [Cname, C(k)]);

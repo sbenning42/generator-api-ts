@@ -5,7 +5,7 @@ import { environment as production } from './prod';
 dotenv.config();
 
 const {
-    NODE_ENV
+    NODE_ENV,
 } = process.env;
 
 export const environment = {
