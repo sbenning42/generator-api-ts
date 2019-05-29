@@ -22,29 +22,29 @@ function attachCTX(req: Request, key: string, value: any) {
     return value;
 }
 
-const ResetCCC = "\x1b[0m";
-const BrightCCC = "\x1b[1m";
-const DimCCC = "\x1b[2m";
-const UnderscoreCCC = "\x1b[4m";
-const BlinkCCC = "\x1b[5m";
-const ReverseCCC = "\x1b[7m";
-const HiddenCCC = "\x1b[8m";
-const FgBlackCCC = "\x1b[30m";
-const FgRedCCC = "\x1b[31m";
-const FgGreenCCC = "\x1b[32m";
-const FgYellowCCC = "\x1b[33m";
-const FgBlueCCC = "\x1b[34m";
-const FgMagentaCCC = "\x1b[35m";
-const FgCyanCCC = "\x1b[36m";
-const FgWhiteCCC = "\x1b[37m";
-const BgBlackCCC = "\x1b[40m";
-const BgRedCCC = "\x1b[41m";
-const BgGreenCCC = "\x1b[42m";
-const BgYellowCCC = "\x1b[43m";
-const BgBlueCCC = "\x1b[44m";
-const BgMagentaCCC = "\x1b[45m";
-const BgCyanCCC = "\x1b[46m";
-const BgWhiteCCC = "\x1b[47m";
+const ResetCCC = '\x1b[0m';
+const BrightCCC = '\x1b[1m';
+const DimCCC = '\x1b[2m';
+const UnderscoreCCC = '\x1b[4m';
+const BlinkCCC = '\x1b[5m';
+const ReverseCCC = '\x1b[7m';
+const HiddenCCC = '\x1b[8m';
+const FgBlackCCC = '\x1b[30m';
+const FgRedCCC = '\x1b[31m';
+const FgGreenCCC = '\x1b[32m';
+const FgYellowCCC = '\x1b[33m';
+const FgBlueCCC = '\x1b[34m';
+const FgMagentaCCC = '\x1b[35m';
+const FgCyanCCC = '\x1b[36m';
+const FgWhiteCCC = '\x1b[37m';
+const BgBlackCCC = '\x1b[40m';
+const BgRedCCC = '\x1b[41m';
+const BgGreenCCC = '\x1b[42m';
+const BgYellowCCC = '\x1b[43m';
+const BgBlueCCC = '\x1b[44m';
+const BgMagentaCCC = '\x1b[45m';
+const BgCyanCCC = '\x1b[46m';
+const BgWhiteCCC = '\x1b[47m';
 
 function colorVerb(verb: string) {
     switch (verb) {

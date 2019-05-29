@@ -32,7 +32,7 @@ import { mainMongoService } from './database/mongo';
 import { UserAPI } from './apis/user/user';
 import { RoleAPI } from './apis/role/role';
 import { middlewaresMap } from './middlewares';
-import { createUserController } from './controllers/create-user';
+import { createUserController, createUserImprovedController } from './controllers/create-user';
 import { hasTokenLogMiddleware } from './middlewares/has-token-log';
 
 /**
@@ -66,9 +66,9 @@ async function main() {
   new RoleAPI(middlewaresMap).applyAPI(app);
 
   /**
-   * Define our own controllers
+   * Define your own controllers
    */
-  app.post('/users', hasTokenLogMiddleware, createUserController);
+  app.post('/users', hasTokenLogMiddleware, createUserImprovedController);
 
   /**
    * Start `express` server

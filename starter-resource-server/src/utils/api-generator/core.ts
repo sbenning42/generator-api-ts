@@ -1,5 +1,5 @@
-import { templates, replaceThem, replaceIt } from "./templates";
-import { Request, Response, NextFunction } from "express";
+import { templates, replaceThem, replaceIt } from './templates';
+import { Request, Response, NextFunction } from 'express';
 
 export class APIGenerator {
 

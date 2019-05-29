@@ -1,4 +1,4 @@
-import { CRUDSchemaInput } from "../utils/api-generator";
+import { CRUDSchemaInput } from '../utils/api-generator';
 
 export const Role: CRUDSchemaInput<{
     name: string,
