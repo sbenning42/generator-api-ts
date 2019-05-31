@@ -150,15 +150,15 @@ export function prettifySchema(schema: _APISchema, L: { log: (...args: any[]) =>
                 pretty(`***** ${cap(entityName)} *****`, [bold], 1)
             }\n\n${
                 Object.entries(entity.properties)
-                    .map(([propName, property]) => [propName, Array.isArray(property) ? property[0] : property])
+                    .map(([propName, property]) => [propName, Array.isArray(property) ? property[0] : property, Array.isArray(property)])
                     .map(([propName, {
                         type, ref, required, unique, hidden, skipChanges, skipCreate, default: _default
-                    }]: [string, _APISchemaEntityPropertyTyped]) => `${
+                    }, isArray]: [string, _APISchemaEntityPropertyTyped, boolean]) => `${
                         pretty(`${propName}: `, [bold], 2)
                     }\n${
                         pretty('Type:', [black], 3)
                     } ${
-                        pretty(stringifyType(type), [bold, blue])
+                        pretty(`${stringifyType(type)}${isArray ? '[]' : ''}`, [bold, blue])
                     }${
                         ref
                             ? `\n${

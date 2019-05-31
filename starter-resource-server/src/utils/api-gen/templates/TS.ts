@@ -274,10 +274,14 @@ export class $0Utils {
         if (typeof(body.id) === 'string') {
             body.id = new ObjectID(body.id);
         }
-        return [$1].reduce<$0CreateBody>((sanitizedBody, key) => ({
-            ...sanitizedBody,
-            [key]: body[key]
-        }), {} as $0CreateBody);
+        return [$1].reduce<$0CreateBody>((sanitizedBody, key) => body[key] !== undefined
+            ? {
+                ...sanitizedBody,
+                [key]: body[key]
+            }
+            : sanitizedBody,
+            {} as $0CreateBody
+        );
     }
 
     async create(
@@ -308,10 +312,13 @@ export class $0Utils {
     }
 
     sanitizeChangesBody(body: $0ChangesBody) {
-        return [$2].reduce<$0ChangesBody>((sanitizedBody, key) => ({
-            ...sanitizedBody,
-            [key]: body[key]
-        }), {} as $0ChangesBody);
+        return [$2].reduce<$0ChangesBody>((sanitizedBody, key) => body[key] !== undefined
+            ? {
+                ...sanitizedBody,
+                [key]: body[key]
+            }
+            : sanitizedBody,
+            {} as $0ChangesBody);
     }
 
     updateById(

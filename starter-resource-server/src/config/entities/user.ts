@@ -11,6 +11,13 @@ export const user: APISchemaEntity = {
             type: String,
             required: true,
             hidden: true,
-        }
+        },
+        roles: [{
+            type: String,
+            required: true,
+            skipCreate: true,
+            skipChanges: true,
+            default: ['user']
+        }]
     }
 };

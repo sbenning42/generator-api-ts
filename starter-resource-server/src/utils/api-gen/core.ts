@@ -27,7 +27,7 @@ import {
     TSRouterRouteWithMiddlewareTpl,
     TSRouterRouteTpl
 } from './templates/TS';
-import { _APISchemaEntity, APISchema, strictAPISchema, Mixed, ObjectId, _APISchemaEntityProperty, _APISchema } from './types';
+import { _APISchemaEntity, APISchema, strictAPISchema, Mixed, ObjectId, _APISchemaEntityProperty, _APISchema, _APISchemaEntityPropertyTyped } from './types';
 import { prettifySchema } from './prettier';
 
 
@@ -189,20 +189,25 @@ export class APIGen {
                         generated: TSMongooseSchemaTpl(
                             cap(name),
                             Object.entries(entity.properties)
+                                .map(([propName, property]) => [
+                                    propName,
+                                    Array.isArray(property) ? property[0] : property,
+                                    Array.isArray(property)
+                                ])
                                 // .filter(([propName, property]) => true)
-                                .map(([propName, property]) => Array.isArray(property)
+                                .map(([propName, property, isArray]: [string, _APISchemaEntityPropertyTyped, boolean]) => property.ref && isArray
                                     ? TSMongooseSchemaArrayPropTpl(
                                         propName,
-                                        stringifyType(property[0].type, false),
-                                        property[0].ref,
-                                        property[0].required,
-                                        property[0].unique,
-                                        property[0].hidden,
-                                        property[0].default,
+                                        stringifyType(property.type, false),
+                                        property.ref,
+                                        property.required,
+                                        property.unique,
+                                        property.hidden,
+                                        property.default,
                                     )
                                     : TSMongooseSchemaPropTpl(
                                         propName,
-                                        stringifyType(property.type, false),
+                                        stringifyType(property.type, isArray),
                                         property.ref,
                                         property.required,
                                         property.unique,

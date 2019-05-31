@@ -17,6 +17,7 @@ export type ID = string | ObjectID;
 export interface User {
    username: string;
    password: string;
+   roles: string[];
 }
 
 
@@ -52,6 +53,13 @@ export const UserSchema = new Schema({
         unique: false,
         select: false,
     },
+    roles: {
+        type: [String],
+        required: true,
+        unique: false,
+        select: true,
+        default: ['user'],
+    },
 }, { minimize: false }); 
 
 
@@ -65,6 +73,7 @@ export type UserCondition = any;
 export interface UserProjection {
     username: 0 | 1;
     password: 0 | 1;
+    roles: 0 | 1;
 }
 
 

@@ -124,10 +124,14 @@ export class UserUtils {
         if (typeof(body.id) === 'string') {
             body.id = new ObjectID(body.id);
         }
-        return ['username', 'password'].reduce<UserCreateBody>((sanitizedBody, key) => ({
-            ...sanitizedBody,
-            [key]: body[key]
-        }), {} as UserCreateBody);
+        return ['username', 'password'].reduce<UserCreateBody>((sanitizedBody, key) => body[key] !== undefined
+            ? {
+                ...sanitizedBody,
+                [key]: body[key]
+            }
+            : sanitizedBody,
+            {} as UserCreateBody
+        );
     }
 
     async create(
@@ -158,10 +162,13 @@ export class UserUtils {
     }
 
     sanitizeChangesBody(body: UserChangesBody) {
-        return ['username', 'password'].reduce<UserChangesBody>((sanitizedBody, key) => ({
-            ...sanitizedBody,
-            [key]: body[key]
-        }), {} as UserChangesBody);
+        return ['username', 'password'].reduce<UserChangesBody>((sanitizedBody, key) => body[key] !== undefined
+            ? {
+                ...sanitizedBody,
+                [key]: body[key]
+            }
+            : sanitizedBody,
+            {} as UserChangesBody);
     }
 
     updateById(
