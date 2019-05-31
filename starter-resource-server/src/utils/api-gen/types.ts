@@ -228,14 +228,14 @@ export function strictAPISchemaEntityRoutes<R extends string[]>(routes: APISchem
         ...thisRoutes,
         [endpoint]: strictAPISchemaEntityRoute(route),
     }), {
-        all: strictAPISchemaEntityRoute(routes.all),
-        query: strictAPISchemaEntityRoute(routes.query),
-        mutation: strictAPISchemaEntityRoute(routes.mutation),
-        'GET /': strictAPISchemaEntityRoute(routes['GET /']),
-        'POST /': strictAPISchemaEntityRoute(routes['POST /']),
-        'GET /:id': strictAPISchemaEntityRoute(routes['GET /:id']),
-        'PUT /:id': strictAPISchemaEntityRoute(routes['PUT /:id']),
-        'DELETE /:id': strictAPISchemaEntityRoute(routes['DELETE /:id']),
+        all: strictAPISchemaEntityRoute(routes && routes.all),
+        query: strictAPISchemaEntityRoute(routes && routes.query),
+        mutation: strictAPISchemaEntityRoute(routes && routes.mutation),
+        'GET /': strictAPISchemaEntityRoute(routes && routes['GET /']),
+        'POST /': strictAPISchemaEntityRoute(routes && routes['POST /']),
+        'GET /:id': strictAPISchemaEntityRoute(routes && routes['GET /:id']),
+        'PUT /:id': strictAPISchemaEntityRoute(routes && routes['PUT /:id']),
+        'DELETE /:id': strictAPISchemaEntityRoute(routes && routes['DELETE /:id']),
         ...({} as { [key in keyof R[number]]: _APISchemaEntityRoute }) /** @todo: apply custom routes definition (eg: not `{}`) */
     });
 }
