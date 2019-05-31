@@ -1,4 +1,4 @@
-## TODO
+## TODO -- apply those to `ApIGen` (it replace old implementation (RIP) `APIGenerator`)
 
 # 1 - P0! - Change type for relation value in schema `relations`
 

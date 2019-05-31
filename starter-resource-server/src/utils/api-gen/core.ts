@@ -27,7 +27,7 @@ import {
     TSRouterRouteWithMiddlewareTpl,
     TSRouterRouteTpl
 } from './templates/TS';
-import { _APISchemaEntity, APISchema, strictAPISchema, Mixed, ObjectId, _APISchemaEntityProperty } from './types';
+import { _APISchemaEntity, APISchema, strictAPISchema, Mixed, ObjectId, _APISchemaEntityProperty, _APISchema } from './types';
 import { prettifySchema } from './prettier';
 
 
@@ -83,8 +83,11 @@ export interface APIEntityGen {
 
 export class APIGen {
 
+    schemas: { s: APISchema<any>, _s: _APISchema<any> }[] = [];
+
     generate<RS extends { [key: string]: string[] }>(_schema: APISchema<RS>) {
         const schema = strictAPISchema(_schema);
+        this.schemas.push({ s: _schema, _s: schema });
         prettifySchema(schema, console);
 
         const cap = (s: string) => `${s.slice(0, 1).toUpperCase()}${s.slice(1)}`; // capitalize
@@ -371,10 +374,13 @@ export class APIGen {
         const modules = entities.map(entity => entity.TS_modules);
         const outDir = schema.config.outDir;
         const backupOutDir = schema.config.backupOutDir;
+        return entities;
+        /*
         if (backupOutDir) {
             this.backup(outDir, backupOutDir);
         }
         this.write(outDir, entities)
+        */
     }
     
     write(outDir: string, entities: APIEntityGen[]) {

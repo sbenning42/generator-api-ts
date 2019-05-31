@@ -9,6 +9,6 @@ const {
 } = process.env;
 
 export const environment = {
-    ...process.env,
+    ...process.env as any,
     ...(NODE_ENV === 'development' ? development : production)
 };
