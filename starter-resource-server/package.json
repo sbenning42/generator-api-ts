@@ -7,7 +7,7 @@
     "tsc": "tsc",
     "dev": "ts-node-dev --transpileOnly --respawn ./src/main.ts",
     "prod": "tsc && node ./dist/main.js",
-    "api:gen": "ts-node-dev --transpileOnly ./src/gen.ts"
+    "gen": "ts-node-dev --transpileOnly ./src/gen.ts"
   },
   "devDependencies": {
     "@types/body-parser": "^1.17.0",
