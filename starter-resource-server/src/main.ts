@@ -28,15 +28,11 @@ import morgan from 'morgan';
 import passport from 'passport';
 
 import { l } from './utils/logger';
-import { mainMongoService } from './services/mongo/mongo.service';
-import { UserAPI } from './generated-apis/user/user';
-import { RoleAPI } from './generated-apis/role/role';
-import { middlewaresMap } from './middlewares';
-import { createUserController, createUserImprovedController } from './controllers/create-user';
-import { hasTokenLogMiddleware } from './middlewares/has-token-log';
-import { Schema } from 'mongoose';
-import { test } from './utils/api-gen/test';
-import { testLogGeneratedRouters } from './utils/api-gen/test-log-generated-router';
+import { services } from './services';
+
+const {
+  mainMongoService,
+} = services;
 
 /**
  * Use async main function to get access to `await` keyword
@@ -62,29 +58,6 @@ async function main() {
     passport.initialize() // initialize passport-js library
   );
 
-  /**
-   * Apply generated's APIs controllers
-   */
-  // new UserAPI(middlewaresMap).applyAPI(app);
-  // new RoleAPI(middlewaresMap).applyAPI(app);
-
-  /**
-   * Define your own controllers
-   */
-  /*
-  app.post('/users', hasTokenLogMiddleware, createUserImprovedController);
-
-  const db = await mainMongoService.getDB();
-  const Model = db.model('Data', new Schema({ data: String }));
-  app.post('/data', async (req, res) => {
-    const model = new Model({ data: req.body.data });
-    const data = await model.save();
-    res.json({ data: data.toObject() });
-  });
-  */
-
-  //test();
-  testLogGeneratedRouters(app);
   /**
    * Start `express` server
    */
