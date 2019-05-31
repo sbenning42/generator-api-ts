@@ -18,6 +18,8 @@ export interface User {
    username: string;
    password: string;
    roles: string[];
+   json?: any;
+   todos?: Todo[];
 }
 
 
@@ -25,18 +27,38 @@ export interface UserCreateBody {
     id?: ID;
    username: string;
    password: string;
+   json?: any;
 }
 
 
 export interface UserChangesBody {
    username?: string;
    password?: string;
+   json?: any;
+}
+
+
+export interface UserPushBody {
+
+}
+
+
+export interface UserPullBody {
+
 }
 
 
 export interface UserUpdateBody {
     id: ID;
-    changes: UserChangesBody;
+    changes?: UserChangesBody;
+    push?: UserPushBody;
+    pull?: UserPullBody;
+}
+
+export interface UserRawUpdateBody {
+    changes?: UserChangesBody;
+    push?: UserPushBody;
+    pull?: UserPullBody;
 }
 
 
@@ -60,7 +82,22 @@ export const UserSchema = new Schema({
         select: true,
         default: ['user'],
     },
-}, { minimize: false }); 
+    json: {
+        type: Mixed,
+        required: false,
+        unique: false,
+        select: true,
+        default: {},
+    },
+    todos: [{
+        type: ObjectId,
+        ref: 'Todo',
+        required: false,
+        unique: false,
+        select: true,
+        default: [],
+    }],
+}, { minimize: false, timestamps: true }); 
 
 
 export type UserDocument = Document & User;
@@ -74,9 +111,110 @@ export interface UserProjection {
     username: 0 | 1;
     password: 0 | 1;
     roles: 0 | 1;
+    json: 0 | 1;
+    todos: 0 | 1;
 }
 
 
-export type UserPopulate = '';
+export type UserPopulate = 'todos';
+
+        
+/********* TODO *********/
+
+
+export interface Todo {
+   title: string;
+   done: boolean;
+   json?: any;
+   owner: User;
+}
+
+
+export interface TodoCreateBody {
+    id?: ID;
+   title: string;
+   done: boolean;
+   json?: any;
+}
+
+
+export interface TodoChangesBody {
+   title?: string;
+   done?: boolean;
+   json?: any;
+}
+
+
+export interface TodoPushBody {
+
+}
+
+
+export interface TodoPullBody {
+
+}
+
+
+export interface TodoUpdateBody {
+    id: ID;
+    changes?: TodoChangesBody;
+    push?: TodoPushBody;
+    pull?: TodoPullBody;
+}
+
+export interface TodoRawUpdateBody {
+    changes?: TodoChangesBody;
+    push?: TodoPushBody;
+    pull?: TodoPullBody;
+}
+
+
+export const TodoSchema = new Schema({
+    title: {
+        type: String,
+        required: true,
+        unique: true,
+        select: true,
+    },
+    done: {
+        type: Boolean,
+        required: true,
+        unique: false,
+        select: true,
+        default: false,
+    },
+    json: {
+        type: Mixed,
+        required: false,
+        unique: false,
+        select: true,
+        default: {},
+    },
+    owner: {
+        type: ObjectId,
+        ref: 'User',
+        required: true,
+        unique: false,
+        select: true,
+    },
+}, { minimize: false, timestamps: true }); 
+
+
+export type TodoDocument = Document & Todo;
+export type TodoDocumentsQuery = DocumentQuery<TodoDocument[], TodoDocument>;
+export type TodoDocumentQuery = DocumentQuery<TodoDocument, TodoDocument>;
+export const TodoModel = model<TodoDocument>('Todo', TodoSchema);
+export type TodoCondition = any;
+
+
+export interface TodoProjection {
+    title: 0 | 1;
+    done: 0 | 1;
+    json: 0 | 1;
+    owner: 0 | 1;
+}
+
+
+export type TodoPopulate = 'owner';
 
         

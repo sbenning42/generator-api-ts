@@ -59,7 +59,7 @@ export type APISchemaEntityRoutes<R extends string[] = []> = {
     'PUT /:id'?: APISchemaEntityRoute;
     'DELETE /:id'?: APISchemaEntityRoute;
 } & {
-    [key in keyof R[number]]?: APISchemaEntityRoute;
+    [key: string]: APISchemaEntityRoute;
 }
 
 export interface APISchemaEntityWithRoutes<R extends string[] = []> {
@@ -220,7 +220,7 @@ export type _APISchemaEntityRoutes<R extends string[] = []> = {
     'PUT /:id': _APISchemaEntityRoute;
     'DELETE /:id': _APISchemaEntityRoute;
 } & {
-    [key in keyof R[number]]: _APISchemaEntityRoute;
+    [key: string]: _APISchemaEntityRoute;
 }
 
 export function strictAPISchemaEntityRoutes<R extends string[]>(routes: APISchemaEntityRoutes<R>): _APISchemaEntityRoutes<R> {
@@ -236,7 +236,7 @@ export function strictAPISchemaEntityRoutes<R extends string[]>(routes: APISchem
         'GET /:id': strictAPISchemaEntityRoute(routes && routes['GET /:id']),
         'PUT /:id': strictAPISchemaEntityRoute(routes && routes['PUT /:id']),
         'DELETE /:id': strictAPISchemaEntityRoute(routes && routes['DELETE /:id']),
-        ...({} as { [key in keyof R[number]]: _APISchemaEntityRoute }) /** @todo: apply custom routes definition (eg: not `{}`) */
+        ...({} as { [key: string]: _APISchemaEntityRoute }) /** @todo: apply custom routes definition (eg: not `{}`) */
     });
 }
 

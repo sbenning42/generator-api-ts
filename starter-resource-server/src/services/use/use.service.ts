@@ -1,6 +1,8 @@
 import { Application } from "express";
 import { applyUserAPI, UserRouter } from "../../apis/user/user";
 import { prettifyRouter } from "../../utils/api-gen/prettier";
+import { userCountController } from "../../controllers/user-count";
+import { applyTodoAPI, TodoRouter } from "../../apis/todo/todo";
 
 export class UseService {
     use(app: Application) {
@@ -25,11 +27,16 @@ export class UseService {
          * 
          */
 
-        const userRouter = new UserRouter();
+        const userRouter = new UserRouter({ userCountController });
         userRouter.applyRouter(app);
         prettifyRouter('users', userRouter.router, console);
+
+        const todoRouter = new TodoRouter();
+        todoRouter.applyRouter(app);
+        prettifyRouter('todos', todoRouter.router, console);
         
         // applyUserAPI(app);
+        // applyTodoAPI(app);
     }
 }
 

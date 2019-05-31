@@ -18,6 +18,25 @@ export const user: APISchemaEntity = {
             skipCreate: true,
             skipChanges: true,
             default: ['user']
-        }]
+        }],
+        json: {
+            type: Object,
+            default: {}
+        },
+        todos: [{
+            type: 'Todo',
+            required: false,
+            skipCreate: true,
+            skipChanges: true,
+            default: []
+        }],
+    },
+    routes: {
+        'DELETE /:id': {
+            skip: true,
+        },
+        'GET /infos/count': {
+            middlewares: ['userCountController']
+        }
     }
 };

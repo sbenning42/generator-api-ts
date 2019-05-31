@@ -1,7 +1,7 @@
-DELETE http://localhost:4266/users/5cf135ad54516d5980281999 HTTP/1.1
+GET http://localhost:4266/users/5cf1425f66e4b542e89e18c2/todos HTTP/1.1
 content-type: application/json
 
 {
-    "username": "test Updated",
-    "password": "test Updated"
+    "title": "test",
+    "done": false
 }
