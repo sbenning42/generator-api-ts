@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
-import { UserCreateLean, UserFindByIdAndAddRolesLeanExec, UserCreate } from "../apis/user/user";
-import { RoleFindByIdAndAddUsersLeanExec, RoleFindOneLeanExec, RoleFindOne } from "../apis/role/role";
+import { UserCreateLean, UserFindByIdAndAddRolesLeanExec, UserCreate } from "../generated-apis/user/user";
+import { RoleFindByIdAndAddUsersLeanExec, RoleFindOneLeanExec, RoleFindOne } from "../generated-apis/role/role";
 
 export async function createUserController(req: Request, res: Response) {
     try {

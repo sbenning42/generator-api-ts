@@ -29,12 +29,14 @@ import passport from 'passport';
 
 import { l } from './utils/logger';
 import { mainMongoService } from './services/mongo/mongo.service';
-import { UserAPI } from './apis/user/user';
-import { RoleAPI } from './apis/role/role';
+import { UserAPI } from './generated-apis/user/user';
+import { RoleAPI } from './generated-apis/role/role';
 import { middlewaresMap } from './middlewares';
 import { createUserController, createUserImprovedController } from './controllers/create-user';
 import { hasTokenLogMiddleware } from './middlewares/has-token-log';
 import { Schema } from 'mongoose';
+import { test } from './utils/api-gen/test';
+import { testLogGeneratedRouters } from './utils/api-gen/test-log-generated-router';
 
 /**
  * Use async main function to get access to `await` keyword
@@ -63,12 +65,13 @@ async function main() {
   /**
    * Apply generated's APIs controllers
    */
-  new UserAPI(middlewaresMap).applyAPI(app);
-  new RoleAPI(middlewaresMap).applyAPI(app);
+  // new UserAPI(middlewaresMap).applyAPI(app);
+  // new RoleAPI(middlewaresMap).applyAPI(app);
 
   /**
    * Define your own controllers
    */
+  /*
   app.post('/users', hasTokenLogMiddleware, createUserImprovedController);
 
   const db = await mainMongoService.getDB();
@@ -78,7 +81,10 @@ async function main() {
     const data = await model.save();
     res.json({ data: data.toObject() });
   });
+  */
 
+  //test();
+  testLogGeneratedRouters(app);
   /**
    * Start `express` server
    */

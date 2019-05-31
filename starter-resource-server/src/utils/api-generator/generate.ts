@@ -118,7 +118,7 @@ ${skippedRouterTpl}
                     fs.writeFileSync(`${path}/ALL.ts.${Date.now()}.bk`, olds.reduce((str, s) => `${str}${s}`), { encoding: 'utf8', flag: 'w' });
                 }
             } catch (error) {
-                return console.error('Something Went wrong.', error);                
+                return console.error('[1] Something Went wrong.', error);                
             }
         }
         backupAll();
@@ -138,7 +138,7 @@ ${skippedRouterTpl}
             generated.push(`Generated ${BrightCCC}API${ResetCCC} for ${BrightCCC}module${ResetCCC} ${BrightCCC}${FgBlueCCC}${Cname}${ResetCCC} at => ${UnderscoreCCC}${path}/${Cname.toLowerCase()}/${Cname.toLowerCase()}.ts${ResetCCC}`);
         });
     } catch (error) {
-        return console.error('Something Went wrong.', error);
+        return console.error('[2] Something Went wrong.', error);
     }
 
     generated.forEach(g => console.log(g + '\n'));

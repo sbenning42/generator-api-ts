@@ -503,6 +503,12 @@ export class UserAPI {
                 updateUserController())
             .delete('/:id', 
                 middlewaresMap.hasTokenLogMiddleware,
+                
+                (req, res, next) => {
+                    const ctx = middlewaresMap;
+                    console.log('Test live middlewares');
+                    next();
+                },
                 deleteUserController())
             .get('/:id/roles', 
                 middlewaresMap.hasTokenLogMiddleware,
