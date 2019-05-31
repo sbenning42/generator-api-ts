@@ -32,6 +32,7 @@ import { services } from './services';
 
 const {
   mainMongoService,
+  mainUseService
 } = services;
 
 /**
@@ -57,6 +58,11 @@ async function main() {
     morgan('combined'), // use some HTTP logging support
     passport.initialize() // initialize passport-js library
   );
+
+  /**
+   * Apply generated APIs
+   */
+  mainUseService.use(app);
 
   /**
    * Start `express` server
