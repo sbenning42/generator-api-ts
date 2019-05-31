@@ -1,2 +1,0 @@
-get http://localhost:4266 HTTP/1.1
-content-type: application/json

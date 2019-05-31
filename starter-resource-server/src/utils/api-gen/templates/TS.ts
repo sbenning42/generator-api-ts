@@ -73,7 +73,7 @@ export const TSMongooseSchemaPropTpl = (
         ref: '$2',
         required: $3,
         unique: $4,
-        hidden: $5,
+        select: $5,
         default: $6,
     },`, [
     name,
@@ -81,7 +81,7 @@ export const TSMongooseSchemaPropTpl = (
     ref,
     required.toString(),
     unique.toString(),
-    hidden.toString(),
+    (!hidden).toString(),
     typeof(_default) === 'string' ? `${_default}` : JSON.stringify(_default)
 ])
     .replace(/\s*ref: 'undefined',/g, '')
@@ -100,7 +100,7 @@ export const TSMongooseSchemaArrayPropTpl = (
         ref: '$2',
         required: $3,
         unique: $4,
-        hidden: $5,
+        select: $5,
         default: $6,
     }],`, [
     name,
@@ -108,7 +108,7 @@ export const TSMongooseSchemaArrayPropTpl = (
     ref,
     required.toString(),
     unique.toString(),
-    hidden.toString(),
+    (!hidden).toString(),
     typeof(_default) === 'string' ? `${_default}` : JSON.stringify(_default)
 ])
     .replace(/\s*ref: 'undefined',/g, '')
@@ -132,7 +132,7 @@ export const TSMongooseModelProjectionPropTpl = (name: string) => rep(`    $0: 0
 
 export const TSMongooseModelPopulateTpl = (name: string, props: string) => rep(`
 export type $0Populate = $1;
-`, [name, props]);
+`, [name, props || `''`]);
 
 export const TSModuleImportsTpl = (name: string, ...customs: string[]) => rep(`
 import { Request, Response, Router, Application } from 'express';
@@ -407,19 +407,15 @@ export const main$0Service: $0Service = new $0Service();
 
 export const TSMiddlewaresTpl = (name: string) => rep(`
 export class $0Middlewares {
-    
-    service: $0Service = main$0Service;
 
 }
 `, [name]);
 
 export const TSControllersTpl = (name: string) => rep(`
 export class $0Controllers {
-    
-    service: $0Service = main$0Service;
 
     async getAll(req: Request, res: Response) {
-        const { utils } = this.service;
+        const { utils } = main$0Service;
         try {
             res.json(await utils.findAll());
         } catch (error) {
@@ -428,7 +424,7 @@ export class $0Controllers {
     }
     
     async getById(req: Request, res: Response) {
-        const { utils } = this.service;
+        const { utils } = main$0Service;
         const id = req.params.id;
         try {
             res.json(await utils.findById(id));
@@ -438,7 +434,7 @@ export class $0Controllers {
     }
     
     async create(req: Request, res: Response) {
-        const { utils } = this.service;
+        const { utils } = main$0Service;
         try {
             res.json(await utils.create(req.body));
         } catch (error) {
@@ -447,7 +443,7 @@ export class $0Controllers {
     }
     
     async update(req: Request, res: Response) {
-        const { utils } = this.service;
+        const { utils } = main$0Service;
         const id = req.params.id;
         try {
             res.json(await utils.updateById({ id, changes: req.body }));
@@ -457,7 +453,7 @@ export class $0Controllers {
     }
     
     async delete(req: Request, res: Response) {
-        const { utils } = this.service;
+        const { utils } = main$0Service;
         const id = req.params.id;
         try {
             res.json(await utils.deleteById(id));
@@ -477,7 +473,7 @@ export class $0Router {
     router = Router();
 
     constructor(
-        protected context?: any,
+        protected context: any = {},
     ) {
         this.setupRouter();
     }
