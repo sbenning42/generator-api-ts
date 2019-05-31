@@ -409,6 +409,9 @@ export class APIGen {
             TS_types.TS_mongooseModelPopulate.generated
         }
         `);
+        if (entities.length < 1) {
+            return console.log(`Nothing to generate. You might want to add \`entities\` in your \`APISchema\`.`);
+        }
         fs.writeFileSync(
             `${outDir}/types.ts`,
             entities[0].TS_types.TS_typeImports.generated + types.join('\n'),

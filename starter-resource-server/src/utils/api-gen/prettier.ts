@@ -117,7 +117,7 @@ export function prettifySchema(schema: _APISchema, L: { log: (...args: any[]) =>
     L.log(`${
         pretty(`APIGen @ prettify Schema:`, [bold, line])
     } ${
-        `(set \`PRETTY_LOG=false\` in \`.env\` file to disable prttify ${bold + red}:(${res}  )`
+        `(set \`PRETTY_LOG=false\` in \`.env\` file to disable prettify ${bold + red}:(${res}  )`
     }\n\n${
         pretty(`Config:`, [bold, line])
     }\n${
