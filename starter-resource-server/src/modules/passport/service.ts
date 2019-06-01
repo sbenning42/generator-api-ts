@@ -118,6 +118,16 @@ export class PassportService<User extends { _id: string | ObjectID }> extends Si
             res.json({});
         };
     }
+
+    hasRoleMiddleware(roles: string[]) {
+        return async (req: Request, res: Response, next: NextFunction) => {
+            const userRoles = req.user && req.user.roles ? req.user.roles : [];
+            if (!roles.some(role => userRoles.includes(role))) {
+                res.status(403).json({ message: 'Unauthorized.' });
+            }
+            next();
+        };
+    }
 }
 
 const {

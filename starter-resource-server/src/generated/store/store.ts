@@ -11,43 +11,43 @@ import {
 } from 'mongoose';
 import {
     ID,
-    User,
-    UserCreateBody,
-    UserChangesBody,
-    UserPushBody,
-    UserPullBody,
-    UserUpdateBody,
-    UserRawUpdateBody,
-    UserSchema,
-    UserModel,
-    UserDocument,
-    UserDocumentQuery,
-    UserDocumentsQuery,
-    UserCondition,
-    UserProjection,
-    UserPopulate,
+    Store,
+    StoreCreateBody,
+    StoreChangesBody,
+    StorePushBody,
+    StorePullBody,
+    StoreUpdateBody,
+    StoreRawUpdateBody,
+    StoreSchema,
+    StoreModel,
+    StoreDocument,
+    StoreDocumentQuery,
+    StoreDocumentsQuery,
+    StoreCondition,
+    StoreProjection,
+    StorePopulate,
 } from '../types';
 
 
 export type MongooseCB<T = any> = (err: any, results: T) => void;
 
-const populateAll = <Q extends (UserDocumentQuery | UserDocumentsQuery)>(
+const populateAll = <Q extends (StoreDocumentQuery | StoreDocumentsQuery)>(
     query: Q,
-    populates: UserPopulate[],
+    populates: StorePopulate[],
     idx: number = 0
 ) => idx < populates.length
     ? populateAll(query.populate(populates[idx]), populates, idx + 1)
     : query;
 
-const docPopulateAll = <D extends UserDocument | UserDocument[]>(
+const docPopulateAll = <D extends StoreDocument | StoreDocument[]>(
     doc: D,
-    populates: UserPopulate[],
+    populates: StorePopulate[],
     idx: number = 0
 ) => idx < populates.length
     ? docPopulateAll(
         Array.isArray(doc)
             ? doc.map(d => d.populate(populates[idx]))
-            : (doc as UserDocument).populate(populates[idx]),
+            : (doc as StoreDocument).populate(populates[idx]),
         populates,
         idx + 1
     )
@@ -64,142 +64,142 @@ export type QueryFindByIdAndUpdateOptions = {
 export type QueryFindByIdAndRemoveOptions = QueryFindOneAndRemoveOptions;
 
 
-/********* USER Module *********/
+/********* STORE Module *********/
 
 
-export class UserUtils {
+export class StoreUtils {
 
-    UserSchema = UserSchema;
-    User = UserModel;
+    StoreSchema = StoreSchema;
+    Store = StoreModel;
 
     findAll(
-        projection?: UserProjection,
-        populates: UserPopulate[] = [],
-        cb?: MongooseCB<UserDocument[]>,
+        projection?: StoreProjection,
+        populates: StorePopulate[] = [],
+        cb?: MongooseCB<StoreDocument[]>,
         options: any = {},
     ) {
         return populateAll(
-            this.User.find({}, projection, options, cb),
+            this.Store.find({}, projection, options, cb),
             populates
-        ) as UserDocumentsQuery;
+        ) as StoreDocumentsQuery;
     }
 
     findMany(
-        condition: UserCondition,
-        projection?: UserProjection,
-        populates: UserPopulate[] = [],
-        cb?: MongooseCB<UserDocument[]>,
+        condition: StoreCondition,
+        projection?: StoreProjection,
+        populates: StorePopulate[] = [],
+        cb?: MongooseCB<StoreDocument[]>,
         options: any = {},
     ) {
         return populateAll(
-            this.User.find(condition, projection, options, cb),
+            this.Store.find(condition, projection, options, cb),
             populates
-        ) as UserDocumentsQuery;
+        ) as StoreDocumentsQuery;
     }
 
     findOne(
-        condition: UserCondition,
-        projection?: UserProjection,
-        populates: UserPopulate[] = [],
-        cb?: MongooseCB<UserDocument>,
+        condition: StoreCondition,
+        projection?: StoreProjection,
+        populates: StorePopulate[] = [],
+        cb?: MongooseCB<StoreDocument>,
         options: any = {},
     ) {
         return populateAll(
-            this.User.findOne(condition, projection, options, cb),
+            this.Store.findOne(condition, projection, options, cb),
             populates
-        ) as UserDocumentQuery;
+        ) as StoreDocumentQuery;
     }
 
     findById(
         id: ID,
-        projection?: UserProjection,
-        populates: UserPopulate[] = [],
-        cb?: MongooseCB<UserDocument>,
+        projection?: StoreProjection,
+        populates: StorePopulate[] = [],
+        cb?: MongooseCB<StoreDocument>,
         options: any = {},
     ) {
         return populateAll(
-            this.User.findById(id, projection, options, cb),
+            this.Store.findById(id, projection, options, cb),
             populates
-        ) as UserDocumentQuery;
+        ) as StoreDocumentQuery;
     }
 
-    sanitizeCreateBody(body: UserCreateBody) {
+    sanitizeCreateBody(body: StoreCreateBody) {
         if (typeof(body.id) === 'string') {
             body.id = new ObjectID(body.id);
         }
-        return ['username', 'password', 'store', 'json'].reduce<UserCreateBody>((sanitizedBody, key) => body[key] !== undefined
+        return ['name'].reduce<StoreCreateBody>((sanitizedBody, key) => body[key] !== undefined
             ? {
                 ...sanitizedBody,
                 [key]: body[key]
             }
             : sanitizedBody,
-            {} as UserCreateBody
+            {} as StoreCreateBody
         );
     }
 
     async create(
-        body: UserCreateBody,
-        populates: UserPopulate[] = [],
-        cb?: MongooseCB<UserDocument>,
+        body: StoreCreateBody,
+        populates: StorePopulate[] = [],
+        cb?: MongooseCB<StoreDocument>,
         options: SaveOptions = {},
         trusted: boolean = false
     ) {
         const sanitizedBody = this.sanitizeCreateBody(body);
-        const modelInstance = new this.User(sanitizedBody);
+        const modelInstance = new this.Store(sanitizedBody);
         return docPopulateAll(
             await modelInstance.save(options, cb),
             populates
-        ) as UserDocument;
+        ) as StoreDocument;
     }
 
     async createMany(
-        bodies: UserCreateBody[],
-        populates: UserPopulate[] = [],
-        cb?: MongooseCB<UserDocument[]>,
+        bodies: StoreCreateBody[],
+        populates: StorePopulate[] = [],
+        cb?: MongooseCB<StoreDocument[]>,
         options: SaveOptions = {},
         trusted: boolean = false
     ) {
-        const modelInstances = bodies.map(body => new this.User(this.sanitizeCreateBody(body)));
+        const modelInstances = bodies.map(body => new this.Store(this.sanitizeCreateBody(body)));
         return docPopulateAll(
-            await this.User.insertMany(modelInstances, options, cb),
+            await this.Store.insertMany(modelInstances, options, cb),
             populates
-        ) as UserDocument[];
+        ) as StoreDocument[];
     }
 
-    sanitizeChangesBody(body: UserChangesBody) {
-        return ['username', 'password', 'json'].reduce<UserChangesBody>((sanitizedBody, key) => body[key] !== undefined
+    sanitizeChangesBody(body: StoreChangesBody) {
+        return ['name'].reduce<StoreChangesBody>((sanitizedBody, key) => body[key] !== undefined
             ? {
                 ...sanitizedBody,
                 [key]: body[key]
             }
             : sanitizedBody,
-            {} as UserChangesBody);
+            {} as StoreChangesBody);
     }
 
-    sanitizePushBody(body: UserPushBody) {
-        return [].reduce<UserPushBody>((sanitizedBody, key) => body[key] !== undefined
+    sanitizePushBody(body: StorePushBody) {
+        return [].reduce<StorePushBody>((sanitizedBody, key) => body[key] !== undefined
             ? {
                 ...sanitizedBody,
                 [key]: Array.isArray(body[key]) ? { $each: body[key] } : body[key]
             }
             : sanitizedBody,
-            {} as UserPushBody);
+            {} as StorePushBody);
     }
 
-    sanitizePullBody(body: UserPullBody) {
-        return [].reduce<UserPullBody>((sanitizedBody, key) => body[key] !== undefined
+    sanitizePullBody(body: StorePullBody) {
+        return [].reduce<StorePullBody>((sanitizedBody, key) => body[key] !== undefined
             ? {
                 ...sanitizedBody,
                 [key]: Array.isArray(body[key]) ? { $each: body[key] } : body[key]
             }
             : sanitizedBody,
-            {} as UserPullBody);
+            {} as StorePullBody);
     }
 
     updateById(
-        { id, changes = {}, push = {}, pull = {} }: UserUpdateBody,        
-        populates: UserPopulate[] = [],
-        cb?: MongooseCB<UserDocument>,
+        { id, changes = {}, push = {}, pull = {} }: StoreUpdateBody,        
+        populates: StorePopulate[] = [],
+        cb?: MongooseCB<StoreDocument>,
         options: QueryFindByIdAndUpdateOptions = { new: true },
         trusted: boolean = false
     ) {
@@ -212,28 +212,28 @@ export class UserUtils {
             $pull: sanitizedPull,
         };
         return populateAll(
-            this.User.findByIdAndUpdate(id, body, options, cb),
+            this.Store.findByIdAndUpdate(id, body, options, cb),
             populates
-        ) as UserDocumentQuery;
+        ) as StoreDocumentQuery;
     }
 
     deleteById(
         id: ID,
-        populates: UserPopulate[] = [],
-        cb?: MongooseCB<UserDocument>,
+        populates: StorePopulate[] = [],
+        cb?: MongooseCB<StoreDocument>,
         options: QueryFindByIdAndRemoveOptions = {},
     ) {
         return populateAll(
-            this.User.findByIdAndRemove(id, options, cb),
+            this.Store.findByIdAndRemove(id, options, cb),
             populates
-        ) as UserDocumentQuery;
+        ) as StoreDocumentQuery;
     }
 
     updateOne(
-        condition: UserCondition,
-        { changes = {}, push = {}, pull = {} }: UserRawUpdateBody,        
-        populates: UserPopulate[] = [],
-        cb?: MongooseCB<UserDocument>,
+        condition: StoreCondition,
+        { changes = {}, push = {}, pull = {} }: StoreRawUpdateBody,        
+        populates: StorePopulate[] = [],
+        cb?: MongooseCB<StoreDocument>,
         options: QueryFindOneAndUpdateOptions = { new: true },
         trusted: boolean = false
     ) {
@@ -246,27 +246,27 @@ export class UserUtils {
             $pull: sanitizedPull,
         };
         return populateAll(
-            this.User.findOneAndUpdate(condition, body, options, cb),
+            this.Store.findOneAndUpdate(condition, body, options, cb),
             populates
-        ) as UserDocumentQuery;
+        ) as StoreDocumentQuery;
     }
 
     deleteOne(
-        condition: UserCondition,
-        populates: UserPopulate[] = [],
-        cb?: MongooseCB<UserDocument>,
+        condition: StoreCondition,
+        populates: StorePopulate[] = [],
+        cb?: MongooseCB<StoreDocument>,
         options: QueryFindOneAndRemoveOptions = {},
     ) {
         return populateAll(
-            this.User.findOneAndRemove(condition, options, cb),
+            this.Store.findOneAndRemove(condition, options, cb),
             populates
-        ) as UserDocumentQuery;
+        ) as StoreDocumentQuery;
     }
 
     updateMany(
-        condition: UserCondition,
-        { changes = {}, push = {}, pull = {} }: UserRawUpdateBody,        
-        populates: UserPopulate[] = [],
+        condition: StoreCondition,
+        { changes = {}, push = {}, pull = {} }: StoreRawUpdateBody,        
+        populates: StorePopulate[] = [],
         cb?: MongooseCB<any>,
         options: ModelUpdateOptions = {},
         trusted: boolean = false
@@ -280,54 +280,39 @@ export class UserUtils {
             $pull: sanitizedPull,
         };
         return populateAll(
-            this.User.updateMany(condition, body, options, cb),
+            this.Store.updateMany(condition, body, options, cb),
             populates
         );
     }
 
     deleteMany(
-        condition: UserCondition,
+        condition: StoreCondition,
         cb?: (err: any) => void,
     ) {
-        return this.User.remove(condition, cb);
+        return this.Store.remove(condition, cb);
     }
+
+}
+
+
+export class StoreService {
     
-    async findStoreOf(id: ID) {
-        const modelInstance = await this.findById(id, undefined, ['store']);
-        return modelInstance.store;
-    }
+    utils: StoreUtils = new StoreUtils();
+
+}
+
+export const mainStoreService: StoreService = new StoreService();
 
 
-    addStoreTo(id: ID, addId: ID) {
-        return this.updateById({ id, changes: { store: addId } } as any, undefined, undefined, undefined, true);
-    }
-
-    removeStoreFrom(id: ID) {
-        return this.updateById({ id, changes: { store: null } } as any, undefined, undefined, undefined, true);
-    }
-
+export class StoreMiddlewares {
 
 }
 
 
-export class UserService {
-    
-    utils: UserUtils = new UserUtils();
-
-}
-
-export const mainUserService: UserService = new UserService();
-
-
-export class UserMiddlewares {
-
-}
-
-
-export class UserControllers {
+export class StoreControllers {
 
     async getAll(req: Request, res: Response) {
-        const { utils } = mainUserService;
+        const { utils } = mainStoreService;
         try {
             res.json(await utils.findAll());
         } catch (error) {
@@ -336,7 +321,7 @@ export class UserControllers {
     }
     
     async getById(req: Request, res: Response) {
-        const { utils } = mainUserService;
+        const { utils } = mainStoreService;
         const id = req.params.id;
         try {
             res.json(await utils.findById(id));
@@ -346,7 +331,7 @@ export class UserControllers {
     }
     
     async create(req: Request, res: Response) {
-        const { utils } = mainUserService;
+        const { utils } = mainStoreService;
         try {
             res.json(await utils.create(req.body));
         } catch (error) {
@@ -355,7 +340,7 @@ export class UserControllers {
     }
     
     async update(req: Request, res: Response) {
-        const { utils } = mainUserService;
+        const { utils } = mainStoreService;
         const id = req.params.id;
         const { changes, push, pull } = req.body;
         try {
@@ -366,7 +351,7 @@ export class UserControllers {
     }
     
     async delete(req: Request, res: Response) {
-        const { utils } = mainUserService;
+        const { utils } = mainStoreService;
         const id = req.params.id;
         try {
             res.json(await utils.deleteById(id));
@@ -379,10 +364,10 @@ export class UserControllers {
 
 }
 
-export const mainUserControllers: UserControllers = new UserControllers();
+export const mainStoreControllers: StoreControllers = new StoreControllers();
 
 
-export class UserRouter {
+export class StoreRouter {
     
     router = Router();
 
@@ -397,20 +382,20 @@ export class UserRouter {
             jwtMiddleware
         } = this.context;
         this.router
-            .get('/', jwtMiddleware, mainUserControllers.getAll)
-            .post('/', mainUserControllers.create)
-            .get('/:id', jwtMiddleware, mainUserControllers.getById)
-            .put('/:id', jwtMiddleware, mainUserControllers.update);
+            .get('/', jwtMiddleware, mainStoreControllers.getAll)
+            .post('/', jwtMiddleware, mainStoreControllers.create)
+            .get('/:id', jwtMiddleware, mainStoreControllers.getById)
+            .delete('/:id', jwtMiddleware, mainStoreControllers.delete);
     }
 
     applyRouter(app: Application) {
-        app.use('/users', this.router);
+        app.use('/stores', this.router);
     }
 }
 
 
-export function applyUserAPI<CTX>(app: Application, context?: CTX, prettifyRouter?: (...args: any[]) => void, ...args: any[]) {
-    const router = new UserRouter(context);
+export function applyStoreAPI<CTX>(app: Application, context?: CTX, prettifyRouter?: (...args: any[]) => void, ...args: any[]) {
+    const router = new StoreRouter(context);
     router.applyRouter(app);
     if (prettifyRouter && args.length > 1) {
         prettifyRouter(args[0], router.router, args[1]);

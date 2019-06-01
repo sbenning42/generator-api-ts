@@ -605,6 +605,78 @@ $1
 export const main$0Controllers: $0Controllers = new $0Controllers();
 `, [name, '']);
 
+export const TSRelationQueryControllersTpl = (name: string, propName: string) => rep(`    
+    async get$1Of(id: ID) {
+        const { utils } = main$0Service;
+        const id = req.params.id;
+        try {
+            res.json(await utils.find$0Of(id));
+        } catch (error) {
+            res.status(400).json({ error, message: 'Something went wrong.' });
+        }
+    }
+`, [`${propName.slice(0, 1).toUpperCase()}${propName.slice(1)}`, propName, name]);
+
+export const TSRelationArrayQueryControllersTpl = (name: string, propName: string) => rep(`    
+    async get$1Of(id: ID) {
+        const { utils } = main$0Service;
+        const id = req.params.id;
+        try {
+            res.json(await utils.find$0Of(id));
+        } catch (error) {
+            res.status(400).json({ error, message: 'Something went wrong.' });
+        }
+    }
+`, [`${propName.slice(0, 1).toUpperCase()}${propName.slice(1)}`, propName, name]);
+
+export const TSRelationMutationControllersTpl = (name: string, propName: string) => rep(`    
+    async add$1Of(id: ID) {
+        const { utils } = main$0Service;
+        const id = req.params.id;
+        const { addId } = req.body;
+        try {
+            res.json(await utils.find$0Of(id, addId));
+        } catch (error) {
+            res.status(400).json({ error, message: 'Something went wrong.' });
+        }
+    }    
+    async remove$1Of(id: ID) {
+        const { utils } = main$0Service;
+        const id = req.params.id;
+        const { removeId  = req.body;
+        try {
+            res.json(await utils.remove$0Of(id, removeId));
+        } catch (error) {
+            res.status(400).json({ error, message: 'Something went wrong.' });
+        }
+    }
+`, [`${propName.slice(0, 1).toUpperCase()}${propName.slice(1)}`, propName, name]);
+
+
+export const TSRelationArrayMutationControllersTpl = (name: string, propName: string) => rep(`    
+    async add$1Of(id: ID) {
+        const { utils } = main$0Service;
+        const id = req.params.id;
+        const { addIds } = req.body;
+        try {
+            res.json(await utils.find$0Of(id, ...addIds));
+        } catch (error) {
+            res.status(400).json({ error, message: 'Something went wrong.' });
+        }
+    }    
+    async remove$1Of(id: ID) {
+        const { utils } = main$0Service;
+        const id = req.params.id;
+        const { removeIds } = req.body;
+        try {
+            res.json(await utils.remove$0Of(id, ...removeIds));
+        } catch (error) {
+            res.status(400).json({ error, message: 'Something went wrong.' });
+        }
+    }
+`, [`${propName.slice(0, 1).toUpperCase()}${propName.slice(1)}`, propName, name]);
+
+
 export const TSRouterTpl = (name: string, routes: string[], endpoint: string, middlewares: string[] = []) => rep(`
 export class $0Router {
     

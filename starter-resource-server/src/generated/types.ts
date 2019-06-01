@@ -20,6 +20,7 @@ export interface User {
    username: string;
    password: string;
    roles: string[];
+   store: Store;
    json?: any;
     createdAt: string;
     updatedAt: string;
@@ -30,6 +31,7 @@ export interface UserCreateBody {
     id?: ID;
    username: string;
    password: string;
+   store: Store;
    json?: any;
 }
 
@@ -85,6 +87,13 @@ export const UserSchema = new Schema({
         select: true,
         default: ['user'],
     },
+    store: {
+        type: ObjectId,
+        ref: 'Store',
+        required: true,
+        unique: false,
+        select: true,
+    },
     json: {
         type: Mixed,
         required: false,
@@ -108,10 +117,84 @@ export interface UserProjection {
     username: 0 | 1;
     password: 0 | 1;
     roles: 0 | 1;
+    store: 0 | 1;
     json: 0 | 1;
 }
 
 
-export type UserPopulate = '';
+export type UserPopulate = 'store';
+
+        
+/********* STORE *********/
+
+
+export interface Store {
+    id: ID,
+   name: string;
+    createdAt: string;
+    updatedAt: string;
+}
+
+
+export interface StoreCreateBody {
+    id?: ID;
+   name: string;
+}
+
+
+export interface StoreChangesBody {
+   name?: string;
+}
+
+
+export interface StorePushBody {
+
+}
+
+
+export interface StorePullBody {
+
+}
+
+
+export interface StoreUpdateBody {
+    id: ID;
+    changes?: StoreChangesBody;
+    push?: StorePushBody;
+    pull?: StorePullBody;
+}
+
+export interface StoreRawUpdateBody {
+    changes?: StoreChangesBody;
+    push?: StorePushBody;
+    pull?: StorePullBody;
+}
+
+
+export const StoreSchema = new Schema({
+    name: {
+        type: String,
+        required: true,
+        unique: true,
+        select: true,
+    },
+}, { minimize: false, timestamps: true }); 
+
+
+export type StoreDocument = Document & Store;
+export type StoreDocumentsQuery = DocumentQuery<StoreDocument[], StoreDocument>;
+export type StoreDocumentQuery = DocumentQuery<StoreDocument, StoreDocument>;
+export const StoreModel = model<StoreDocument>('Store', StoreSchema);
+export type StoreCondition = any;
+
+
+export interface StoreProjection {
+    createdAt: 0 | 1;
+    updatedAt: 0 | 1;
+    name: 0 | 1;
+}
+
+
+export type StorePopulate = '';
 
         

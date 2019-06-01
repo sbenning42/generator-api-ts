@@ -9,6 +9,7 @@ import { applyUserAPI } from '../../generated/user/user';
 import { prettifyRouter } from '../../common/api-gen/prettier';
 import { mainPassportService } from '../passport/service';
 import { L } from '../../common/logger';
+import { applyStoreAPI } from '../../generated/store/store';
 
 const {
 } = environment;
@@ -24,15 +25,17 @@ export class UseService extends Singleton {
 
     async use(app: Application) {
 
+        const jwtMiddleware = mainPassportService.jwt();
+
         await mainMongoService.init();
         L.info(`DB: ${mainMongoService.url} connected.`);
         
         app.use(initContextMiddleware, passport.initialize());
         mainPassportRouter.applyRouter(app, '/auth');
         
-        applyUserAPI(app, {
-            jwtMiddleware: mainPassportService.jwt(),
-        }, prettifyRouter, 'users', console);
+        applyUserAPI(app, { jwtMiddleware }, prettifyRouter, 'users', console);
+        applyStoreAPI(app, { jwtMiddleware }, prettifyRouter, 'stores', console);
+
     }
 }
 
