@@ -410,6 +410,11 @@ export class UserRouter {
 }
 
 
-export function applyUserAPI<CTX>(app: Application, context?: CTX) {
-    new UserRouter(context).applyRouter(app);
+export function applyUserAPI<CTX>(app: Application, context?: CTX, prettifyRouter?: (...args: any[]) => void, ...args: any[]) {
+    const router = new UserRouter(context);
+    router.applyRouter(app);
+    if (prettifyRouter && args.length > 1) {
+        prettifyRouter(args[0], router.router, args[1]);
+    }
+    return router;
 }

@@ -150,7 +150,7 @@ export const TSMongooseSchemaArrayPropTpl = (
         ? `${_default}`
         : (
             typeof(_default) === 'function'
-                ? _default.toString()
+                ? _default.toString().replace(/\w*_\d*\./g, '')
                 : JSON.stringify(_default)
         )
 ])
@@ -641,7 +641,12 @@ export const TSRouterRouteWithMiddlewareTpl = (
         .$0('$1', $2, $3)`, [verb, endpoint, middlewares.join(', '), controller]);
 
 export const TSApplyAPI = (name: string) => rep(`
-export function apply$0API<CTX>(app: Application, context?: CTX) {
-    new $0Router(context).applyRouter(app);
+export function apply$0API<CTX>(app: Application, context?: CTX, prettifyRouter?: (...args: any[]) => void, ...args: any[]) {
+    const router = new $0Router(context);
+    router.applyRouter(app);
+    if (prettifyRouter && args.length > 1) {
+        prettifyRouter(args[0], router.router, args[1]);
+    }
+    return router;
 }
 `, [name]);

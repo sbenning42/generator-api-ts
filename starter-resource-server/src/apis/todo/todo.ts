@@ -410,6 +410,11 @@ export class TodoRouter {
 }
 
 
-export function applyTodoAPI<CTX>(app: Application, context?: CTX) {
-    new TodoRouter(context).applyRouter(app);
+export function applyTodoAPI<CTX>(app: Application, context?: CTX, prettifyRouter?: (...args: any[]) => void, ...args: any[]) {
+    const router = new TodoRouter(context);
+    router.applyRouter(app);
+    if (prettifyRouter && args.length > 1) {
+        prettifyRouter(args[0], router.router, args[1]);
+    }
+    return router;
 }

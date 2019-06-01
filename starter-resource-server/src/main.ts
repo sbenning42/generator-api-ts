@@ -7,7 +7,7 @@ import dotenv from 'dotenv';
 dotenv.config();
 const {
   PORT = 4266, // Apply default port if not provided by `.env` file
-  MONGO_URL
+  MONGO_URL,
 } = process.env;
 
 /**
@@ -22,6 +22,7 @@ import passport from 'passport';
 
 import { l } from './utils/logger';
 import { services } from './services';
+import { createMainPassportService } from './services/passport/passport.service';
 
 const {
   mainMongoService,
