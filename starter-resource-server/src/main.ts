@@ -35,7 +35,7 @@ async function main() {
   /**
    * Apply application handlers
    */
-  mainUseService.use(app);
+  await mainUseService.use(app);
 
   /**
    * Start `express` server

@@ -630,7 +630,7 @@ export class $0Router {
 `, [name, routes.join(''), endpoint, middlewares.join(',\n            ')]);
 
 export const TSRouterRouteTpl = (verb: string, endpoint: string, controller: string) => rep(`
-        .$0('$1', $2)`, [verb, endpoint, controller]);
+            .$0('$1', $2)`, [verb, endpoint, controller]);
 
 
 export const TSRouterRouteWithMiddlewareTpl = (
@@ -639,7 +639,7 @@ export const TSRouterRouteWithMiddlewareTpl = (
     controller: string,
     ...middlewares: string[]
 ) => rep(`
-        .$0('$1', $2, $3)`, [verb, endpoint, middlewares.join(', '), controller]);
+            .$0('$1', $2, $3)`, [verb, endpoint, middlewares.join(', '), controller]);
 
 export const TSApplyAPI = (name: string) => rep(`
 export function apply$0API<CTX>(app: Application, context?: CTX, prettifyRouter?: (...args: any[]) => void, ...args: any[]) {

@@ -42,6 +42,7 @@ export interface APISchemaEntityRoute {
     skip?: boolean;
     auth?: APISchemaEntityRouteAuth;
     middlewares?: string[];
+    excludeMiddlewares?: string[];
 }
 
 export interface APISchemaEntityProperties {
@@ -188,12 +189,14 @@ export interface _APISchemaEntityRoute {
     skip: boolean;
     auth: _APISchemaEntityRouteAuth;
     middlewares: string[];
+    excludeMiddlewares: string[];
 }
 
 export function strictAPISchemaEntityRoute(route: APISchemaEntityRoute): _APISchemaEntityRoute {
     return {
         skip: route && route.skip !== undefined ? route.skip : false,
         middlewares: route && route.middlewares !== undefined ? route.middlewares : [],
+        excludeMiddlewares: route && route.excludeMiddlewares !== undefined ? route.excludeMiddlewares : [],
         auth: strictAPISchemaEntityRouteAuth(route && route.auth),
     };
 }
@@ -235,7 +238,7 @@ export function strictAPISchemaEntityRoutes<R extends string[]>(routes: APISchem
         'GET /:id': strictAPISchemaEntityRoute(routes && routes['GET /:id']),
         'PUT /:id': strictAPISchemaEntityRoute(routes && routes['PUT /:id']),
         'DELETE /:id': strictAPISchemaEntityRoute(routes && routes['DELETE /:id']),
-        ...({} as { [key: string]: _APISchemaEntityRoute }) /** @todo: apply custom routes definition (eg: not `{}`) */
+        ...({} as { [key: string]: _APISchemaEntityRoute }) /** @todo: apply relation routes definition (eg: not `{}`) */
     });
 }
 

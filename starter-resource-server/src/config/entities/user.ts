@@ -25,6 +25,16 @@ export const user: APISchemaEntity = {
         },
     },
     routes: {
+        all: {
+            middlewares: [
+                'jwtMiddleware'
+            ]
+        },
+        'POST /': {
+            excludeMiddlewares: [
+                'jwtMiddleware'
+            ]
+        },
         'DELETE /:id': {
             skip: true,
         }

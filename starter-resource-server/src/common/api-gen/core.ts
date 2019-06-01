@@ -356,7 +356,7 @@ export class APIGen {
                                                 roles: allRoles,
                                                 scopes: allScopes
                                             },
-                                            middlewares: allMiddlewares,
+                                            middlewares: _allMiddlewares,
                                             skip: allSkip
                                         } = entity.routes.all,
                                         {
@@ -365,7 +365,7 @@ export class APIGen {
                                                 roles: queryRoles,
                                                 scopes: queryScopes
                                             },
-                                            middlewares: queryMiddlewares,
+                                            middlewares: _queryMiddlewares,
                                             skip: querySkip
                                         } = entity.routes.query,
                                         {
@@ -374,7 +374,7 @@ export class APIGen {
                                                 roles: mutationRoles,
                                                 scopes: mutationScopes
                                             },
-                                            middlewares: mutationMiddlewares,
+                                            middlewares: _mutationMiddlewares,
                                             skip: mutationSkip
                                         } = entity.routes.mutation,
                                         {
@@ -384,8 +384,12 @@ export class APIGen {
                                                 scopes: scopes
                                             },
                                             middlewares: middlewares,
+                                            excludeMiddlewares: excludeMiddlewares,
                                             skip: skip
                                         } = route;
+                                    const allMiddlewares = _allMiddlewares.filter(m => !excludeMiddlewares.includes(m));
+                                    const queryMiddlewares = _queryMiddlewares.filter(m => !excludeMiddlewares.includes(m));
+                                    const mutationMiddlewares = _mutationMiddlewares.filter(m => !excludeMiddlewares.includes(m));
                                     const hasMiddlewares = [
                                         allMiddlewares,
                                         queryMiddlewares,
@@ -424,7 +428,7 @@ export class APIGen {
                                                 ...(queryMiddlewares || []),
                                                 ...(mutationMiddlewares || []),
                                                 ...(middlewares || [])   
-                                            ].concat().join(', ')
+                                            ].join(', ')
                                         )
                                         : TSRouterRouteTpl(verb.toLowerCase(), ep, controller);
                                 }),

@@ -379,13 +379,13 @@ export class UserRouter {
 
     private setupRouter() {
         const {
-            
+            jwtMiddleware
         } = this.context;
         this.router
-        .get('/', mainUserControllers.getAll)
-        .post('/', mainUserControllers.create)
-        .get('/:id', mainUserControllers.getById)
-        .put('/:id', mainUserControllers.update);
+            .get('/', jwtMiddleware, mainUserControllers.getAll)
+            .post('/', mainUserControllers.create)
+            .get('/:id', jwtMiddleware, mainUserControllers.getById)
+            .put('/:id', jwtMiddleware, mainUserControllers.update);
     }
 
     applyRouter(app: Application) {

@@ -5,6 +5,10 @@ import { mainPassportRouter } from '../passport/router';
 import { mainMongoService } from '../mongo/service';
 import passport = require('passport');
 import { initContextMiddleware } from '../../config/context';
+import { applyUserAPI } from '../../generated/user/user';
+import { prettifyRouter } from '../../common/api-gen/prettier';
+import { mainPassportService } from '../passport/service';
+import { L } from '../../common/logger';
 
 const {
 } = environment;
@@ -19,12 +23,16 @@ export class UseService extends Singleton {
     }
 
     async use(app: Application) {
+
         await mainMongoService.init();
-        app.use(
-            initContextMiddleware,
-            passport.initialize(),
-        );
-        mainPassportRouter.applyRouter(app);
+        L.info(`DB: ${mainMongoService.url} connected.`);
+        
+        app.use(initContextMiddleware, passport.initialize());
+        mainPassportRouter.applyRouter(app, '/auth');
+        
+        applyUserAPI(app, {
+            jwtMiddleware: mainPassportService.jwt(),
+        }, prettifyRouter, 'users', console);
     }
 }
 
