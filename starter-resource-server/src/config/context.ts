@@ -1,11 +1,15 @@
 import { Request, Response, NextFunction } from "express";
 
-let _ctx: any;
+/**
+ * `context` is a way to access req-dependant data in `mongoose` model field default function value
+ */
+
+let ctx: any;
 
 export function initContextMiddleware(req: Request, res: Response, next: NextFunction) {
-    _ctx = { req, res };
-    req['ctx'] = _ctx;
+    ctx = { req, res };
+    req['ctx'] = ctx;
     next();
 }
 
-export const context = () => _ctx;
+export const context = () => ctx;

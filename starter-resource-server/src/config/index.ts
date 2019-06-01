@@ -5,5 +5,8 @@ import { entities } from "./entities";
 export const schema: APISchema = {
     entities,
     config,
-    context: { name: 'context', from: '../config/context' }
+    context: {
+        name: 'context',
+        from: '../config/context'
+    }
 };

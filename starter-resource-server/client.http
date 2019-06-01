@@ -1,7 +1,8 @@
-GET http://localhost:4266/users/5cf1425f66e4b542e89e18c2/todos HTTP/1.1
+post http://localhost:4266/todos HTTP/1.1
 content-type: application/json
 
 {
     "title": "test",
-    "done": false
+    "done": false,
+    "owner": "powned?"
 }
