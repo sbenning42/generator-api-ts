@@ -2,6 +2,7 @@
 import { Request, Response, NextFunction } from 'express';
 import { Schema, model, Document, DocumentQuery } from 'mongoose';
 import { ObjectID } from 'mongodb';
+import { context } from '../config/context';
 
 
 export const Mixed = Schema.Types.Mixed;
@@ -20,6 +21,8 @@ export interface User {
    roles: string[];
    json?: any;
    todos?: Todo[];
+    createdAt: string;
+    updatedAt: string;
 }
 
 
@@ -125,8 +128,10 @@ export type UserPopulate = 'todos';
 export interface Todo {
    title: string;
    done: boolean;
-   json?: any;
+   json?: any[];
    owner: User;
+    createdAt: string;
+    updatedAt: string;
 }
 
 
@@ -134,24 +139,24 @@ export interface TodoCreateBody {
     id?: ID;
    title: string;
    done: boolean;
-   json?: any;
+   json?: any[];
 }
 
 
 export interface TodoChangesBody {
    title?: string;
    done?: boolean;
-   json?: any;
+   json?: any[];
 }
 
 
 export interface TodoPushBody {
-
+   json?: any | any[];
 }
 
 
 export interface TodoPullBody {
-
+   json?: any | any[];
 }
 
 
@@ -184,7 +189,7 @@ export const TodoSchema = new Schema({
         default: false,
     },
     json: {
-        type: Mixed,
+        type: [Mixed],
         required: false,
         unique: false,
         select: true,
@@ -196,6 +201,7 @@ export const TodoSchema = new Schema({
         required: true,
         unique: false,
         select: true,
+        default: () => context().currentId,
     },
 }, { minimize: false, timestamps: true }); 
 

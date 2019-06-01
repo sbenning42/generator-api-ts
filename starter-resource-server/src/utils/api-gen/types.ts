@@ -76,7 +76,7 @@ export interface APISchemaEntities<RS extends { [key: string]: string[] } = {}> 
 export interface APISchema<RS extends { [key: string]: string[] } = {}> {
     config: APISchemaConfig;
     entities: APISchemaEntities<RS>;
-    context?: any | ((context: { req: Request, res: Response }) => any);
+    context?: { name: string, from: string };
 }
 
 
@@ -269,7 +269,7 @@ export function strictAPISchemaEntities<RS extends { [key: string]: string[] }>(
 export interface _APISchema<RS extends { [key: string]: string[] } = {}> {
     config: _APISchemaConfig;
     entities: _APISchemaEntities<RS>;
-    context: (context: { req: Request, res: Response }) => any;
+    context: { name: string, from: string };
 }
 
 export function strictAPISchema<RS extends { [key: string]: string[] }>(schema: APISchema<RS>): _APISchema<RS> {
@@ -277,11 +277,7 @@ export function strictAPISchema<RS extends { [key: string]: string[] }>(schema: 
         config: strictAPISchemaConfig(schema && schema.config),
         entities: strictAPISchemaEntities<RS>(schema && schema.entities),
         context: schema.context !== undefined
-            ? (
-                typeof(schema.context) === 'function'
-                    ? schema.context
-                    : () => schema.context
-            )
-            : () => ({}),
+            ? schema.context
+            : { name: 'context', from: '../config' },
     };
 }

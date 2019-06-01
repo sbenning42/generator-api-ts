@@ -3,6 +3,8 @@ import { applyUserAPI, UserRouter } from "../../apis/user/user";
 import { prettifyRouter } from "../../utils/api-gen/prettier";
 import { userCountController } from "../../controllers/user-count";
 import { applyTodoAPI, TodoRouter } from "../../apis/todo/todo";
+import { initContextMiddleware } from "../../config/context";
+import { setCurrentIdMiddleware } from "../../middlewares/set-current-id.middleware";
 
 export class UseService {
     use(app: Application) {
@@ -27,11 +29,13 @@ export class UseService {
          * 
          */
 
+        app.use(initContextMiddleware);
+
         const userRouter = new UserRouter({ userCountController });
         userRouter.applyRouter(app);
         prettifyRouter('users', userRouter.router, console);
 
-        const todoRouter = new TodoRouter();
+        const todoRouter = new TodoRouter({ setCurrentIdMiddleware });
         todoRouter.applyRouter(app);
         prettifyRouter('todos', todoRouter.router, console);
         

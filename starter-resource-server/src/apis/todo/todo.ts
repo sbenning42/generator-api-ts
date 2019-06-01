@@ -177,7 +177,7 @@ export class TodoUtils {
     }
 
     sanitizePushBody(body: TodoPushBody) {
-        return [].reduce<TodoPushBody>((sanitizedBody, key) => body[key] !== undefined
+        return ['json'].reduce<TodoPushBody>((sanitizedBody, key) => body[key] !== undefined
             ? {
                 ...sanitizedBody,
                 [key]: Array.isArray(body[key]) ? { $each: body[key] } : body[key]
@@ -187,7 +187,7 @@ export class TodoUtils {
     }
 
     sanitizePullBody(body: TodoPullBody) {
-        return [].reduce<TodoPullBody>((sanitizedBody, key) => body[key] !== undefined
+        return ['json'].reduce<TodoPullBody>((sanitizedBody, key) => body[key] !== undefined
             ? {
                 ...sanitizedBody,
                 [key]: Array.isArray(body[key]) ? { $each: body[key] } : body[key]
@@ -357,8 +357,9 @@ export class TodoControllers {
     async update(req: Request, res: Response) {
         const { utils } = mainTodoService;
         const id = req.params.id;
+        const { changes, push, pull } = req.body;
         try {
-            res.json(await utils.updateById({ id, changes: req.body }));
+            res.json(await utils.updateById({ id, changes, push, pull }));
         } catch (error) {
             res.status(400).json({ error, message: 'Something went wrong.' });
         }
@@ -393,11 +394,11 @@ export class TodoRouter {
 
     private setupRouter() {
         const {
-            
+            setCurrentIdMiddleware
         } = this.context;
         this.router
         .get('/', mainTodoControllers.getAll)
-        .post('/', mainTodoControllers.create)
+        .post('/', setCurrentIdMiddleware, mainTodoControllers.create)
         .get('/:id', mainTodoControllers.getById)
         .put('/:id', mainTodoControllers.update)
         .delete('/:id', mainTodoControllers.delete);

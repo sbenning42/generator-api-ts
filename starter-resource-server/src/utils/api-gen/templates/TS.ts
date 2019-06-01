@@ -4,10 +4,11 @@ export const rep = (s: string, args: string[] = []) => args.reduce((str, arg, id
 // TS***Tpl functions are `rep` call wrappers. They defines their `s` (eg: the template)
 // as well as defining last transformations to perform to `args` 
 
-export const TSTypeImportsTpl = (customs: string[] = [], consts: string[] = []) => rep(`
+export const TSTypeImportsTpl = (customs: string[] = [], consts: string[] = [], ctx?: { name: string, from: string }) => rep(`
 import { Request, Response, NextFunction } from 'express';
 import { Schema, model, Document, DocumentQuery } from 'mongoose';
 import { ObjectID } from 'mongodb';
+$2
 $0
 
 export const Mixed = Schema.Types.Mixed;
@@ -20,11 +21,14 @@ $1
 `, [
     customs.length > 0 ? customs.join('\n') : '',
     consts.length > 0 ? consts.join('\n') : '',
+    ctx ? `import { ${ctx.name} } from '${ctx.from}';` : ''
 ]);
 
 export const TSTypeTpl = (name: string, props: string) => rep(`
 export interface $0 {
 $1
+    createdAt: string;
+    updatedAt: string;
 }
 `, [name, props]);
 export const TSTypePropTpl = (name: string, type: string, isArray: boolean = false, required: boolean = false) =>
@@ -109,7 +113,13 @@ export const TSMongooseSchemaPropTpl = (
     required.toString(),
     unique.toString(),
     (!hidden).toString(),
-    typeof(_default) === 'string' ? `${_default}` : JSON.stringify(_default)
+    typeof(_default) === 'string'
+        ? `${_default}`
+        : (
+            typeof(_default) === 'function'
+                ? _default.toString().replace(/\w*_\d*\./g, '')
+                : JSON.stringify(_default)
+        )
 ])
     .replace(/\s*ref: 'undefined',/g, '')
     .replace(/\s*default: undefined,/g, '')
@@ -136,7 +146,13 @@ export const TSMongooseSchemaArrayPropTpl = (
     required.toString(),
     unique.toString(),
     (!hidden).toString(),
-    typeof(_default) === 'string' ? `${_default}` : JSON.stringify(_default)
+    typeof(_default) === 'string'
+        ? `${_default}`
+        : (
+            typeof(_default) === 'function'
+                ? _default.toString()
+                : JSON.stringify(_default)
+        )
 ])
     .replace(/\s*ref: 'undefined',/g, '')
     .replace(/\s*default: undefined,/g, '')
@@ -563,8 +579,9 @@ export class $0Controllers {
     async update(req: Request, res: Response) {
         const { utils } = main$0Service;
         const id = req.params.id;
+        const { changes, push, pull } = req.body;
         try {
-            res.json(await utils.updateById({ id, changes: req.body }));
+            res.json(await utils.updateById({ id, changes, push, pull }));
         } catch (error) {
             res.status(400).json({ error, message: 'Something went wrong.' });
         }

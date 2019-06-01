@@ -191,7 +191,13 @@ export function prettifySchema(schema: _APISchema, L: { log: (...args: any[]) =>
                             ? `\n${
                                 pretty('Default:', [black], 3)
                             } ${
-                                pretty(typeof(_default) === 'string' ? _default : JSON.stringify(_default).slice(0, 50), [bold])
+                                pretty(typeof(_default) === 'string'
+                                    ? _default
+                                    : (
+                                        typeof(_default) === 'function'
+                                            ? _default.toString()
+                                            : JSON.stringify(_default)
+                                    ), [bold])
                             }`
                             : ''
                     }`).join('\n')

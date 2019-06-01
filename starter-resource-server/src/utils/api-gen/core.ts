@@ -152,7 +152,7 @@ export class APIGen {
                 TS_types: {
                     TS_typeImports: {
                         entity, name,
-                        generated: TSTypeImportsTpl()
+                        generated: TSTypeImportsTpl([], [], schema.context)
                     },
                     TS_type: {
                         entity, name,

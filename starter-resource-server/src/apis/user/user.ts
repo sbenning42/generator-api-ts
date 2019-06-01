@@ -357,8 +357,9 @@ export class UserControllers {
     async update(req: Request, res: Response) {
         const { utils } = mainUserService;
         const id = req.params.id;
+        const { changes, push, pull } = req.body;
         try {
-            res.json(await utils.updateById({ id, changes: req.body }));
+            res.json(await utils.updateById({ id, changes, push, pull }));
         } catch (error) {
             res.status(400).json({ error, message: 'Something went wrong.' });
         }
