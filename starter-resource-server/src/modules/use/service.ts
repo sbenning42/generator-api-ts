@@ -1,9 +1,9 @@
+import passport from 'passport';
 import { Application } from 'express';
 import { environment } from '../../environment';
 import { Singleton } from '../../common/singleton/singleton';
 import { mainPassportRouter } from '../passport/router';
 import { mainMongoService } from '../mongo/service';
-import passport = require('passport');
 import { initContextMiddleware } from '../../config/context';
 import { applyUserAPI } from '../../generated/user/user';
 import { prettifyRouter } from '../../common/api-gen/prettier';
