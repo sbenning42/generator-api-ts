@@ -4,10 +4,11 @@ export const rep = (s: string, args: string[] = []) => args.reduce((str, arg, id
 // TS***Tpl functions are `rep` call wrappers. They defines their `s` (eg: the template)
 // as well as defining last transformations to perform to `args` 
 
-export const TSTypeImportsTpl = (customs: string[] = [], consts: string[] = []) => rep(`
+export const TSTypeImportsTpl = (customs: string[] = [], consts: string[] = [], ctx?: { name: string, from: string }) => rep(`
 import { Request, Response, NextFunction } from 'express';
 import { Schema, model, Document, DocumentQuery } from 'mongoose';
 import { ObjectID } from 'mongodb';
+$2
 $0
 
 export const Mixed = Schema.Types.Mixed;
@@ -20,11 +21,14 @@ $1
 `, [
     customs.length > 0 ? customs.join('\n') : '',
     consts.length > 0 ? consts.join('\n') : '',
+    ctx ? `import { ${ctx.name} } from '${ctx.from}';` : ''
 ]);
 
 export const TSTypeTpl = (name: string, props: string) => rep(`
 export interface $0 {
 $1
+    createdAt: string;
+    updatedAt: string;
 }
 `, [name, props]);
 export const TSTypePropTpl = (name: string, type: string, isArray: boolean = false, required: boolean = false) =>
@@ -44,20 +48,47 @@ export interface $0ChangesBody {
 $1
 }
 `, [name, props]);
+
+export const TSPushBodyTpl = (name: string, props: string) => rep(`
+export interface $0PushBody {
+$1
+}
+`, [name, props]);
+
+export const TSPushBodyPropTpl = (name: string, type: string) =>
+    rep(`   $0?: $1 | $1[];`, [name, type]);
+
+export const TSPullBodyTpl = (name: string, props: string) => rep(`
+export interface $0PullBody {
+$1
+}
+`, [name, props]);
+
+export const TSPullBodyPropTpl = (name: string, type: string) =>
+    rep(`   $0?: $1 | $1[];`, [name, type]);
+
 export const TSChangesBodyPropTpl = (name: string, type: string, isArray: boolean = false, required: boolean = false) =>
     rep(`   $0?: $1$2;`, [name, type, isArray ? '[]' : '']);
 
 export const TSUpdateBodyTpl = (name: string) => rep(`
 export interface $0UpdateBody {
     id: ID;
-    changes: $0ChangesBody;
+    changes?: $0ChangesBody;
+    push?: $0PushBody;
+    pull?: $0PullBody;
+}
+
+export interface $0RawUpdateBody {
+    changes?: $0ChangesBody;
+    push?: $0PushBody;
+    pull?: $0PullBody;
 }
 `, [name]);
 
 export const TSMongooseSchemaTpl = (name: string, props: string) => rep(`
 export const $0Schema = new Schema({
 $1
-}, { minimize: false }); 
+}, { minimize: false, timestamps: true }); 
 `, [name, props]);
 
 export const TSMongooseSchemaPropTpl = (
@@ -73,7 +104,7 @@ export const TSMongooseSchemaPropTpl = (
         ref: '$2',
         required: $3,
         unique: $4,
-        hidden: $5,
+        select: $5,
         default: $6,
     },`, [
     name,
@@ -81,8 +112,14 @@ export const TSMongooseSchemaPropTpl = (
     ref,
     required.toString(),
     unique.toString(),
-    hidden.toString(),
-    typeof(_default) === 'string' ? `${_default}` : JSON.stringify(_default)
+    (!hidden).toString(),
+    typeof(_default) === 'string'
+        ? `${_default}`
+        : (
+            typeof(_default) === 'function'
+                ? _default.toString().replace(/\w*_\d*\./g, '')
+                : JSON.stringify(_default)
+        )
 ])
     .replace(/\s*ref: 'undefined',/g, '')
     .replace(/\s*default: undefined,/g, '')
@@ -100,7 +137,7 @@ export const TSMongooseSchemaArrayPropTpl = (
         ref: '$2',
         required: $3,
         unique: $4,
-        hidden: $5,
+        select: $5,
         default: $6,
     }],`, [
     name,
@@ -108,8 +145,14 @@ export const TSMongooseSchemaArrayPropTpl = (
     ref,
     required.toString(),
     unique.toString(),
-    hidden.toString(),
-    typeof(_default) === 'string' ? `${_default}` : JSON.stringify(_default)
+    (!hidden).toString(),
+    typeof(_default) === 'string'
+        ? `${_default}`
+        : (
+            typeof(_default) === 'function'
+                ? _default.toString()
+                : JSON.stringify(_default)
+        )
 ])
     .replace(/\s*ref: 'undefined',/g, '')
     .replace(/\s*default: undefined,/g, '')
@@ -132,7 +175,7 @@ export const TSMongooseModelProjectionPropTpl = (name: string) => rep(`    $0: 0
 
 export const TSMongooseModelPopulateTpl = (name: string, props: string) => rep(`
 export type $0Populate = $1;
-`, [name, props]);
+`, [name, props || `''`]);
 
 export const TSModuleImportsTpl = (name: string, ...customs: string[]) => rep(`
 import { Request, Response, Router, Application } from 'express';
@@ -150,7 +193,10 @@ import {
     $0,
     $0CreateBody,
     $0ChangesBody,
+    $0PushBody,
+    $0PullBody,
     $0UpdateBody,
+    $0RawUpdateBody,
     $0Schema,
     $0Model,
     $0Document,
@@ -213,6 +259,9 @@ export const TSUtilsTpl = (
     name: string,
     createBodyAllowedProperties: string,
     changesBodyAllowedProperties: string,
+    pushBodyAllowedProperties: string,
+    pullBodyAllowedProperties: string,
+    relationUtils: string,
 ) => rep(`
 export class $0Utils {
 
@@ -274,10 +323,14 @@ export class $0Utils {
         if (typeof(body.id) === 'string') {
             body.id = new ObjectID(body.id);
         }
-        return [$1].reduce<$0CreateBody>((sanitizedBody, key) => ({
-            ...sanitizedBody,
-            [key]: body[key]
-        }), {} as $0CreateBody);
+        return [$1].reduce<$0CreateBody>((sanitizedBody, key) => body[key] !== undefined
+            ? {
+                ...sanitizedBody,
+                [key]: body[key]
+            }
+            : sanitizedBody,
+            {} as $0CreateBody
+        );
     }
 
     async create(
@@ -285,6 +338,7 @@ export class $0Utils {
         populates: $0Populate[] = [],
         cb?: MongooseCB<$0Document>,
         options: SaveOptions = {},
+        trusted: boolean = false
     ) {
         const sanitizedBody = this.sanitizeCreateBody(body);
         const modelInstance = new this.$0(sanitizedBody);
@@ -299,6 +353,7 @@ export class $0Utils {
         populates: $0Populate[] = [],
         cb?: MongooseCB<$0Document[]>,
         options: SaveOptions = {},
+        trusted: boolean = false
     ) {
         const modelInstances = bodies.map(body => new this.$0(this.sanitizeCreateBody(body)));
         return docPopulateAll(
@@ -308,20 +363,50 @@ export class $0Utils {
     }
 
     sanitizeChangesBody(body: $0ChangesBody) {
-        return [$2].reduce<$0ChangesBody>((sanitizedBody, key) => ({
-            ...sanitizedBody,
-            [key]: body[key]
-        }), {} as $0ChangesBody);
+        return [$2].reduce<$0ChangesBody>((sanitizedBody, key) => body[key] !== undefined
+            ? {
+                ...sanitizedBody,
+                [key]: body[key]
+            }
+            : sanitizedBody,
+            {} as $0ChangesBody);
+    }
+
+    sanitizePushBody(body: $0PushBody) {
+        return [$3].reduce<$0PushBody>((sanitizedBody, key) => body[key] !== undefined
+            ? {
+                ...sanitizedBody,
+                [key]: Array.isArray(body[key]) ? { $each: body[key] } : body[key]
+            }
+            : sanitizedBody,
+            {} as $0PushBody);
+    }
+
+    sanitizePullBody(body: $0PullBody) {
+        return [$4].reduce<$0PullBody>((sanitizedBody, key) => body[key] !== undefined
+            ? {
+                ...sanitizedBody,
+                [key]: Array.isArray(body[key]) ? { $each: body[key] } : body[key]
+            }
+            : sanitizedBody,
+            {} as $0PullBody);
     }
 
     updateById(
-        { id, changes }: $0UpdateBody,
+        { id, changes = {}, push = {}, pull = {} }: $0UpdateBody,        
         populates: $0Populate[] = [],
         cb?: MongooseCB<$0Document>,
         options: QueryFindByIdAndUpdateOptions = { new: true },
+        trusted: boolean = false
     ) {
-        const sanitizedChanges = this.sanitizeChangesBody(changes);
-        const body = { $set: sanitizedChanges };
+        const sanitizedChanges = trusted ? changes : this.sanitizeChangesBody(changes);
+        const sanitizedPush = trusted ? push : this.sanitizePushBody(push);
+        const sanitizedPull = trusted ? pull : this.sanitizePullBody(pull);
+        const body = {
+            $set: sanitizedChanges,
+            $push: sanitizedPush,
+            $pull: sanitizedPull,
+        };
         return populateAll(
             this.$0.findByIdAndUpdate(id, body, options, cb),
             populates
@@ -342,13 +427,20 @@ export class $0Utils {
 
     updateOne(
         condition: $0Condition,
-        changes: $0ChangesBody,
+        { changes = {}, push = {}, pull = {} }: $0RawUpdateBody,        
         populates: $0Populate[] = [],
         cb?: MongooseCB<$0Document>,
         options: QueryFindOneAndUpdateOptions = { new: true },
+        trusted: boolean = false
     ) {
-        const sanitizedChanges = this.sanitizeChangesBody(changes);
-        const body = { $set: sanitizedChanges };
+        const sanitizedChanges = trusted ? changes : this.sanitizeChangesBody(changes);
+        const sanitizedPush = trusted ? push : this.sanitizePushBody(push);
+        const sanitizedPull = trusted ? pull : this.sanitizePullBody(pull);
+        const body = {
+            $set: sanitizedChanges,
+            $push: sanitizedPush,
+            $pull: sanitizedPull,
+        };
         return populateAll(
             this.$0.findOneAndUpdate(condition, body, options, cb),
             populates
@@ -369,13 +461,20 @@ export class $0Utils {
 
     updateMany(
         condition: $0Condition,
-        changes: $0ChangesBody,
+        { changes = {}, push = {}, pull = {} }: $0RawUpdateBody,        
         populates: $0Populate[] = [],
         cb?: MongooseCB<any>,
         options: ModelUpdateOptions = {},
+        trusted: boolean = false
     ) {
-        const sanitizedChanges = this.sanitizeChangesBody(changes);
-        const body = { $set: sanitizedChanges };
+        const sanitizedChanges = trusted ? changes : this.sanitizeChangesBody(changes);
+        const sanitizedPush = trusted ? push : this.sanitizePushBody(push);
+        const sanitizedPull = trusted ? pull : this.sanitizePullBody(pull);
+        const body = {
+            $set: sanitizedChanges,
+            $push: sanitizedPush,
+            $pull: sanitizedPull,
+        };
         return populateAll(
             this.$0.updateMany(condition, body, options, cb),
             populates
@@ -388,12 +487,47 @@ export class $0Utils {
     ) {
         return this.$0.remove(condition, cb);
     }
+$5
 }
 `, [
     name,
     createBodyAllowedProperties,
     changesBodyAllowedProperties ? changesBodyAllowedProperties : createBodyAllowedProperties,
+    pushBodyAllowedProperties,
+    pullBodyAllowedProperties ? pullBodyAllowedProperties : pushBodyAllowedProperties,
+    relationUtils
 ]);
+
+export const TSRelationQueryUtilsTpl = (name: string, prop: string) => rep(`    
+    async find$0Of(id: ID) {
+        const modelInstance = await this.findById(id, undefined, ['$1']);
+        return modelInstance.$1;
+    }
+`, [name, prop]);
+
+export const TSRelationMutationUtilsTpl = (name: string, prop: string) => rep(`
+
+    add$0To(id: ID, addId: ID) {
+        return this.updateById({ id, changes: { $1: addId } } as any, undefined, undefined, undefined, true);
+    }
+
+    remove$0From(id: ID) {
+        return this.updateById({ id, changes: { $1: null } } as any, undefined, undefined, undefined, true);
+    }
+
+`, [name, prop]);
+
+export const TSRelationManyUtilsTpl = (name: string, prop: string) => rep(`
+
+    add$0To(id: ID, ...addIds: ID[]) {
+        return this.updateById({ id, push: { $1: addIds } } as any, undefined, undefined, undefined, true);
+    }
+
+    remove$0From(id: ID, ...removeIds: ID[]) {
+        return this.updateById({ id, pull: { $1: removeIds } } as any, undefined, undefined, undefined, true);
+    }
+
+`, [name, prop]);
 
 export const TSServicesTpl = (name: string) => rep(`
 export class $0Service {
@@ -407,19 +541,15 @@ export const main$0Service: $0Service = new $0Service();
 
 export const TSMiddlewaresTpl = (name: string) => rep(`
 export class $0Middlewares {
-    
-    service: $0Service = main$0Service;
 
 }
 `, [name]);
 
 export const TSControllersTpl = (name: string) => rep(`
 export class $0Controllers {
-    
-    service: $0Service = main$0Service;
 
     async getAll(req: Request, res: Response) {
-        const { utils } = this.service;
+        const { utils } = main$0Service;
         try {
             res.json(await utils.findAll());
         } catch (error) {
@@ -428,7 +558,7 @@ export class $0Controllers {
     }
     
     async getById(req: Request, res: Response) {
-        const { utils } = this.service;
+        const { utils } = main$0Service;
         const id = req.params.id;
         try {
             res.json(await utils.findById(id));
@@ -438,7 +568,7 @@ export class $0Controllers {
     }
     
     async create(req: Request, res: Response) {
-        const { utils } = this.service;
+        const { utils } = main$0Service;
         try {
             res.json(await utils.create(req.body));
         } catch (error) {
@@ -447,17 +577,18 @@ export class $0Controllers {
     }
     
     async update(req: Request, res: Response) {
-        const { utils } = this.service;
+        const { utils } = main$0Service;
         const id = req.params.id;
+        const { changes, push, pull } = req.body;
         try {
-            res.json(await utils.updateById({ id, changes: req.body }));
+            res.json(await utils.updateById({ id, changes, push, pull }));
         } catch (error) {
             res.status(400).json({ error, message: 'Something went wrong.' });
         }
     }
     
     async delete(req: Request, res: Response) {
-        const { utils } = this.service;
+        const { utils } = main$0Service;
         const id = req.params.id;
         try {
             res.json(await utils.deleteById(id));
@@ -466,10 +597,12 @@ export class $0Controllers {
         }
     }
 
+$1
+
 }
 
 export const main$0Controllers: $0Controllers = new $0Controllers();
-`, [name]);
+`, [name, '']);
 
 export const TSRouterTpl = (name: string, routes: string[], endpoint: string, middlewares: string[] = []) => rep(`
 export class $0Router {
@@ -477,7 +610,7 @@ export class $0Router {
     router = Router();
 
     constructor(
-        protected context?: any,
+        protected context: any = {},
     ) {
         this.setupRouter();
     }

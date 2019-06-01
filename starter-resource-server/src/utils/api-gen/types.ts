@@ -59,7 +59,7 @@ export type APISchemaEntityRoutes<R extends string[] = []> = {
     'PUT /:id'?: APISchemaEntityRoute;
     'DELETE /:id'?: APISchemaEntityRoute;
 } & {
-    [key in keyof R[number]]?: APISchemaEntityRoute;
+    [key: string]: APISchemaEntityRoute;
 }
 
 export interface APISchemaEntityWithRoutes<R extends string[] = []> {
@@ -76,7 +76,7 @@ export interface APISchemaEntities<RS extends { [key: string]: string[] } = {}> 
 export interface APISchema<RS extends { [key: string]: string[] } = {}> {
     config: APISchemaConfig;
     entities: APISchemaEntities<RS>;
-    context?: any | ((context: { req: Request, res: Response }) => any);
+    context?: { name: string, from: string };
 }
 
 
@@ -220,7 +220,7 @@ export type _APISchemaEntityRoutes<R extends string[] = []> = {
     'PUT /:id': _APISchemaEntityRoute;
     'DELETE /:id': _APISchemaEntityRoute;
 } & {
-    [key in keyof R[number]]: _APISchemaEntityRoute;
+    [key: string]: _APISchemaEntityRoute;
 }
 
 export function strictAPISchemaEntityRoutes<R extends string[]>(routes: APISchemaEntityRoutes<R>): _APISchemaEntityRoutes<R> {
@@ -228,15 +228,15 @@ export function strictAPISchemaEntityRoutes<R extends string[]>(routes: APISchem
         ...thisRoutes,
         [endpoint]: strictAPISchemaEntityRoute(route),
     }), {
-        all: strictAPISchemaEntityRoute(routes.all),
-        query: strictAPISchemaEntityRoute(routes.query),
-        mutation: strictAPISchemaEntityRoute(routes.mutation),
-        'GET /': strictAPISchemaEntityRoute(routes['GET /']),
-        'POST /': strictAPISchemaEntityRoute(routes['POST /']),
-        'GET /:id': strictAPISchemaEntityRoute(routes['GET /:id']),
-        'PUT /:id': strictAPISchemaEntityRoute(routes['PUT /:id']),
-        'DELETE /:id': strictAPISchemaEntityRoute(routes['DELETE /:id']),
-        ...({} as { [key in keyof R[number]]: _APISchemaEntityRoute }) /** @todo: apply custom routes definition (eg: not `{}`) */
+        all: strictAPISchemaEntityRoute(routes && routes.all),
+        query: strictAPISchemaEntityRoute(routes && routes.query),
+        mutation: strictAPISchemaEntityRoute(routes && routes.mutation),
+        'GET /': strictAPISchemaEntityRoute(routes && routes['GET /']),
+        'POST /': strictAPISchemaEntityRoute(routes && routes['POST /']),
+        'GET /:id': strictAPISchemaEntityRoute(routes && routes['GET /:id']),
+        'PUT /:id': strictAPISchemaEntityRoute(routes && routes['PUT /:id']),
+        'DELETE /:id': strictAPISchemaEntityRoute(routes && routes['DELETE /:id']),
+        ...({} as { [key: string]: _APISchemaEntityRoute }) /** @todo: apply custom routes definition (eg: not `{}`) */
     });
 }
 
@@ -269,7 +269,7 @@ export function strictAPISchemaEntities<RS extends { [key: string]: string[] }>(
 export interface _APISchema<RS extends { [key: string]: string[] } = {}> {
     config: _APISchemaConfig;
     entities: _APISchemaEntities<RS>;
-    context: (context: { req: Request, res: Response }) => any;
+    context: { name: string, from: string };
 }
 
 export function strictAPISchema<RS extends { [key: string]: string[] }>(schema: APISchema<RS>): _APISchema<RS> {
@@ -277,11 +277,7 @@ export function strictAPISchema<RS extends { [key: string]: string[] }>(schema: 
         config: strictAPISchemaConfig(schema && schema.config),
         entities: strictAPISchemaEntities<RS>(schema && schema.entities),
         context: schema.context !== undefined
-            ? (
-                typeof(schema.context) === 'function'
-                    ? schema.context
-                    : () => schema.context
-            )
-            : () => ({}),
+            ? schema.context
+            : { name: 'context', from: '../config' },
     };
 }

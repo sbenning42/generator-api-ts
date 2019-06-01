@@ -14,7 +14,10 @@ import {
     User,
     UserCreateBody,
     UserChangesBody,
+    UserPushBody,
+    UserPullBody,
     UserUpdateBody,
+    UserRawUpdateBody,
     UserSchema,
     UserModel,
     UserDocument,
@@ -124,10 +127,14 @@ export class UserUtils {
         if (typeof(body.id) === 'string') {
             body.id = new ObjectID(body.id);
         }
-        return ['email', 'username', 'birthDate', 'json'].reduce<UserCreateBody>((sanitizedBody, key) => ({
-            ...sanitizedBody,
-            [key]: body[key]
-        }), {} as UserCreateBody);
+        return ['username', 'password', 'json'].reduce<UserCreateBody>((sanitizedBody, key) => body[key] !== undefined
+            ? {
+                ...sanitizedBody,
+                [key]: body[key]
+            }
+            : sanitizedBody,
+            {} as UserCreateBody
+        );
     }
 
     async create(
@@ -135,6 +142,7 @@ export class UserUtils {
         populates: UserPopulate[] = [],
         cb?: MongooseCB<UserDocument>,
         options: SaveOptions = {},
+        trusted: boolean = false
     ) {
         const sanitizedBody = this.sanitizeCreateBody(body);
         const modelInstance = new this.User(sanitizedBody);
@@ -149,6 +157,7 @@ export class UserUtils {
         populates: UserPopulate[] = [],
         cb?: MongooseCB<UserDocument[]>,
         options: SaveOptions = {},
+        trusted: boolean = false
     ) {
         const modelInstances = bodies.map(body => new this.User(this.sanitizeCreateBody(body)));
         return docPopulateAll(
@@ -158,20 +167,50 @@ export class UserUtils {
     }
 
     sanitizeChangesBody(body: UserChangesBody) {
-        return ['email', 'username', 'birthDate', 'json'].reduce<UserChangesBody>((sanitizedBody, key) => ({
-            ...sanitizedBody,
-            [key]: body[key]
-        }), {} as UserChangesBody);
+        return ['username', 'password', 'json'].reduce<UserChangesBody>((sanitizedBody, key) => body[key] !== undefined
+            ? {
+                ...sanitizedBody,
+                [key]: body[key]
+            }
+            : sanitizedBody,
+            {} as UserChangesBody);
+    }
+
+    sanitizePushBody(body: UserPushBody) {
+        return [].reduce<UserPushBody>((sanitizedBody, key) => body[key] !== undefined
+            ? {
+                ...sanitizedBody,
+                [key]: Array.isArray(body[key]) ? { $each: body[key] } : body[key]
+            }
+            : sanitizedBody,
+            {} as UserPushBody);
+    }
+
+    sanitizePullBody(body: UserPullBody) {
+        return [].reduce<UserPullBody>((sanitizedBody, key) => body[key] !== undefined
+            ? {
+                ...sanitizedBody,
+                [key]: Array.isArray(body[key]) ? { $each: body[key] } : body[key]
+            }
+            : sanitizedBody,
+            {} as UserPullBody);
     }
 
     updateById(
-        { id, changes }: UserUpdateBody,
+        { id, changes = {}, push = {}, pull = {} }: UserUpdateBody,        
         populates: UserPopulate[] = [],
         cb?: MongooseCB<UserDocument>,
         options: QueryFindByIdAndUpdateOptions = { new: true },
+        trusted: boolean = false
     ) {
-        const sanitizedChanges = this.sanitizeChangesBody(changes);
-        const body = { $set: sanitizedChanges };
+        const sanitizedChanges = trusted ? changes : this.sanitizeChangesBody(changes);
+        const sanitizedPush = trusted ? push : this.sanitizePushBody(push);
+        const sanitizedPull = trusted ? pull : this.sanitizePullBody(pull);
+        const body = {
+            $set: sanitizedChanges,
+            $push: sanitizedPush,
+            $pull: sanitizedPull,
+        };
         return populateAll(
             this.User.findByIdAndUpdate(id, body, options, cb),
             populates
@@ -192,13 +231,20 @@ export class UserUtils {
 
     updateOne(
         condition: UserCondition,
-        changes: UserChangesBody,
+        { changes = {}, push = {}, pull = {} }: UserRawUpdateBody,        
         populates: UserPopulate[] = [],
         cb?: MongooseCB<UserDocument>,
         options: QueryFindOneAndUpdateOptions = { new: true },
+        trusted: boolean = false
     ) {
-        const sanitizedChanges = this.sanitizeChangesBody(changes);
-        const body = { $set: sanitizedChanges };
+        const sanitizedChanges = trusted ? changes : this.sanitizeChangesBody(changes);
+        const sanitizedPush = trusted ? push : this.sanitizePushBody(push);
+        const sanitizedPull = trusted ? pull : this.sanitizePullBody(pull);
+        const body = {
+            $set: sanitizedChanges,
+            $push: sanitizedPush,
+            $pull: sanitizedPull,
+        };
         return populateAll(
             this.User.findOneAndUpdate(condition, body, options, cb),
             populates
@@ -219,13 +265,20 @@ export class UserUtils {
 
     updateMany(
         condition: UserCondition,
-        changes: UserChangesBody,
+        { changes = {}, push = {}, pull = {} }: UserRawUpdateBody,        
         populates: UserPopulate[] = [],
         cb?: MongooseCB<any>,
         options: ModelUpdateOptions = {},
+        trusted: boolean = false
     ) {
-        const sanitizedChanges = this.sanitizeChangesBody(changes);
-        const body = { $set: sanitizedChanges };
+        const sanitizedChanges = trusted ? changes : this.sanitizeChangesBody(changes);
+        const sanitizedPush = trusted ? push : this.sanitizePushBody(push);
+        const sanitizedPull = trusted ? pull : this.sanitizePullBody(pull);
+        const body = {
+            $set: sanitizedChanges,
+            $push: sanitizedPush,
+            $pull: sanitizedPull,
+        };
         return populateAll(
             this.User.updateMany(condition, body, options, cb),
             populates
@@ -238,6 +291,22 @@ export class UserUtils {
     ) {
         return this.User.remove(condition, cb);
     }
+    
+    async findTodosOf(id: ID) {
+        const modelInstance = await this.findById(id, undefined, ['todos']);
+        return modelInstance.todos;
+    }
+
+
+    addTodosTo(id: ID, ...addIds: ID[]) {
+        return this.updateById({ id, push: { todos: addIds } } as any, undefined, undefined, undefined, true);
+    }
+
+    removeTodosFrom(id: ID, ...removeIds: ID[]) {
+        return this.updateById({ id, pull: { todos: removeIds } } as any, undefined, undefined, undefined, true);
+    }
+
+
 }
 
 
@@ -251,18 +320,14 @@ export const mainUserService: UserService = new UserService();
 
 
 export class UserMiddlewares {
-    
-    service: UserService = mainUserService;
 
 }
 
 
 export class UserControllers {
-    
-    service: UserService = mainUserService;
 
     async getAll(req: Request, res: Response) {
-        const { utils } = this.service;
+        const { utils } = mainUserService;
         try {
             res.json(await utils.findAll());
         } catch (error) {
@@ -271,7 +336,7 @@ export class UserControllers {
     }
     
     async getById(req: Request, res: Response) {
-        const { utils } = this.service;
+        const { utils } = mainUserService;
         const id = req.params.id;
         try {
             res.json(await utils.findById(id));
@@ -281,7 +346,7 @@ export class UserControllers {
     }
     
     async create(req: Request, res: Response) {
-        const { utils } = this.service;
+        const { utils } = mainUserService;
         try {
             res.json(await utils.create(req.body));
         } catch (error) {
@@ -290,17 +355,18 @@ export class UserControllers {
     }
     
     async update(req: Request, res: Response) {
-        const { utils } = this.service;
+        const { utils } = mainUserService;
         const id = req.params.id;
+        const { changes, push, pull } = req.body;
         try {
-            res.json(await utils.updateById({ id, changes: req.body }));
+            res.json(await utils.updateById({ id, changes, push, pull }));
         } catch (error) {
             res.status(400).json({ error, message: 'Something went wrong.' });
         }
     }
     
     async delete(req: Request, res: Response) {
-        const { utils } = this.service;
+        const { utils } = mainUserService;
         const id = req.params.id;
         try {
             res.json(await utils.deleteById(id));
@@ -308,6 +374,8 @@ export class UserControllers {
             res.status(400).json({ error, message: 'Something went wrong.' });
         }
     }
+
+
 
 }
 
@@ -319,21 +387,21 @@ export class UserRouter {
     router = Router();
 
     constructor(
-        protected context?: any,
+        protected context: any = {},
     ) {
         this.setupRouter();
     }
 
     private setupRouter() {
         const {
-            
+            userCountController
         } = this.context;
         this.router
         .get('/', mainUserControllers.getAll)
         .post('/', mainUserControllers.create)
         .get('/:id', mainUserControllers.getById)
         .put('/:id', mainUserControllers.update)
-        .delete('/:id', mainUserControllers.delete);
+        .get('/infos/count', userCountController, (_: Request, res: Response) => res.status(504).json({ message: 'Not implementd.' }));
     }
 
     applyRouter(app: Application) {

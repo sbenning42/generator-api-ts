@@ -1,6 +1,0 @@
-post http://localhost:4266/data HTTP/1.1
-content-type: application/json
-
-{
-    "data": "0"
-}

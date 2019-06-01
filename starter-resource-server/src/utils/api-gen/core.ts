@@ -1,6 +1,4 @@
 import fs from 'fs';
-import { Request, Response, NextFunction } from 'express';
-import { Schema } from 'mongoose';
 import {
     TSTypeTpl,
     TSUpdateBodyTpl,
@@ -25,9 +23,25 @@ import {
     TSRouterTpl,
     TSApplyAPI,
     TSRouterRouteWithMiddlewareTpl,
-    TSRouterRouteTpl
+    TSRouterRouteTpl,
+    TSPushBodyPropTpl,
+    TSPullBodyPropTpl,
+    TSPullBodyTpl,
+    TSPushBodyTpl,
+    TSRelationManyUtilsTpl,
+    TSRelationMutationUtilsTpl,
+    TSRelationQueryUtilsTpl,
 } from './templates/TS';
-import { _APISchemaEntity, APISchema, strictAPISchema, Mixed, ObjectId, _APISchemaEntityProperty } from './types';
+import {
+    _APISchemaEntity,
+    APISchema,
+    strictAPISchema,
+    Mixed,
+    ObjectId,
+    _APISchemaEntityProperty,
+    _APISchema,
+    _APISchemaEntityPropertyTyped
+} from './types';
 import { prettifySchema } from './prettier';
 
 
@@ -48,6 +62,8 @@ export interface APIEntityGen {
         TS_type: APIEntityFieldGen;
         TS_createBody: APIEntityFieldGen;
         TS_changesBody: APIEntityFieldGen;
+        TS_pushBody: APIEntityFieldGen;
+        TS_pullBody: APIEntityFieldGen;
         TS_updateBody: APIEntityFieldGen;
         TS_mongooseSchema: APIEntityFieldGen;
         TS_mongooseModel: APIEntityFieldGen;
@@ -83,8 +99,14 @@ export interface APIEntityGen {
 
 export class APIGen {
 
+    // not used
+    schemas: { s: APISchema<any>, _s: _APISchema<any> }[] = [];
+
     generate<RS extends { [key: string]: string[] }>(_schema: APISchema<RS>) {
         const schema = strictAPISchema(_schema);
+        // not used
+        this.schemas.push({ s: _schema, _s: schema });
+    
         prettifySchema(schema, console);
 
         const cap = (s: string) => `${s.slice(0, 1).toUpperCase()}${s.slice(1)}`; // capitalize
@@ -130,7 +152,7 @@ export class APIGen {
                 TS_types: {
                     TS_typeImports: {
                         entity, name,
-                        generated: TSTypeImportsTpl()
+                        generated: TSTypeImportsTpl([], [], schema.context)
                     },
                     TS_type: {
                         entity, name,
@@ -177,6 +199,30 @@ export class APIGen {
                                 )).join('\n')
                         )
                     },
+                    TS_pushBody: {
+                        entity, name,
+                        generated: TSPushBodyTpl(
+                            cap(name),
+                            Object.entries(entity.properties)
+                                .filter(([propName, property]) => Array.isArray(property) && !property[0].skipChanges)
+                                .map(([propName, property]) => TSPushBodyPropTpl(
+                                    propName,
+                                    stringifyPropType(property),
+                                )).join('\n')
+                        )
+                    },
+                    TS_pullBody: {
+                        entity, name,
+                        generated: TSPullBodyTpl(
+                            cap(name),
+                            Object.entries(entity.properties)
+                                .filter(([propName, property]) => Array.isArray(property) && !property[0].skipChanges)
+                                .map(([propName, property]) => TSPullBodyPropTpl(
+                                    propName,
+                                    stringifyPropType(property),
+                                )).join('\n')
+                        )
+                    },
                     TS_updateBody: {
                         entity, name,
                         generated: TSUpdateBodyTpl(cap(name))
@@ -186,20 +232,25 @@ export class APIGen {
                         generated: TSMongooseSchemaTpl(
                             cap(name),
                             Object.entries(entity.properties)
+                                .map(([propName, property]) => [
+                                    propName,
+                                    Array.isArray(property) ? property[0] : property,
+                                    Array.isArray(property)
+                                ])
                                 // .filter(([propName, property]) => true)
-                                .map(([propName, property]) => Array.isArray(property)
+                                .map(([propName, property, isArray]: [string, _APISchemaEntityPropertyTyped, boolean]) => property.ref && isArray
                                     ? TSMongooseSchemaArrayPropTpl(
                                         propName,
-                                        stringifyType(property[0].type, false),
-                                        property[0].ref,
-                                        property[0].required,
-                                        property[0].unique,
-                                        property[0].hidden,
-                                        property[0].default,
+                                        stringifyType(property.type, false),
+                                        property.ref,
+                                        property.required,
+                                        property.unique,
+                                        property.hidden,
+                                        property.default,
                                     )
                                     : TSMongooseSchemaPropTpl(
                                         propName,
-                                        stringifyType(property.type, false),
+                                        stringifyType(property.type, isArray),
                                         property.ref,
                                         property.required,
                                         property.unique,
@@ -252,6 +303,24 @@ export class APIGen {
                                     ? !property[0].skipChanges
                                     : !property.skipChanges
                                 ).map(([propName]) => `'${propName}'`).join(', '),
+                            Object.entries(entity.properties)
+                                .filter(([propName, property]) => Array.isArray(property) && !property[0].skipChanges)
+                                .map(([propName]) => `'${propName}'`).join(', '),
+                            Object.entries(entity.properties)
+                                .filter(([propName, property]) => Array.isArray(property) && !property[0].skipChanges)
+                                .map(([propName]) => `'${propName}'`).join(', '),
+                            Object.entries(entity.properties)
+                                .map(([propName, property]) => [
+                                    propName,
+                                    Array.isArray(property) ? property[0] : property,
+                                    Array.isArray(property)
+                                ] as [string, _APISchemaEntityPropertyTyped, boolean])
+                                .filter(([, property]) => !!property.ref)
+                                .map(([propName, property, isArray]) => TSRelationQueryUtilsTpl(cap(propName), propName)
+                                    + (isArray
+                                        ? (/*property.skipChanges ? '' : */TSRelationManyUtilsTpl(cap(propName), propName))
+                                        : (/*property.skipChanges ? '' : */TSRelationMutationUtilsTpl(cap(propName), propName)))
+                                ).join('\n')
                         )
                     },
                     TS_service: {
@@ -371,18 +440,19 @@ export class APIGen {
         const modules = entities.map(entity => entity.TS_modules);
         const outDir = schema.config.outDir;
         const backupOutDir = schema.config.backupOutDir;
+        return entities;
+        /*
         if (backupOutDir) {
             this.backup(outDir, backupOutDir);
         }
         this.write(outDir, entities)
+        */
     }
     
     write(outDir: string, entities: APIEntityGen[]) {
         if (!fs.existsSync(outDir)) {
             fs.mkdirSync(outDir, { mode: 0o755 });
         }
-        const cap = (s: string) => `${s.slice(0, 1).toUpperCase()}${s.slice(1)}`;
-        const pad = (tab: number) => tab ? `    ${pad(tab - 1)}` : '';
         const types = entities.map(({ TS_types }) => `/********* ${
             TS_types.TS_type.entity.name.toUpperCase()
         } *********/\n\n${
@@ -391,6 +461,10 @@ export class APIGen {
             TS_types.TS_createBody.generated
         }\n${
             TS_types.TS_changesBody.generated
+        }\n${
+            TS_types.TS_pushBody.generated
+        }\n${
+            TS_types.TS_pullBody.generated
         }\n${
             TS_types.TS_updateBody.generated
         }\n${
@@ -403,6 +477,9 @@ export class APIGen {
             TS_types.TS_mongooseModelPopulate.generated
         }
         `);
+        if (entities.length < 1) {
+            return console.log(`Nothing to generate. You might want to add \`entities\` in your \`APISchema\`.`);
+        }
         fs.writeFileSync(
             `${outDir}/types.ts`,
             entities[0].TS_types.TS_typeImports.generated + types.join('\n'),

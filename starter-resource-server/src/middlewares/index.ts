@@ -1,5 +1,5 @@
-import { hasTokenLogMiddleware } from "./has-token-log";
+import { setCurrentIdMiddleware } from "./set-current-id.middleware";
 
-export const middlewaresMap = {
-    hasTokenLogMiddleware: hasTokenLogMiddleware,
+export const middlewares = {
+    setCurrentIdMiddleware
 };

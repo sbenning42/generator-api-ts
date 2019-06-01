@@ -117,7 +117,7 @@ export function prettifySchema(schema: _APISchema, L: { log: (...args: any[]) =>
     L.log(`${
         pretty(`APIGen @ prettify Schema:`, [bold, line])
     } ${
-        `(set \`PRETTY_LOG=false\` in \`.env\` file to disable prttify ${bold + red}:(${res}  )`
+        `(set \`PRETTY_LOG=false\` in \`.env\` file to disable prettify ${bold + red}:(${res}  )`
     }\n\n${
         pretty(`Config:`, [bold, line])
     }\n${
@@ -150,15 +150,15 @@ export function prettifySchema(schema: _APISchema, L: { log: (...args: any[]) =>
                 pretty(`***** ${cap(entityName)} *****`, [bold], 1)
             }\n\n${
                 Object.entries(entity.properties)
-                    .map(([propName, property]) => [propName, Array.isArray(property) ? property[0] : property])
+                    .map(([propName, property]) => [propName, Array.isArray(property) ? property[0] : property, Array.isArray(property)])
                     .map(([propName, {
                         type, ref, required, unique, hidden, skipChanges, skipCreate, default: _default
-                    }]: [string, _APISchemaEntityPropertyTyped]) => `${
+                    }, isArray]: [string, _APISchemaEntityPropertyTyped, boolean]) => `${
                         pretty(`${propName}: `, [bold], 2)
                     }\n${
                         pretty('Type:', [black], 3)
                     } ${
-                        pretty(stringifyType(type), [bold, blue])
+                        pretty(`${stringifyType(type)}${isArray ? '[]' : ''}`, [bold, blue])
                     }${
                         ref
                             ? `\n${
@@ -191,7 +191,13 @@ export function prettifySchema(schema: _APISchema, L: { log: (...args: any[]) =>
                             ? `\n${
                                 pretty('Default:', [black], 3)
                             } ${
-                                pretty(typeof(_default) === 'string' ? _default : JSON.stringify(_default).slice(0, 50), [bold])
+                                pretty(typeof(_default) === 'string'
+                                    ? _default
+                                    : (
+                                        typeof(_default) === 'function'
+                                            ? _default.toString()
+                                            : JSON.stringify(_default)
+                                    ), [bold])
                             }`
                             : ''
                     }`).join('\n')
