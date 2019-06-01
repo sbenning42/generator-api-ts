@@ -1,4 +1,4 @@
-import { APIGen } from './utils/api-gen/core';
+import { APIGen } from './common/api-gen/core';
 import { schema } from './config';
 
 const EXIT = (status: number) => process.exit(status), FAILURE = 1, SUCCESS = 0;

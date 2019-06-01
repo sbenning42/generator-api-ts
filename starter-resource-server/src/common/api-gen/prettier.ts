@@ -1,9 +1,10 @@
-import { _APISchema, Mixed, ObjectId, _APISchemaEntityPropertyTyped, _APISchemaEntityRoute } from "./types";
+import { _APISchema, Mixed, ObjectId, _APISchemaEntityPropertyTyped, _APISchemaEntityRoute } from './types';
 import { Router } from 'express';
+import { environment } from '../../environment';
 const {
     PRETTY_COL = 'true',
     PRETTY_LOG = 'true'
-} = process.env;
+} = environment;
 
 const isCol = () => PRETTY_COL === 'true';
 const isLog = () => PRETTY_LOG === 'true';

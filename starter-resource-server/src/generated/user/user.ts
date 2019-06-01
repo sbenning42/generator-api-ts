@@ -291,21 +291,6 @@ export class UserUtils {
     ) {
         return this.User.remove(condition, cb);
     }
-    
-    async findTodosOf(id: ID) {
-        const modelInstance = await this.findById(id, undefined, ['todos']);
-        return modelInstance.todos;
-    }
-
-
-    addTodosTo(id: ID, ...addIds: ID[]) {
-        return this.updateById({ id, push: { todos: addIds } } as any, undefined, undefined, undefined, true);
-    }
-
-    removeTodosFrom(id: ID, ...removeIds: ID[]) {
-        return this.updateById({ id, pull: { todos: removeIds } } as any, undefined, undefined, undefined, true);
-    }
-
 
 }
 
@@ -394,14 +379,13 @@ export class UserRouter {
 
     private setupRouter() {
         const {
-            userCountController
+            
         } = this.context;
         this.router
         .get('/', mainUserControllers.getAll)
         .post('/', mainUserControllers.create)
         .get('/:id', mainUserControllers.getById)
-        .put('/:id', mainUserControllers.update)
-        .get('/infos/count', userCountController, (_: Request, res: Response) => res.status(504).json({ message: 'Not implementd.' }));
+        .put('/:id', mainUserControllers.update);
     }
 
     applyRouter(app: Application) {

@@ -1,4 +1,4 @@
-import { APISchemaEntity } from '../../utils/api-gen/types';
+import { APISchemaEntity } from '../../common/api-gen/types';
 
 export const user: APISchemaEntity = {
     properties: {
@@ -23,20 +23,10 @@ export const user: APISchemaEntity = {
             type: Object,
             default: {}
         },
-        todos: [{
-            type: 'Todo',
-            required: false,
-            skipCreate: true,
-            skipChanges: true,
-            default: []
-        }],
     },
     routes: {
         'DELETE /:id': {
             skip: true,
-        },
-        'GET /infos/count': {
-            middlewares: ['userCountController']
         }
     }
 };

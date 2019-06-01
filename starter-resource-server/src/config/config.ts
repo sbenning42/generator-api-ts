@@ -1,5 +1,5 @@
 import { environment } from '../environment';
-import { APISchemaConfig } from '../utils/api-gen/types';
+import { APISchemaConfig } from '../common/api-gen/types';
 
 const {
     JWT_SECRET,

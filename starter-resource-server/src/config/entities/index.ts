@@ -1,7 +1,5 @@
-import { user } from "./user";
-import { todo } from "./todo";
+import { user } from './user';
 
 export const entities: any = {
-    user,
-    todo
+    user
 };

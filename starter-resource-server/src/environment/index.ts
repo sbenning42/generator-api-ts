@@ -1,8 +1,8 @@
 import dotenv from 'dotenv';
+dotenv.config();
+
 import { environment as development } from './dev';
 import { environment as production } from './prod';
-
-dotenv.config();
 
 const {
     NODE_ENV,

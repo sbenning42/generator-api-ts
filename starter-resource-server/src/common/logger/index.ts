@@ -1,8 +1,9 @@
 import pino from 'pino';
+import { environment } from '../../environment';
 
 const {
     LOGGER_NAME: name = 'Express Application',
     LOGGER_LEVEL: level = 'debug'
-} = process.env;
+} = environment;
 
-export const l = pino({ name, level });
+export const L = pino({ name, level });

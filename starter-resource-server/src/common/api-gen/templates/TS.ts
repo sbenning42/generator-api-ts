@@ -26,6 +26,7 @@ $1
 
 export const TSTypeTpl = (name: string, props: string) => rep(`
 export interface $0 {
+    id: ID,
 $1
     createdAt: string;
     updatedAt: string;

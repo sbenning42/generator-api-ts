@@ -268,7 +268,11 @@ export class APIGen {
                         entity, name,
                         generated: TSMongooseModelProjectionTpl(
                             cap(name),
-                            Object.entries(entity.properties)
+                            Object.entries({
+                                createdAt: '',
+                                updatedAt: '',
+                                ...entity.properties,
+                            })
                                 .map(([propName]) => TSMongooseModelProjectionPropTpl(propName))
                                 .join('\n')
                         )

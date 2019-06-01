@@ -1,5 +1,4 @@
 import { Schema } from 'mongoose';
-import { Request, Response } from 'express';
 
 export const Mixed = Schema.Types.Mixed;
 export const ObjectId = Schema.Types.ObjectId;

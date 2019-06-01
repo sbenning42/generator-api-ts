@@ -1,6 +1,6 @@
-import { APISchema } from "../utils/api-gen/types";
-import { config } from "./config";
-import { entities } from "./entities";
+import { APISchema } from '../common/api-gen/types';
+import { config } from './config';
+import { entities } from './entities';
 
 export const schema: APISchema = {
     entities,
