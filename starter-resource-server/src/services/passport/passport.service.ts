@@ -6,15 +6,6 @@ import { Request, Response, NextFunction } from 'express';
 import mongoose, { Model, Document } from 'mongoose';
 import { ObjectID } from 'mongodb';
 
-export interface AuthPayload {
-    username: string;
-    password: string;
-}
-export interface AuthResponse<User extends { _id: string | ObjectID }> {
-    user: User;
-    token: string;
-}
-
 export const AuthSchema = new mongoose.Schema({
     token: {
         type: String,
@@ -38,14 +29,15 @@ export class PassportService<User extends { _id: string | ObjectID }> {
         private userModel: Model<Document & User>,
         private fieldName: string,
     ) {
+        console.log(`User model: `, userModel);
         this.setupLocalStrategy();
         this.setupJWTStrategy();
     }
 
     private setupLocalStrategy() {
         passport.use(new passportLocal.Strategy(
-            async function(username, password, done) {
-                const user = await this.userModel.findOne({ [this.fieldName]: username });
+            async (username, password, done) => {
+                const user = await this.userModel.findOne({ [this.fieldName]: username }).select('+username +password');
                 if (!user || (user.get('password') !== password)) {
                     return done(null, false);
                 } else {
@@ -91,6 +83,17 @@ export class PassportService<User extends { _id: string | ObjectID }> {
         return this.passport.authenticate('local', { session: false });
     }
 
+    localSignoutMiddleware() {
+        return async (req: Request, res: Response, next: NextFunction) => {
+            const authorization = req.headers.authorization;
+            const token = authorization ? authorization.replace('Bearer ', '') : '';
+            const userId = req.user ? req.user.id : undefined;
+            const auth = new AuthModel({ token, userId });
+            await auth.save();
+            next();
+        };
+    }
+
     jwt() {
         return async (req: Request, res: Response, next: NextFunction) => {
             const authorization = req.headers.authorization;
@@ -109,6 +112,12 @@ export class PassportService<User extends { _id: string | ObjectID }> {
             const user = req.user;
             const token = JWT.sign({ user, id: user._id }, this.secret);
             res.json({ user, token });
+        };
+    }
+
+    localSignoutController() {
+        return async (req: Request, res: Response) => {
+            res.json({});
         };
     }
 }

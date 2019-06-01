@@ -195,7 +195,7 @@ export function prettifySchema(schema: _APISchema, L: { log: (...args: any[]) =>
                                     ? _default
                                     : (
                                         typeof(_default) === 'function'
-                                            ? _default.toString()
+                                            ? _default.toString().replace(/\w*_\d*\./g, '')
                                             : JSON.stringify(_default)
                                     ), [bold])
                             }`
