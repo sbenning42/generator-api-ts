@@ -28,6 +28,7 @@ async function main() {
   app.use(
     helmet(), // add various HTTP Headers for some security
     bodyParser.json(), // parse request body into JSON
+    bodyParser.urlencoded({ extended: true }), // enable extended encoded urls
     cors(), // use `origin: '*'` cors HTTP Headers
     morgan('combined'), // use some HTTP logging support
   );

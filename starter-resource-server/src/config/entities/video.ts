@@ -35,7 +35,7 @@ export const video: APISchemaEntity = {
             middlewares: ['deleteVideoFromStoreMiddleware']
         },
         'POST /utils/upload': {
-            middlewares: ['uploadVideoController']
+            middlewares: ['multipartMiddleware', 'uploadVideoController']
         }
     }
 };

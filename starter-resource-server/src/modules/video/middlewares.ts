@@ -4,7 +4,22 @@ import { Request, Response, NextFunction } from 'express';
 import { L } from '../../common/logger';
 import { mainVideoService } from './service';
 
+import fs from 'fs';
+import multipart from 'connect-multiparty';
+import { environment } from '../../environment';
+
+const {
+    uploadDir = './assets/uploads'
+} = environment;
+
+if (!fs.existsSync(uploadDir)) {
+    fs.mkdirSync(uploadDir, { mode: 0o755 });
+}
+
 export class VideoMiddlewares extends Singleton {
+
+    multipartMiddleware = multipart({ uploadDir: uploadDir });
+
     constructor() {
         super(VideoMiddlewares);
     }

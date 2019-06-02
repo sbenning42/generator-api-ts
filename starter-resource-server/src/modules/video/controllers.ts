@@ -9,6 +9,8 @@ export class VideoControllers extends Singleton {
 
     uploadVideo() {
         return async (req: Request, res: Response) => {
+            L.info(`Got file: `, req['file']);
+            L.info(`Got files: `, req['files']);
             L.info(`VideoControllers@uploadVideo: Not implemented yet.`);
             res.status(504).json({ message: `Not implemented yet.` });
         };

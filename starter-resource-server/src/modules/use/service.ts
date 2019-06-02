@@ -29,9 +29,11 @@ export class UseService extends Singleton {
     async use(app: Application) {
 
         const jwtMiddleware = mainPassportService.jwt();
-        const uploadVideoController = mainVideoControllers.uploadVideo();
+        const multipartMiddleware = mainVideoMiddlewares.multipartMiddleware;
         const addVideoToStoreMiddleware = mainVideoMiddlewares.addVideoToStore();
         const deleteVideoFromStoreMiddleware = mainVideoMiddlewares.deleteVideoFromStore();
+        
+        const uploadVideoController = mainVideoControllers.uploadVideo();
 
         await mainMongoService.init();
         L.info(`DB: ${mainMongoService.url} connected.`);
@@ -49,6 +51,7 @@ export class UseService extends Singleton {
         
         applyVideoAPI(app, {
             jwtMiddleware,
+            multipartMiddleware,
             addVideoToStoreMiddleware,
             deleteVideoFromStoreMiddleware,
             uploadVideoController,

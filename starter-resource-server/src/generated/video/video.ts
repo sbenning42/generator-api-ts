@@ -438,6 +438,7 @@ export class VideoRouter {
             jwtMiddleware,
             addVideoToStoreMiddleware,
             deleteVideoFromStoreMiddleware,
+            multipartMiddleware,
             uploadVideoController
         } = this.context;
         this.router
@@ -447,7 +448,7 @@ export class VideoRouter {
             .put('/:id', jwtMiddleware, mainVideoControllers.update)
             .delete('/:id', jwtMiddleware, deleteVideoFromStoreMiddleware, mainVideoControllers.delete)
             .get('/:id/store', mainVideoControllers.getStoreOf)
-            .post('/utils/upload', jwtMiddleware, uploadVideoController, (_: Request, res: Response) => res.status(504).json({ message: 'Not implementd.' }));
+            .post('/utils/upload', jwtMiddleware, multipartMiddleware, uploadVideoController, (_: Request, res: Response) => res.status(504).json({ message: 'Not implementd.' }));
     }
 
     applyRouter(app: Application) {
