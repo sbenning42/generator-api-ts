@@ -7,13 +7,19 @@ import cors from 'cors';
 import helmet from 'helmet';
 import morgan from 'morgan';
 
+
+import swaggerUi from 'swagger-ui-express';
+import YAML from 'yamljs';
 import { L } from './common/logger';
 import { mainUseService } from './modules/use/service';
 import { environment } from './environment';
 
 const {
-  port
+  port,
+  swagger
 } = environment;
+
+const swaggerDocument = YAML.load(swagger);
 
 /**
  * Use async main function to get access to `await` keyword
@@ -28,9 +34,13 @@ async function main() {
   app.use(
     helmet(), // add various HTTP Headers for some security
     bodyParser.json(), // parse request body into JSON
+    bodyParser.urlencoded({ extended: true }), // enable extended encoded urls
     cors(), // use `origin: '*'` cors HTTP Headers
     morgan('combined'), // use some HTTP logging support
   );
+
+  app.use('/docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
+
 
   /**
    * Apply application handlers

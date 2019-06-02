@@ -11,43 +11,43 @@ import {
 } from 'mongoose';
 import {
     ID,
-    User,
-    UserCreateBody,
-    UserChangesBody,
-    UserPushBody,
-    UserPullBody,
-    UserUpdateBody,
-    UserRawUpdateBody,
-    UserSchema,
-    UserModel,
-    UserDocument,
-    UserDocumentQuery,
-    UserDocumentsQuery,
-    UserCondition,
-    UserProjection,
-    UserPopulate,
+    Video,
+    VideoCreateBody,
+    VideoChangesBody,
+    VideoPushBody,
+    VideoPullBody,
+    VideoUpdateBody,
+    VideoRawUpdateBody,
+    VideoSchema,
+    VideoModel,
+    VideoDocument,
+    VideoDocumentQuery,
+    VideoDocumentsQuery,
+    VideoCondition,
+    VideoProjection,
+    VideoPopulate,
 } from '../types';
 
 
 export type MongooseCB<T = any> = (err: any, results: T) => void;
 
-const populateAll = <Q extends (UserDocumentQuery | UserDocumentsQuery)>(
+const populateAll = <Q extends (VideoDocumentQuery | VideoDocumentsQuery)>(
     query: Q,
-    populates: UserPopulate[],
+    populates: VideoPopulate[],
     idx: number = 0
 ) => idx < populates.length
     ? populateAll(query.populate(populates[idx]), populates, idx + 1)
     : query;
 
-const docPopulateAll = <D extends UserDocument | UserDocument[]>(
+const docPopulateAll = <D extends VideoDocument | VideoDocument[]>(
     doc: D,
-    populates: UserPopulate[],
+    populates: VideoPopulate[],
     idx: number = 0
 ) => idx < populates.length
     ? docPopulateAll(
         Array.isArray(doc)
             ? doc.map(d => d.populate(populates[idx]))
-            : (doc as UserDocument).populate(populates[idx]),
+            : (doc as VideoDocument).populate(populates[idx]),
         populates,
         idx + 1
     )
@@ -64,143 +64,143 @@ export type QueryFindByIdAndUpdateOptions = {
 export type QueryFindByIdAndRemoveOptions = QueryFindOneAndRemoveOptions;
 
 
-/********* USER Module *********/
+/********* VIDEO Module *********/
 
 
-export class UserUtils {
+export class VideoUtils {
 
-    UserSchema = UserSchema;
-    User = UserModel;
+    VideoSchema = VideoSchema;
+    Video = VideoModel;
 
     findAll(
-        projection?: UserProjection,
-        populates: UserPopulate[] = [],
-        cb?: MongooseCB<UserDocument[]>,
+        projection?: VideoProjection,
+        populates: VideoPopulate[] = [],
+        cb?: MongooseCB<VideoDocument[]>,
         options: any = {},
     ) {
         return populateAll(
-            this.User.find({}, projection, options, cb),
+            this.Video.find({}, projection, options, cb),
             populates
-        ) as UserDocumentsQuery;
+        ) as VideoDocumentsQuery;
     }
 
     findMany(
-        condition: UserCondition,
-        projection?: UserProjection,
-        populates: UserPopulate[] = [],
-        cb?: MongooseCB<UserDocument[]>,
+        condition: VideoCondition,
+        projection?: VideoProjection,
+        populates: VideoPopulate[] = [],
+        cb?: MongooseCB<VideoDocument[]>,
         options: any = {},
     ) {
         return populateAll(
-            this.User.find(condition, projection, options, cb),
+            this.Video.find(condition, projection, options, cb),
             populates
-        ) as UserDocumentsQuery;
+        ) as VideoDocumentsQuery;
     }
 
     findOne(
-        condition: UserCondition,
-        projection?: UserProjection,
-        populates: UserPopulate[] = [],
-        cb?: MongooseCB<UserDocument>,
+        condition: VideoCondition,
+        projection?: VideoProjection,
+        populates: VideoPopulate[] = [],
+        cb?: MongooseCB<VideoDocument>,
         options: any = {},
     ) {
         return populateAll(
-            this.User.findOne(condition, projection, options, cb),
+            this.Video.findOne(condition, projection, options, cb),
             populates
-        ) as UserDocumentQuery;
+        ) as VideoDocumentQuery;
     }
 
     findById(
         id: ID,
-        projection?: UserProjection,
-        populates: UserPopulate[] = [],
-        cb?: MongooseCB<UserDocument>,
+        projection?: VideoProjection,
+        populates: VideoPopulate[] = [],
+        cb?: MongooseCB<VideoDocument>,
         options: any = {},
     ) {
         return populateAll(
-            this.User.findById(id, projection, options, cb),
+            this.Video.findById(id, projection, options, cb),
             populates
-        ) as UserDocumentQuery;
+        ) as VideoDocumentQuery;
     }
 
-    sanitizeCreateBody(body: UserCreateBody) {
+    sanitizeCreateBody(body: VideoCreateBody) {
         if (typeof(body.id) === 'string') {
             delete body.id;
             body._id = new ObjectID(body.id);
         }
-        return ['_id', 'username', 'password', 'store', 'json'].reduce<UserCreateBody>((sanitizedBody, key) => body[key] !== undefined
+        return ['_id', 'name', 'json'].reduce<VideoCreateBody>((sanitizedBody, key) => body[key] !== undefined
             ? {
                 ...sanitizedBody,
                 [key]: body[key]
             }
             : sanitizedBody,
-            {} as UserCreateBody
+            {} as VideoCreateBody
         );
     }
 
     async create(
-        body: UserCreateBody,
-        populates: UserPopulate[] = [],
-        cb?: MongooseCB<UserDocument>,
+        body: VideoCreateBody,
+        populates: VideoPopulate[] = [],
+        cb?: MongooseCB<VideoDocument>,
         options: SaveOptions = {},
         trusted: boolean = false
     ) {
         const sanitizedBody = this.sanitizeCreateBody(body);
-        const modelInstance = new this.User(sanitizedBody);
+        const modelInstance = new this.Video(sanitizedBody);
         return docPopulateAll(
             await modelInstance.save(options, cb),
             populates
-        ) as UserDocument;
+        ) as VideoDocument;
     }
 
     async createMany(
-        bodies: UserCreateBody[],
-        populates: UserPopulate[] = [],
-        cb?: MongooseCB<UserDocument[]>,
+        bodies: VideoCreateBody[],
+        populates: VideoPopulate[] = [],
+        cb?: MongooseCB<VideoDocument[]>,
         options: SaveOptions = {},
         trusted: boolean = false
     ) {
-        const modelInstances = bodies.map(body => new this.User(this.sanitizeCreateBody(body)));
+        const modelInstances = bodies.map(body => new this.Video(this.sanitizeCreateBody(body)));
         return docPopulateAll(
-            await this.User.insertMany(modelInstances, options, cb),
+            await this.Video.insertMany(modelInstances, options, cb),
             populates
-        ) as UserDocument[];
+        ) as VideoDocument[];
     }
 
-    sanitizeChangesBody(body: UserChangesBody) {
-        return ['username', 'password', 'json'].reduce<UserChangesBody>((sanitizedBody, key) => body[key] !== undefined
+    sanitizeChangesBody(body: VideoChangesBody) {
+        return ['json'].reduce<VideoChangesBody>((sanitizedBody, key) => body[key] !== undefined
             ? {
                 ...sanitizedBody,
                 [key]: body[key]
             }
             : sanitizedBody,
-            {} as UserChangesBody);
+            {} as VideoChangesBody);
     }
 
-    sanitizePushBody(body: UserPushBody) {
-        return [].reduce<UserPushBody>((sanitizedBody, key) => body[key] !== undefined
+    sanitizePushBody(body: VideoPushBody) {
+        return [].reduce<VideoPushBody>((sanitizedBody, key) => body[key] !== undefined
             ? {
                 ...sanitizedBody,
                 [key]: Array.isArray(body[key]) && body[key].length > 0 ? { $each: body[key] } : body[key]
             }
             : sanitizedBody,
-            {} as UserPushBody);
+            {} as VideoPushBody);
     }
 
-    sanitizePullBody(body: UserPullBody) {
-        return [].reduce<UserPullBody>((sanitizedBody, key) => body[key] !== undefined
+    sanitizePullBody(body: VideoPullBody) {
+        return [].reduce<VideoPullBody>((sanitizedBody, key) => body[key] !== undefined
             ? {
                 ...sanitizedBody,
                 [key]: Array.isArray(body[key]) && body[key].length > 0 ? { $each: body[key] } : body[key]
             }
             : sanitizedBody,
-            {} as UserPullBody);
+            {} as VideoPullBody);
     }
 
     updateById(
-        { id, changes = {}, push = {}, pull = {} }: UserUpdateBody,        
-        populates: UserPopulate[] = [],
-        cb?: MongooseCB<UserDocument>,
+        { id, changes = {}, push = {}, pull = {} }: VideoUpdateBody,        
+        populates: VideoPopulate[] = [],
+        cb?: MongooseCB<VideoDocument>,
         options: QueryFindByIdAndUpdateOptions = { new: true },
         trusted: boolean = false
     ) {
@@ -216,28 +216,28 @@ export class UserUtils {
             .filter(key => Object.keys(body[key] || {}).length > 0)
             .reduce((obj, key) => ({ ...obj, [key]: body[key] }), {});
         return populateAll(
-            this.User.findByIdAndUpdate(id, sanitizedBody, options, cb),
+            this.Video.findByIdAndUpdate(id, sanitizedBody, options, cb),
             populates
-        ) as UserDocumentQuery;
+        ) as VideoDocumentQuery;
     }
 
     deleteById(
         id: ID,
-        populates: UserPopulate[] = [],
-        cb?: MongooseCB<UserDocument>,
+        populates: VideoPopulate[] = [],
+        cb?: MongooseCB<VideoDocument>,
         options: QueryFindByIdAndRemoveOptions = {},
     ) {
         return populateAll(
-            this.User.findByIdAndRemove(id, options, cb),
+            this.Video.findByIdAndRemove(id, options, cb),
             populates
-        ) as UserDocumentQuery;
+        ) as VideoDocumentQuery;
     }
 
     updateOne(
-        condition: UserCondition,
-        { changes = {}, push = {}, pull = {} }: UserRawUpdateBody,        
-        populates: UserPopulate[] = [],
-        cb?: MongooseCB<UserDocument>,
+        condition: VideoCondition,
+        { changes = {}, push = {}, pull = {} }: VideoRawUpdateBody,        
+        populates: VideoPopulate[] = [],
+        cb?: MongooseCB<VideoDocument>,
         options: QueryFindOneAndUpdateOptions = { new: true },
         trusted: boolean = false
     ) {
@@ -253,27 +253,27 @@ export class UserUtils {
             .filter(key => Object.keys(body[key] || {}).length > 0)
             .reduce((obj, key) => ({ ...obj, [key]: body[key] }), {});
         return populateAll(
-            this.User.findOneAndUpdate(condition, sanitizedBody, options, cb),
+            this.Video.findOneAndUpdate(condition, sanitizedBody, options, cb),
             populates
-        ) as UserDocumentQuery;
+        ) as VideoDocumentQuery;
     }
 
     deleteOne(
-        condition: UserCondition,
-        populates: UserPopulate[] = [],
-        cb?: MongooseCB<UserDocument>,
+        condition: VideoCondition,
+        populates: VideoPopulate[] = [],
+        cb?: MongooseCB<VideoDocument>,
         options: QueryFindOneAndRemoveOptions = {},
     ) {
         return populateAll(
-            this.User.findOneAndRemove(condition, options, cb),
+            this.Video.findOneAndRemove(condition, options, cb),
             populates
-        ) as UserDocumentQuery;
+        ) as VideoDocumentQuery;
     }
 
     updateMany(
-        condition: UserCondition,
-        { changes = {}, push = {}, pull = {} }: UserRawUpdateBody,        
-        populates: UserPopulate[] = [],
+        condition: VideoCondition,
+        { changes = {}, push = {}, pull = {} }: VideoRawUpdateBody,        
+        populates: VideoPopulate[] = [],
         cb?: MongooseCB<any>,
         options: ModelUpdateOptions = {},
         trusted: boolean = false
@@ -290,16 +290,16 @@ export class UserUtils {
             .filter(key => Object.keys(body[key] || {}).length > 0)
             .reduce((obj, key) => ({ ...obj, [key]: body[key] }), {});
         return populateAll(
-            this.User.updateMany(condition, sanitizedBody, options, cb),
+            this.Video.updateMany(condition, sanitizedBody, options, cb),
             populates
         );
     }
 
     deleteMany(
-        condition: UserCondition,
+        condition: VideoCondition,
         cb?: (err: any) => void,
     ) {
-        return this.User.remove(condition, cb);
+        return this.Video.remove(condition, cb);
     }
     
     async findStoreOf(id: ID) {
@@ -320,24 +320,24 @@ export class UserUtils {
 }
 
 
-export class UserService {
+export class VideoService {
     
-    utils: UserUtils = new UserUtils();
+    utils: VideoUtils = new VideoUtils();
 
 }
 
-export const mainUserService: UserService = new UserService();
+export const mainVideoService: VideoService = new VideoService();
 
 
-export class UserMiddlewares {
+export class VideoMiddlewares {
 
 }
 
 
-export class UserControllers {
+export class VideoControllers {
 
     async getAll(req: Request, res: Response) {
-        const { utils } = mainUserService;
+        const { utils } = mainVideoService;
         try {
             res.json(await utils.findAll());
         } catch (error) {
@@ -346,7 +346,7 @@ export class UserControllers {
     }
     
     async getById(req: Request, res: Response) {
-        const { utils } = mainUserService;
+        const { utils } = mainVideoService;
         const id = req.params.id;
         try {
             res.json(await utils.findById(id));
@@ -356,7 +356,7 @@ export class UserControllers {
     }
     
     async create(req: Request, res: Response) {
-        const { utils } = mainUserService;
+        const { utils } = mainVideoService;
         try {
             res.json(await utils.create(req.body));
         } catch (error) {
@@ -365,7 +365,7 @@ export class UserControllers {
     }
     
     async update(req: Request, res: Response) {
-        const { utils } = mainUserService;
+        const { utils } = mainVideoService;
         const id = req.params.id;
         const { changes, push, pull } = req.body;
         try {
@@ -376,7 +376,7 @@ export class UserControllers {
     }
     
     async delete(req: Request, res: Response) {
-        const { utils } = mainUserService;
+        const { utils } = mainVideoService;
         const id = req.params.id;
         try {
             res.json(await utils.deleteById(id));
@@ -387,7 +387,7 @@ export class UserControllers {
 
     
     async getStoreOf(req: Request, res: Response) {
-        const { utils } = mainUserService;
+        const { utils } = mainVideoService;
         const id = req.params.id;
         try {
             const relation = await utils.findStoreOf(id);
@@ -398,7 +398,7 @@ export class UserControllers {
     }
     
     async addStoreTo(req: Request, res: Response) {
-        const { utils } = mainUserService;
+        const { utils } = mainVideoService;
         const id = req.params.id;
         const { addId } = req.body;
         try {
@@ -408,7 +408,7 @@ export class UserControllers {
         }
     }    
     async removeStoreFrom(req: Request, res: Response) {
-        const { utils } = mainUserService;
+        const { utils } = mainVideoService;
         const id = req.params.id;
         const { removeId } = req.body;
         try {
@@ -421,10 +421,10 @@ export class UserControllers {
 
 }
 
-export const mainUserControllers: UserControllers = new UserControllers();
+export const mainVideoControllers: VideoControllers = new VideoControllers();
 
 
-export class UserRouter {
+export class VideoRouter {
     
     router = Router();
 
@@ -436,24 +436,32 @@ export class UserRouter {
 
     private setupRouter() {
         const {
-            jwtMiddleware
+            jwtMiddleware,
+            addVideoToStoreMiddleware,
+            deleteVideoFromStoreMiddleware,
+            multipartMiddleware,
+            uploadVideoController
         } = this.context;
         this.router
-            .get('/', jwtMiddleware, mainUserControllers.getAll)
-            .post('/', mainUserControllers.create)
-            .get('/:id', jwtMiddleware, mainUserControllers.getById)
-            .put('/:id', jwtMiddleware, mainUserControllers.update)
-            .get('/:id/store', jwtMiddleware, mainUserControllers.getStoreOf);
+            .get('/', mainVideoControllers.getAll)
+            .post('/', jwtMiddleware, addVideoToStoreMiddleware, mainVideoControllers.create)
+            .get('/:id', mainVideoControllers.getById)
+            .put('/:id', jwtMiddleware, mainVideoControllers.update)
+            .delete('/:id', jwtMiddleware, deleteVideoFromStoreMiddleware, mainVideoControllers.delete)
+            .get('/:id/store', mainVideoControllers.getStoreOf)
+            .put('/:id/store/add', jwtMiddleware, mainVideoControllers.addStoreTo)
+            .put('/:id/store/remove', jwtMiddleware, mainVideoControllers.removeStoreFrom)
+            .post('/utils/upload', jwtMiddleware, multipartMiddleware, uploadVideoController, (_: Request, res: Response) => res.status(504).json({ message: 'Not implementd.' }));
     }
 
     applyRouter(app: Application) {
-        app.use('/users', this.router);
+        app.use('/videos', this.router);
     }
 }
 
 
-export function applyUserAPI<CTX>(app: Application, context?: CTX, prettifyRouter?: (...args: any[]) => void, ...args: any[]) {
-    const router = new UserRouter(context);
+export function applyVideoAPI<CTX>(app: Application, context?: CTX, prettifyRouter?: (...args: any[]) => void, ...args: any[]) {
+    const router = new VideoRouter(context);
     router.applyRouter(app);
     if (prettifyRouter && args.length > 1) {
         prettifyRouter(args[0], router.router, args[1]);

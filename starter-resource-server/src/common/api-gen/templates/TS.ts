@@ -26,7 +26,8 @@ $1
 
 export const TSTypeTpl = (name: string, props: string) => rep(`
 export interface $0 {
-    id: ID,
+    id?: ID,
+    _id?: ID,
 $1
     createdAt: string;
     updatedAt: string;
@@ -37,7 +38,8 @@ export const TSTypePropTpl = (name: string, type: string, isArray: boolean = fal
 
 export const TSCreateBodyTpl = (name: string, props: string) => rep(`
 export interface $0CreateBody {
-    id?: ID;
+    id?: ID,
+    _id?: ID,
 $1
 }
 `, [name, props]);
@@ -322,9 +324,10 @@ export class $0Utils {
 
     sanitizeCreateBody(body: $0CreateBody) {
         if (typeof(body.id) === 'string') {
-            body.id = new ObjectID(body.id);
+            delete body.id;
+            body._id = new ObjectID(body.id);
         }
-        return [$1].reduce<$0CreateBody>((sanitizedBody, key) => body[key] !== undefined
+        return ['_id', $1].reduce<$0CreateBody>((sanitizedBody, key) => body[key] !== undefined
             ? {
                 ...sanitizedBody,
                 [key]: body[key]
@@ -377,7 +380,7 @@ export class $0Utils {
         return [$3].reduce<$0PushBody>((sanitizedBody, key) => body[key] !== undefined
             ? {
                 ...sanitizedBody,
-                [key]: Array.isArray(body[key]) ? { $each: body[key] } : body[key]
+                [key]: Array.isArray(body[key]) && body[key].length > 0 ? { $each: body[key] } : body[key]
             }
             : sanitizedBody,
             {} as $0PushBody);
@@ -387,7 +390,7 @@ export class $0Utils {
         return [$4].reduce<$0PullBody>((sanitizedBody, key) => body[key] !== undefined
             ? {
                 ...sanitizedBody,
-                [key]: Array.isArray(body[key]) ? { $each: body[key] } : body[key]
+                [key]: Array.isArray(body[key]) && body[key].length > 0 ? { $each: body[key] } : body[key]
             }
             : sanitizedBody,
             {} as $0PullBody);
@@ -408,8 +411,11 @@ export class $0Utils {
             $push: sanitizedPush,
             $pull: sanitizedPull,
         };
+        const sanitizedBody = ['$set', '$push', '$pull']
+            .filter(key => Object.keys(body[key] || {}).length > 0)
+            .reduce((obj, key) => ({ ...obj, [key]: body[key] }), {});
         return populateAll(
-            this.$0.findByIdAndUpdate(id, body, options, cb),
+            this.$0.findByIdAndUpdate(id, sanitizedBody, options, cb),
             populates
         ) as $0DocumentQuery;
     }
@@ -442,8 +448,11 @@ export class $0Utils {
             $push: sanitizedPush,
             $pull: sanitizedPull,
         };
+        const sanitizedBody = ['$set', '$push', '$pull']
+            .filter(key => Object.keys(body[key] || {}).length > 0)
+            .reduce((obj, key) => ({ ...obj, [key]: body[key] }), {});
         return populateAll(
-            this.$0.findOneAndUpdate(condition, body, options, cb),
+            this.$0.findOneAndUpdate(condition, sanitizedBody, options, cb),
             populates
         ) as $0DocumentQuery;
     }
@@ -476,8 +485,11 @@ export class $0Utils {
             $push: sanitizedPush,
             $pull: sanitizedPull,
         };
+        const sanitizedBody = ['$set', '$push', '$pull']
+            .filter(key => Object.keys(body[key] || {}).length > 0)
+            .reduce((obj, key) => ({ ...obj, [key]: body[key] }), {});
         return populateAll(
-            this.$0.updateMany(condition, body, options, cb),
+            this.$0.updateMany(condition, sanitizedBody, options, cb),
             populates
         );
     }
@@ -521,11 +533,11 @@ export const TSRelationMutationUtilsTpl = (name: string, prop: string) => rep(`
 export const TSRelationManyUtilsTpl = (name: string, prop: string) => rep(`
 
     add$0To(id: ID, ...addIds: ID[]) {
-        return this.updateById({ id, push: { $1: addIds } } as any, undefined, undefined, undefined, true);
+        return this.updateById({ id, push: { $1: { $each: addIds } } } as any, undefined, undefined, undefined, true);
     }
 
     remove$0From(id: ID, ...removeIds: ID[]) {
-        return this.updateById({ id, pull: { $1: removeIds } } as any, undefined, undefined, undefined, true);
+        return this.updateById({ id, pull: { $1: { $in: removeIds } } } as any, undefined, undefined, undefined, true);
     }
 
 `, [name, prop]);
@@ -546,7 +558,7 @@ export class $0Middlewares {
 }
 `, [name]);
 
-export const TSControllersTpl = (name: string) => rep(`
+export const TSControllersTpl = (name: string, props: string) => rep(`
 export class $0Controllers {
 
     async getAll(req: Request, res: Response) {
@@ -603,7 +615,80 @@ $1
 }
 
 export const main$0Controllers: $0Controllers = new $0Controllers();
-`, [name, '']);
+`, [name, props]);
+
+export const TSRelationQueryControllersTpl = (name: string, propName: string) => rep(`    
+    async get$1Of(req: Request, res: Response) {
+        const { utils } = main$0Service;
+        const id = req.params.id;
+        try {
+            const relation = await utils.find$1Of(id);
+            res.json(relation);
+        } catch (error) {
+            res.status(400).json({ error, message: 'Something went wrong.' });
+        }
+    }
+`, [name, `${propName.slice(0, 1).toUpperCase()}${propName.slice(1)}`, propName]);
+
+export const TSRelationArrayQueryControllersTpl = (name: string, propName: string) => rep(`    
+    async get$1Of(req: Request, res: Response) {
+        const { utils } = main$0Service;
+        const id = req.params.id;
+        try {
+            res.json(await utils.find$1Of(id));
+        } catch (error) {
+            res.status(400).json({ error, message: 'Something went wrong.' });
+        }
+    }
+`, [name, `${propName.slice(0, 1).toUpperCase()}${propName.slice(1)}`, propName]);
+
+export const TSRelationMutationControllersTpl = (name: string, propName: string) => rep(`    
+    async add$1To(req: Request, res: Response) {
+        const { utils } = main$0Service;
+        const id = req.params.id;
+        const { addId } = req.body;
+        try {
+            res.json(await utils.add$1To(id, addId));
+        } catch (error) {
+            res.status(400).json({ error, message: 'Something went wrong.' });
+        }
+    }    
+    async remove$1From(req: Request, res: Response) {
+        const { utils } = main$0Service;
+        const id = req.params.id;
+        const { removeId } = req.body;
+        try {
+            res.json(await utils.remove$1From(id));
+        } catch (error) {
+            res.status(400).json({ error, message: 'Something went wrong.' });
+        }
+    }
+`, [name, `${propName.slice(0, 1).toUpperCase()}${propName.slice(1)}`, propName]);
+
+
+export const TSRelationArrayMutationControllersTpl = (name: string, propName: string) => rep(`    
+    async add$1To(req: Request, res: Response) {
+        const { utils } = main$0Service;
+        const id = req.params.id;
+        const { addIds } = req.body;
+        try {
+            res.json(await utils.add$1To(id, ...addIds));
+        } catch (error) {
+            res.status(400).json({ error, message: 'Something went wrong.' });
+        }
+    }    
+    async remove$1From(req: Request, res: Response) {
+        const { utils } = main$0Service;
+        const id = req.params.id;
+        const { removeIds } = req.body;
+        try {
+            res.json(await utils.remove$1From(id, ...removeIds));
+        } catch (error) {
+            res.status(400).json({ error, message: 'Something went wrong.' });
+        }
+    }
+`, [name, `${propName.slice(0, 1).toUpperCase()}${propName.slice(1)}`, propName]);
+
 
 export const TSRouterTpl = (name: string, routes: string[], endpoint: string, middlewares: string[] = []) => rep(`
 export class $0Router {

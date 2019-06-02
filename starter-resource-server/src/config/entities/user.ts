@@ -19,6 +19,13 @@ export const user: APISchemaEntity = {
             skipChanges: true,
             default: ['user']
         }],
+        store: {
+            type: 'Store',
+            required: true,
+            skipChanges: true,
+            skipAdd: true,
+            skipRemove: true,
+        },
         json: {
             type: Object,
             default: {}

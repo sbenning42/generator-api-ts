@@ -1,0 +1,413 @@
+
+swagger: "2.0"
+info:
+    version: "0.0.1"
+    title: "Swagger API"
+host: localhost:4266
+basePath: "/"
+schemes:
+    - http
+    - https
+consumes:
+    - application/json
+produces:
+    - application/json
+        
+
+definitions:
+    User:
+        type: object
+        properties:
+            username:
+                type: string
+            password:
+                type: string
+            roles:
+                type: array
+                items:
+                    type: string
+            store:
+                $ref: '#/definitions/Store'
+            json:
+                type: object
+    UserCreateBody:
+        type: object
+        properties:
+            username:
+                type: string
+            password:
+                type: string
+            store:
+                $ref: '#/definitions/Store'
+            json:
+                type: object
+    UserChangesBody:
+        type: object
+        properties:
+            username:
+                type: string
+            password:
+                type: string
+            json:
+                type: object
+    UserPushBody:
+        type: object
+    UserPullBody:
+        type: object
+    UserUpdateBody:
+        type: object
+        properties:
+            id:
+                type: string
+            changes:
+                $ref: '#/definitions/UserChangesBody'
+            push:
+                $ref: '#/definitions/UserPushBody'
+            pull:
+                $ref: '#/definitions/UserPullBody'
+    Store:
+        type: object
+        properties:
+            name:
+                type: string
+            videos:
+                type: array
+                items:
+                    $ref: '#/definitions/Video'
+    StoreCreateBody:
+        type: object
+        properties:
+            name:
+                type: string
+    StoreChangesBody:
+        type: object
+        properties:
+            name:
+                type: string
+    StorePushBody:
+        type: object
+    StorePullBody:
+        type: object
+    StoreUpdateBody:
+        type: object
+        properties:
+            id:
+                type: string
+            changes:
+                $ref: '#/definitions/StoreChangesBody'
+            push:
+                $ref: '#/definitions/StorePushBody'
+            pull:
+                $ref: '#/definitions/StorePullBody'
+    Video:
+        type: object
+        properties:
+            name:
+                type: string
+            json:
+                type: object
+            store:
+                $ref: '#/definitions/Store'
+    VideoCreateBody:
+        type: object
+        properties:
+            name:
+                type: string
+            json:
+                type: object
+    VideoChangesBody:
+        type: object
+        properties:
+            json:
+                type: object
+    VideoPushBody:
+        type: object
+    VideoPullBody:
+        type: object
+    VideoUpdateBody:
+        type: object
+        properties:
+            id:
+                type: string
+            changes:
+                $ref: '#/definitions/VideoChangesBody'
+            push:
+                $ref: '#/definitions/VideoPushBody'
+            pull:
+                $ref: '#/definitions/VideoPullBody'
+    AddIdBody:
+        type: object
+        properties:
+            addId:
+                type: string
+    AddIdsBody:
+        type: object
+        properties:
+            addIds:
+                type: array
+                items:
+                    type: string
+    RemoveIdBody:
+        type: object
+        properties:
+            addId:
+                type: string
+    RemoveIdsBody:
+        type: object
+        properties:
+            addIds:
+                type: array
+                items:
+                    type: string
+
+
+paths:
+    /users:
+        get:
+            description: "sample description"
+            responses:
+                '200':
+                    description: "not provided."
+                    schema:
+                        type: object
+        post:
+            description: "sample description"
+            parameters:
+                - name: body
+                  description: "Not provided"
+                  in: body
+                  schema:
+                    $ref: '#/definitions/UserCreateBody'
+            responses:
+                '200':
+                    description: "not provided."
+                    schema:
+                        type: object
+    /users/{id}:
+        get:
+            description: "sample description"
+            parameters:
+                - name: id
+                  in: path
+                  required: true
+                  description: "Not provided"
+                  type: string
+            responses:
+                '200':
+                    description: "not provided."
+                    schema:
+                        type: object
+        put:
+            description: "sample description"
+            parameters:
+                - name: id
+                  in: path
+                  required: true
+                  description: "Not provided"
+                  type: string
+
+                - name: body
+                  description: "Not provided"
+                  in: body
+                  schema:
+                    $ref: '#/definitions/UserUpdateBody'
+            responses:
+                '200':
+                    description: "not provided."
+                    schema:
+                        type: object
+    /users/{id}/store:
+        get:
+            description: "sample description"
+            parameters:
+                - name: id
+                  in: path
+                  required: true
+                  description: "Not provided"
+                  type: string
+            responses:
+                '200':
+                    description: "not provided."
+                    schema:
+                        type: object
+
+    /stores:
+        get:
+            description: "sample description"
+            responses:
+                '200':
+                    description: "not provided."
+                    schema:
+                        type: object
+        post:
+            description: "sample description"
+            parameters:
+                - name: body
+                  description: "Not provided"
+                  in: body
+                  schema:
+                    $ref: '#/definitions/StoreCreateBody'
+            responses:
+                '200':
+                    description: "not provided."
+                    schema:
+                        type: object
+    /stores/{id}:
+        get:
+            description: "sample description"
+            parameters:
+                - name: id
+                  in: path
+                  required: true
+                  description: "Not provided"
+                  type: string
+            responses:
+                '200':
+                    description: "not provided."
+                    schema:
+                        type: object
+    /stores/{id}/videos:
+        get:
+            description: "sample description"
+            parameters:
+                - name: id
+                  in: path
+                  required: true
+                  description: "Not provided"
+                  type: string
+            responses:
+                '200':
+                    description: "not provided."
+                    schema:
+                        type: object
+
+    /videos:
+        get:
+            description: "sample description"
+            responses:
+                '200':
+                    description: "not provided."
+                    schema:
+                        type: object
+        post:
+            description: "sample description"
+            parameters:
+                - name: body
+                  description: "Not provided"
+                  in: body
+                  schema:
+                    $ref: '#/definitions/VideoCreateBody'
+            responses:
+                '200':
+                    description: "not provided."
+                    schema:
+                        type: object
+    /videos/{id}:
+        get:
+            description: "sample description"
+            parameters:
+                - name: id
+                  in: path
+                  required: true
+                  description: "Not provided"
+                  type: string
+            responses:
+                '200':
+                    description: "not provided."
+                    schema:
+                        type: object
+        put:
+            description: "sample description"
+            parameters:
+                - name: id
+                  in: path
+                  required: true
+                  description: "Not provided"
+                  type: string
+
+                - name: body
+                  description: "Not provided"
+                  in: body
+                  schema:
+                    $ref: '#/definitions/VideoUpdateBody'
+            responses:
+                '200':
+                    description: "not provided."
+                    schema:
+                        type: object
+        delete:
+            description: "sample description"
+            parameters:
+                - name: id
+                  in: path
+                  required: true
+                  description: "Not provided"
+                  type: string
+            responses:
+                '200':
+                    description: "not provided."
+                    schema:
+                        type: object
+    /videos/{id}/store:
+        get:
+            description: "sample description"
+            parameters:
+                - name: id
+                  in: path
+                  required: true
+                  description: "Not provided"
+                  type: string
+            responses:
+                '200':
+                    description: "not provided."
+                    schema:
+                        type: object
+    /videos/{id}/store/add:
+        put:
+            description: "sample description"
+            parameters:
+                - name: id
+                  in: path
+                  required: true
+                  description: "Not provided"
+                  type: string
+
+                - name: body
+                  description: "Not provided"
+                  in: body
+                  schema:
+                    $ref: '#/definitions/AddIdBody'
+            responses:
+                '200':
+                    description: "not provided."
+                    schema:
+                        type: object
+    /videos/{id}/store/remove:
+        put:
+            description: "sample description"
+            parameters:
+                - name: id
+                  in: path
+                  required: true
+                  description: "Not provided"
+                  type: string
+
+                - name: body
+                  description: "Not provided"
+                  in: body
+                  schema:
+                    $ref: '#/definitions/RemoveIdBody'
+            responses:
+                '200':
+                    description: "not provided."
+                    schema:
+                        type: object
+    /videos/utils/upload:
+        post:
+            description: "sample description"
+            responses:
+                '200':
+                    description: "not provided."
+                    schema:
+                        type: object
+

@@ -49,7 +49,9 @@ export class PassportService<User extends { _id: string | ObjectID }> extends Si
                 const user = await User
                     .findOne({ [fields[0]]: username })
                     .select(`+${fields[0]} +${fields[1]}`);
+                console.log(`Got user: `, user);
                 if (!user || (user.get(`${fields[1]}`) !== password)) {
+                    console.log('HERE !!!');
                     return done(null, false);
                 } else {
                     return done(null, user);
@@ -116,6 +118,16 @@ export class PassportService<User extends { _id: string | ObjectID }> extends Si
     localSignoutController() {
         return async (req: Request, res: Response) => {
             res.json({});
+        };
+    }
+
+    hasRoleMiddleware(roles: string[]) {
+        return async (req: Request, res: Response, next: NextFunction) => {
+            const userRoles = req.user && req.user.roles ? req.user.roles : [];
+            if (!roles.some(role => userRoles.includes(role))) {
+                res.status(403).json({ message: 'Unauthorized.' });
+            }
+            next();
         };
     }
 }
