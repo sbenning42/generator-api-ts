@@ -37,9 +37,8 @@ async function main() {
     morgan('combined'), // use some HTTP logging support
   );
 
-  let swaggerDocument: any;
   try {
-    swaggerDocument = YAML.load(swagger);
+    const swaggerDocument = YAML.load(swagger);
     app.use('/docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
   } catch (error) {
     L.info('Cannot apply swagger.')
