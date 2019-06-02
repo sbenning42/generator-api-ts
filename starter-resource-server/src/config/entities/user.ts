@@ -23,6 +23,8 @@ export const user: APISchemaEntity = {
             type: 'Store',
             required: true,
             skipChanges: true,
+            skipAdd: true,
+            skipRemove: true,
         },
         json: {
             type: Object,

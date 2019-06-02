@@ -6,7 +6,15 @@ export const store: APISchemaEntity = {
             type: String,
             required: true,
             unique: true,
-        }
+        },
+        videos: [{
+            type: 'Video',
+            default: [],
+            skipCreate: true,
+            skipChanges: true,
+            skipAdd: true,
+            skipRemove: true,
+        }]
     },
     routes: {
         mutation: {
@@ -15,7 +23,7 @@ export const store: APISchemaEntity = {
         'PUT /:id': {
             skip: true,
         },
-        'DELETE /id': {
+        'DELETE /:id': {
             skip: true,
         },
     },

@@ -20,12 +20,14 @@ export type APISchemaEntityPropertyType = Boolean | Number | String | Date | Obj
 
 export interface APISchemaEntityPropertyTyped {
     type: APISchemaEntityPropertyType,
-    required?: boolean,
-    unique?: boolean,
-    hidden?: boolean,
-    default?: any,
-    skipCreate?: boolean,
-    skipChanges?: boolean,
+    required?: boolean;
+    unique?: boolean;
+    hidden?: boolean;
+    default?: any;
+    skipCreate?: boolean;
+    skipChanges?: boolean;
+    skipAdd?: boolean;
+    skipRemove?: boolean;
 }
 
 export type APISchemaEntityPropertyObj = APISchemaEntityPropertyTyped | APISchemaEntityPropertyType;
@@ -123,13 +125,15 @@ export type _APISchemaEntityPropertyType = Boolean|Number|String|Date|typeof Mix
 
 export interface _APISchemaEntityPropertyTyped {
     type: _APISchemaEntityPropertyType,
-    required: boolean,
-    unique: boolean,
-    hidden: boolean,
-    skipCreate: boolean,
-    skipChanges: boolean,
-    default?: any,
-    ref?: any,
+    required: boolean;
+    unique: boolean;
+    hidden: boolean;
+    skipCreate: boolean;
+    skipChanges: boolean;
+    skipAdd: boolean;
+    skipRemove: boolean;
+    default?: any;
+    ref?: any;
 }
 
 export type _APISchemaEntityProperty = _APISchemaEntityPropertyTyped | [_APISchemaEntityPropertyTyped];
@@ -166,6 +170,8 @@ export function strictAPISchemaEntityProperty(_prop: APISchemaEntityProperty): _
         unique: prop.unique !== undefined ? prop.unique : false,
         skipCreate: prop.skipCreate !== undefined ? prop.skipCreate : false, // (ref ? true : false),
         skipChanges: prop.skipChanges !== undefined ? prop.skipChanges : false, // (ref ? true : false),
+        skipAdd: prop.skipAdd !== undefined ? prop.skipAdd : false,
+        skipRemove: prop.skipRemove !== undefined ? prop.skipRemove : false,
         default: prop.default !== undefined ? prop.default : undefined,
     };
     return isArray ? [strictProp] : strictProp;
@@ -190,14 +196,16 @@ export interface _APISchemaEntityRoute {
     auth: _APISchemaEntityRouteAuth;
     middlewares: string[];
     excludeMiddlewares: string[];
+    _ref?: string;
 }
 
-export function strictAPISchemaEntityRoute(route: APISchemaEntityRoute): _APISchemaEntityRoute {
+export function strictAPISchemaEntityRoute(route: APISchemaEntityRoute, ep?: string, refs: { [ep: string]: string } = {}): _APISchemaEntityRoute {
     return {
         skip: route && route.skip !== undefined ? route.skip : false,
         middlewares: route && route.middlewares !== undefined ? route.middlewares : [],
         excludeMiddlewares: route && route.excludeMiddlewares !== undefined ? route.excludeMiddlewares : [],
         auth: strictAPISchemaEntityRouteAuth(route && route.auth),
+        _ref: refs[ep]
     };
 }
 
@@ -225,10 +233,40 @@ export type _APISchemaEntityRoutes<R extends string[] = []> = {
     [key: string]: _APISchemaEntityRoute;
 }
 
-export function strictAPISchemaEntityRoutes<R extends string[]>(routes: APISchemaEntityRoutes<R>): _APISchemaEntityRoutes<R> {
-    return Object.entries(routes || {}).reduce<_APISchemaEntityRoutes<R>>((thisRoutes, [endpoint, route]) => ({
+export function strictAPISchemaEntityRoutes<R extends string[]>(routes: APISchemaEntityRoutes<R>, properties: _APISchemaEntityProperties): _APISchemaEntityRoutes<R> {
+    const refs = {};
+    const forRelations = Object.entries(properties || {})
+        .map(([propName, property]) => {
+            const isArray = Array.isArray(property);
+            return [propName, isArray ? property[0] : property, isArray] as [string, _APISchemaEntityPropertyTyped, boolean];
+        })
+        .filter(([propName, property, isArray]) => !!property.ref)
+        .map(([propName, property, isArray]) => [
+            [`GET /:id/${propName}`, {}, propName],
+            [`PUT /:id/${propName}/add`, { skip: property.skipAdd }, propName],
+            [`PUT /:id/${propName}/remove`, { skip: property.skipRemove }, propName],
+        ] as [string, _APISchemaEntityRoute, string][])
+        .reduce((agg, [[k0, v0, propName], [k1, v1], [k2, v2]]) => {
+            refs[k0] = propName;
+            refs[k1] = propName;
+            refs[k2] = propName;
+            if (v0) {
+                agg[k0] = v0;
+            }
+            if (v1) {
+                agg[k1] = v1;
+            }
+            if (v2) {
+                agg[k2] = v2;
+            }
+            return agg;
+        }, {});
+    return Object.entries({
+        ...forRelations,
+        ...(routes || {})
+    }).reduce<_APISchemaEntityRoutes<R>>((thisRoutes, [endpoint, route]) => ({
         ...thisRoutes,
-        [endpoint]: strictAPISchemaEntityRoute(route),
+        [endpoint]: strictAPISchemaEntityRoute(route, endpoint, refs),
     }), {
         all: strictAPISchemaEntityRoute(routes && routes.all),
         query: strictAPISchemaEntityRoute(routes && routes.query),
@@ -250,10 +288,10 @@ export interface _APISchemaEntity<R extends string[] = []> {
 
 export function strictAPISchemaEntity<R extends string[]>(name: string, _entity: APISchemaEntity<R>): _APISchemaEntity<R> {
     const entity = (_entity && (_entity['properties'] !== undefined || _entity['routes'] !== undefined) ? _entity : { properties: _entity }) as APISchemaEntityWithRoutes<R>;
+    const properties = strictAPISchemaEntityProperties(entity.properties);
     return {
-        name,
-        properties: strictAPISchemaEntityProperties(entity.properties),
-        routes: strictAPISchemaEntityRoutes<R>(entity.routes),
+        name, properties,
+        routes: strictAPISchemaEntityRoutes<R>(entity.routes, properties),
     };
 }
 

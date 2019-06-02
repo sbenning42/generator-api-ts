@@ -31,6 +31,9 @@ import {
     TSRelationManyUtilsTpl,
     TSRelationMutationUtilsTpl,
     TSRelationQueryUtilsTpl,
+    TSRelationQueryControllersTpl,
+    TSRelationMutationControllersTpl,
+    TSRelationArrayMutationControllersTpl,
 } from './templates/TS';
 import {
     _APISchemaEntity,
@@ -40,7 +43,9 @@ import {
     ObjectId,
     _APISchemaEntityProperty,
     _APISchema,
-    _APISchemaEntityPropertyTyped
+    _APISchemaEntityPropertyTyped,
+    _APISchemaEntityRoutes,
+    _APISchemaEntityRoute
 } from './types';
 import { prettifySchema } from './prettier';
 
@@ -172,7 +177,10 @@ export class APIGen {
                         entity, name,
                         generated: TSCreateBodyTpl(
                             cap(name),
-                            Object.entries(entity.properties)
+                            Object.entries({
+                                id: { type: String, skipCreate: false, required: false } as any as _APISchemaEntityPropertyTyped,
+                                ...entity.properties
+                            })
                                 .filter(([propName, property]) => Array.isArray(property)
                                     ? !property[0].skipCreate
                                     : !property.skipCreate
@@ -334,12 +342,28 @@ export class APIGen {
                         entity, name, generated: TSMiddlewaresTpl(cap(name)),
                     },
                     TS_controllers: {
-                        entity, name, generated: TSControllersTpl(cap(name)),
+                        entity, name, generated: TSControllersTpl(
+                            cap(name),
+                            Object.entries(entity.properties)
+                                .map(([propName, property]) => [
+                                    propName,
+                                    Array.isArray(property) ? property[0] : property,
+                                    Array.isArray(property)
+                                ] as [string, _APISchemaEntityPropertyTyped, boolean])
+                                .filter(([, property]) => !!property.ref)
+                                .map(([propName, property, isArray]) => TSRelationQueryControllersTpl(cap(name), propName)
+                                    + (isArray
+                                        ? (/*property.skipChanges ? '' : */TSRelationArrayMutationControllersTpl(cap(name), propName))
+                                        : (/*property.skipChanges ? '' : */TSRelationMutationControllersTpl(cap(name), propName)))
+                                ).join('\n')
+                        ),
                     },
                     TS_router: {
                         entity, name, generated: TSRouterTpl(
                             cap(name),
-                            Object.entries(entity.routes)
+                            [
+                                ...Object.entries(entity.routes),
+                            ]
                                 .filter(([endpoint, route]) => [
                                     'GET', 'POST', 'PUT', 'DELETE'
                                 ].some(verb => endpoint.startsWith(verb)))
@@ -385,18 +409,25 @@ export class APIGen {
                                             },
                                             middlewares: middlewares,
                                             excludeMiddlewares: excludeMiddlewares,
-                                            skip: skip
+                                            skip: skip,
+                                            _ref
                                         } = route;
+                                    const [_verb, _ep] = endpoint.split(' ');
+                                    const verb = _verb.trim().toUpperCase();
+                                    const ep = _ep.trim().toLowerCase();
                                     const allMiddlewares = _allMiddlewares.filter(m => !excludeMiddlewares.includes(m));
-                                    const queryMiddlewares = _queryMiddlewares.filter(m => !excludeMiddlewares.includes(m));
-                                    const mutationMiddlewares = _mutationMiddlewares.filter(m => !excludeMiddlewares.includes(m));
+                                    const queryMiddlewares = verb === 'GET'
+                                        ? _queryMiddlewares.filter(m => !excludeMiddlewares.includes(m))
+                                        : [];
+                                    const mutationMiddlewares = verb !== 'GET'
+                                        ? _mutationMiddlewares.filter(m => !excludeMiddlewares.includes(m))
+                                        : [];
                                     const hasMiddlewares = [
                                         allMiddlewares,
                                         queryMiddlewares,
                                         mutationMiddlewares,
                                         middlewares
                                     ].some(middlewares => middlewares && middlewares.length > 0);
-                                    const [verb, ep] = endpoint.split(' ');
                                     let controller: string;
                                     switch (true) {
                                         case verb === `GET` && ep === `/`:
@@ -405,11 +436,20 @@ export class APIGen {
                                         case verb === `GET` && ep === `/:id`:
                                             controller = `main${cap(name)}Controllers.getById`;
                                             break;
+                                        case _ref !== undefined && verb === `GET` && ep === `/:id/${_ref}`:
+                                            controller = `main${cap(name)}Controllers.get${cap(_ref)}Of`;
+                                            break;
                                         case verb === `POST` && ep === `/`:
                                             controller = `main${cap(name)}Controllers.create`;
                                             break;
                                         case verb === `PUT` && ep === `/:id`:
                                             controller = `main${cap(name)}Controllers.update`;
+                                            break;
+                                        case _ref !== undefined && verb === `PUT` && ep === `/:id/${_ref}/add`:
+                                            controller = `main${cap(name)}Controllers.add${cap(_ref)}To`;
+                                            break;
+                                        case _ref !== undefined && verb === `PUT` && ep === `/:id/${_ref}/remove`:
+                                            controller = `main${cap(name)}Controllers.remove${cap(_ref)}From`;
                                             break;
                                         case verb === `DELETE` && ep === `/:id`:
                                             controller = `main${cap(name)}Controllers.delete`;
@@ -424,9 +464,9 @@ export class APIGen {
                                             ep,
                                             controller,
                                             [
-                                                ...(allMiddlewares || []),
-                                                ...(queryMiddlewares || []),
-                                                ...(mutationMiddlewares || []),
+                                                ...allMiddlewares,
+                                                ...queryMiddlewares,
+                                                ...mutationMiddlewares,
                                                 ...(middlewares || [])   
                                             ].join(', ')
                                         )
@@ -437,7 +477,7 @@ export class APIGen {
                                 .filter(([, route]) => route.middlewares && route.middlewares.length > 0)
                                 .map(([, route]) => route.middlewares)
                                 .reduce((all, middlewares) => all.concat(...middlewares), [])
-                        )
+                        ),
                     },
                     TS_applyAPI: {
                         entity, name, generated: TSApplyAPI(cap(name)),

@@ -180,7 +180,7 @@ export class UserUtils {
         return [].reduce<UserPushBody>((sanitizedBody, key) => body[key] !== undefined
             ? {
                 ...sanitizedBody,
-                [key]: Array.isArray(body[key]) ? { $each: body[key] } : body[key]
+                [key]: Array.isArray(body[key]) && body[key].length > 0 ? { $each: body[key] } : body[key]
             }
             : sanitizedBody,
             {} as UserPushBody);
@@ -190,7 +190,7 @@ export class UserUtils {
         return [].reduce<UserPullBody>((sanitizedBody, key) => body[key] !== undefined
             ? {
                 ...sanitizedBody,
-                [key]: Array.isArray(body[key]) ? { $each: body[key] } : body[key]
+                [key]: Array.isArray(body[key]) && body[key].length > 0 ? { $each: body[key] } : body[key]
             }
             : sanitizedBody,
             {} as UserPullBody);
@@ -211,8 +211,11 @@ export class UserUtils {
             $push: sanitizedPush,
             $pull: sanitizedPull,
         };
+        const sanitizedBody = ['$set', '$push', '$pull']
+            .filter(key => Object.keys(body[key] || {}).length > 0)
+            .reduce((obj, key) => ({ ...obj, [key]: body[key] }), {});
         return populateAll(
-            this.User.findByIdAndUpdate(id, body, options, cb),
+            this.User.findByIdAndUpdate(id, sanitizedBody, options, cb),
             populates
         ) as UserDocumentQuery;
     }
@@ -245,8 +248,11 @@ export class UserUtils {
             $push: sanitizedPush,
             $pull: sanitizedPull,
         };
+        const sanitizedBody = ['$set', '$push', '$pull']
+            .filter(key => Object.keys(body[key] || {}).length > 0)
+            .reduce((obj, key) => ({ ...obj, [key]: body[key] }), {});
         return populateAll(
-            this.User.findOneAndUpdate(condition, body, options, cb),
+            this.User.findOneAndUpdate(condition, sanitizedBody, options, cb),
             populates
         ) as UserDocumentQuery;
     }
@@ -279,8 +285,11 @@ export class UserUtils {
             $push: sanitizedPush,
             $pull: sanitizedPull,
         };
+        const sanitizedBody = ['$set', '$push', '$pull']
+            .filter(key => Object.keys(body[key] || {}).length > 0)
+            .reduce((obj, key) => ({ ...obj, [key]: body[key] }), {});
         return populateAll(
-            this.User.updateMany(condition, body, options, cb),
+            this.User.updateMany(condition, sanitizedBody, options, cb),
             populates
         );
     }
@@ -375,6 +384,38 @@ export class UserControllers {
         }
     }
 
+    
+    async getStoreOf(req: Request, res: Response) {
+        const { utils } = mainUserService;
+        const id = req.params.id;
+        try {
+            const relation = await utils.findStoreOf(id);
+            res.json(relation);
+        } catch (error) {
+            res.status(400).json({ error, message: 'Something went wrong.' });
+        }
+    }
+    
+    async addStoreTo(req: Request, res: Response) {
+        const { utils } = mainUserService;
+        const id = req.params.id;
+        const { addId } = req.body;
+        try {
+            res.json(await utils.addStoreTo(id, addId));
+        } catch (error) {
+            res.status(400).json({ error, message: 'Something went wrong.' });
+        }
+    }    
+    async removeStoreFrom(req: Request, res: Response) {
+        const { utils } = mainUserService;
+        const id = req.params.id;
+        const { removeId } = req.body;
+        try {
+            res.json(await utils.removeStoreFrom(id));
+        } catch (error) {
+            res.status(400).json({ error, message: 'Something went wrong.' });
+        }
+    }
 
 
 }
@@ -400,7 +441,8 @@ export class UserRouter {
             .get('/', jwtMiddleware, mainUserControllers.getAll)
             .post('/', mainUserControllers.create)
             .get('/:id', jwtMiddleware, mainUserControllers.getById)
-            .put('/:id', jwtMiddleware, mainUserControllers.update);
+            .put('/:id', jwtMiddleware, mainUserControllers.update)
+            .get('/:id/store', jwtMiddleware, mainUserControllers.getStoreOf);
     }
 
     applyRouter(app: Application) {

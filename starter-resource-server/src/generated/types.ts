@@ -29,6 +29,7 @@ export interface User {
 
 export interface UserCreateBody {
     id?: ID;
+   id?: string;
    username: string;
    password: string;
    store: Store;
@@ -131,6 +132,7 @@ export type UserPopulate = 'store';
 export interface Store {
     id: ID,
    name: string;
+   videos?: Video[];
     createdAt: string;
     updatedAt: string;
 }
@@ -138,6 +140,7 @@ export interface Store {
 
 export interface StoreCreateBody {
     id?: ID;
+   id?: string;
    name: string;
 }
 
@@ -178,6 +181,14 @@ export const StoreSchema = new Schema({
         unique: true,
         select: true,
     },
+    videos: [{
+        type: ObjectId,
+        ref: 'Video',
+        required: false,
+        unique: false,
+        select: true,
+        default: [],
+    }],
 }, { minimize: false, timestamps: true }); 
 
 
@@ -192,9 +203,97 @@ export interface StoreProjection {
     createdAt: 0 | 1;
     updatedAt: 0 | 1;
     name: 0 | 1;
+    videos: 0 | 1;
 }
 
 
-export type StorePopulate = '';
+export type StorePopulate = 'videos';
+
+        
+/********* VIDEO *********/
+
+
+export interface Video {
+    id: ID,
+   json: any;
+   store: Store;
+    createdAt: string;
+    updatedAt: string;
+}
+
+
+export interface VideoCreateBody {
+    id?: ID;
+   id?: string;
+   json: any;
+}
+
+
+export interface VideoChangesBody {
+   json?: any;
+}
+
+
+export interface VideoPushBody {
+
+}
+
+
+export interface VideoPullBody {
+
+}
+
+
+export interface VideoUpdateBody {
+    id: ID;
+    changes?: VideoChangesBody;
+    push?: VideoPushBody;
+    pull?: VideoPullBody;
+}
+
+export interface VideoRawUpdateBody {
+    changes?: VideoChangesBody;
+    push?: VideoPushBody;
+    pull?: VideoPullBody;
+}
+
+
+export const VideoSchema = new Schema({
+    json: {
+        type: Mixed,
+        required: true,
+        unique: false,
+        select: true,
+    },
+    store: {
+        type: ObjectId,
+        ref: 'Store',
+        required: true,
+        unique: false,
+        select: true,
+        default: () => {
+                const { req: { user: { store } } } = context();
+                return store;
+            },
+    },
+}, { minimize: false, timestamps: true }); 
+
+
+export type VideoDocument = Document & Video;
+export type VideoDocumentsQuery = DocumentQuery<VideoDocument[], VideoDocument>;
+export type VideoDocumentQuery = DocumentQuery<VideoDocument, VideoDocument>;
+export const VideoModel = model<VideoDocument>('Video', VideoSchema);
+export type VideoCondition = any;
+
+
+export interface VideoProjection {
+    createdAt: 0 | 1;
+    updatedAt: 0 | 1;
+    json: 0 | 1;
+    store: 0 | 1;
+}
+
+
+export type VideoPopulate = 'store';
 
         

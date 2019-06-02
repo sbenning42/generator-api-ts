@@ -10,6 +10,9 @@ import { prettifyRouter } from '../../common/api-gen/prettier';
 import { mainPassportService } from '../passport/service';
 import { L } from '../../common/logger';
 import { applyStoreAPI } from '../../generated/store/store';
+import { applyVideoAPI } from '../../generated/video/video';
+import { mainVideoControllers } from '../video/controllers';
+import { mainVideoMiddlewares } from '../video/middlewares';
 
 const {
 } = environment;
@@ -26,6 +29,9 @@ export class UseService extends Singleton {
     async use(app: Application) {
 
         const jwtMiddleware = mainPassportService.jwt();
+        const uploadVideoController = mainVideoControllers.uploadVideo();
+        const addVideoToStoreMiddleware = mainVideoMiddlewares.addVideoToStore();
+        const deleteVideoFromStoreMiddleware = mainVideoMiddlewares.deleteVideoFromStore();
 
         await mainMongoService.init();
         L.info(`DB: ${mainMongoService.url} connected.`);
@@ -33,8 +39,20 @@ export class UseService extends Singleton {
         app.use(initContextMiddleware, passport.initialize());
         mainPassportRouter.applyRouter(app, '/auth');
         
-        applyUserAPI(app, { jwtMiddleware }, prettifyRouter, 'users', console);
-        applyStoreAPI(app, { jwtMiddleware }, prettifyRouter, 'stores', console);
+        applyUserAPI(app, {
+            jwtMiddleware,
+        }, prettifyRouter, 'users', console);
+        
+        applyStoreAPI(app, {
+            jwtMiddleware,
+        }, prettifyRouter, 'stores', console);
+        
+        applyVideoAPI(app, {
+            jwtMiddleware,
+            addVideoToStoreMiddleware,
+            deleteVideoFromStoreMiddleware,
+            uploadVideoController,
+        }, prettifyRouter, 'videos', console);
 
     }
 }
