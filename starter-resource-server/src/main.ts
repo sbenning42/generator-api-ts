@@ -54,7 +54,7 @@ async function main() {
    * Start `express` server
    */
   app.listen(port, () => {
-    L.info(`Server up and running at http://localhost:${port}`);
+    L.info(`Server up and running. Swagger at http://localhost:${port}/${swagger}`);
   });
 
 }
