@@ -48,10 +48,15 @@ import {
     _APISchemaEntityRoute
 } from './types';
 import { prettifySchema } from './prettier';
+import { YMLDefinitionTypeTpl, YMLDefinitionPropRelArrayTpl, YMLDefinitionPropObjArrayTpl, YMLDefinitionPropPrimArrayTpl, YMLDefinitionPropRelTpl, YMLDefinitionPropObjTpl, YMLDefinitionPropPrimTpl, YMLDefinitionTpl, YMLPathsEntityTpl, YMLGetEndpoints, YMLPathsEntityVerbTpl, YMLPathsTpl, epExpress2Swagger, YMLPathsEntityVerbVarsTpl, YMLPathsEntityBodyVarsTpl } from './templates/YML';
+import { environment } from '../../environment';
 
 
 /***************************************** Core **************************************************/
 
+const {
+    port
+} = environment;
 
 export interface APIEntityFieldGen {
     generated: string; // this is the generated string to write in file
@@ -99,6 +104,10 @@ export interface APIEntityGen {
     GQL_typescript: {
         GQL_resolvers: APIEntityFieldGen;
         GQL_utils: APIEntityFieldGen;
+    };
+    YML_schema: {
+        YML_definitionType: APIEntityFieldGen;
+        YML_pathsEntity: APIEntityFieldGen;
     };
 }
 
@@ -154,6 +163,196 @@ export class APIGen {
         };
         const entities = Object.entries(schema.entities)
             .map(([name, entity]) => ({
+                YML_schema: {
+                    YML_definitionType: {
+                        entity, name,
+                        generated: `${
+                            YMLDefinitionTypeTpl(
+                                cap(name),
+                                Object.entries(entity.properties)
+                                    .map(([n, e]) => [n, Array.isArray(e) ? e[0] : e, Array.isArray(e)] as [string, _APISchemaEntityPropertyTyped, boolean])
+                                    .map(([n, e, ia]) => ia
+                                        ? (
+                                            !!e.ref
+                                                ? YMLDefinitionPropRelArrayTpl(n, cap(e.ref))
+                                                : (
+                                                    e.type === Mixed
+                                                        ? YMLDefinitionPropObjArrayTpl(n)
+                                                        : YMLDefinitionPropPrimArrayTpl(n, stringifyType(e.type, false, true))
+                                                )
+                                        )
+                                        : (
+                                            !!e.ref
+                                                ? YMLDefinitionPropRelTpl(n, cap(e.ref))
+                                                : (
+                                                    e.type === Mixed
+                                                        ? YMLDefinitionPropObjTpl(n)
+                                                        : YMLDefinitionPropPrimTpl(n, stringifyType(e.type, false, true))
+                                                )
+                                        )
+                                    ).join('')
+                            )
+                        }\n${
+                            YMLDefinitionTypeTpl(
+                                `${cap(name)}CreateBody`,
+                                Object.entries(entity.properties)
+                                    .filter(([propName, property]) => Array.isArray(property)
+                                        ? !property[0].skipCreate
+                                        : !property.skipCreate
+                                    )
+                                    .map(([n, e]) => [n, Array.isArray(e) ? e[0] : e, Array.isArray(e)] as [string, _APISchemaEntityPropertyTyped, boolean])
+                                    .map(([n, e, ia]) => ia
+                                        ? (
+                                            !!e.ref
+                                                ? YMLDefinitionPropRelArrayTpl(n, cap(e.ref))
+                                                : (
+                                                    e.type === Mixed
+                                                        ? YMLDefinitionPropObjArrayTpl(n)
+                                                        : YMLDefinitionPropPrimArrayTpl(n, stringifyType(e.type, false, true))
+                                                )
+                                        )
+                                        : (
+                                            !!e.ref
+                                                ? YMLDefinitionPropRelTpl(n, cap(e.ref))
+                                                : (
+                                                    e.type === Mixed
+                                                        ? YMLDefinitionPropObjTpl(n)
+                                                        : YMLDefinitionPropPrimTpl(n, stringifyType(e.type, false, true))
+                                                )
+                                        )
+                                    ).join('')
+                            )
+                        }\n${
+
+                            YMLDefinitionTypeTpl(
+                                `${cap(name)}ChangesBody`,
+                                Object.entries(entity.properties)
+                                    .filter(([propName, property]) => Array.isArray(property)
+                                        ? !property[0].skipChanges
+                                        : !property.skipChanges
+                                    )
+                                    .map(([n, e]) => [n, Array.isArray(e) ? e[0] : e, Array.isArray(e)] as [string, _APISchemaEntityPropertyTyped, boolean])
+                                    .map(([n, e, ia]) => ia
+                                        ? (
+                                            !!e.ref
+                                                ? YMLDefinitionPropRelArrayTpl(n, cap(e.ref))
+                                                : (
+                                                    e.type === Mixed
+                                                        ? YMLDefinitionPropObjArrayTpl(n)
+                                                        : YMLDefinitionPropPrimArrayTpl(n, stringifyType(e.type, false, true))
+                                                )
+                                        )
+                                        : (
+                                            !!e.ref
+                                                ? YMLDefinitionPropRelTpl(n, cap(e.ref))
+                                                : (
+                                                    e.type === Mixed
+                                                        ? YMLDefinitionPropObjTpl(n)
+                                                        : YMLDefinitionPropPrimTpl(n, stringifyType(e.type, false, true))
+                                                )
+                                        )
+                                    ).join('')
+                            )
+                        
+                        }\n${
+
+                            YMLDefinitionTypeTpl(
+                                `${cap(name)}PushBody`,
+                                Object.entries(entity.properties)
+                                    .filter(([propName, property]) => Array.isArray(property) && !property[0].skipChanges)
+                                    .map(([n, e]) => [n, Array.isArray(e) ? e[0] : e, Array.isArray(e)] as [string, _APISchemaEntityPropertyTyped, boolean])
+                                    .map(([n, e, ia]) => ia
+                                        ? (
+                                            !!e.ref
+                                                ? YMLDefinitionPropRelArrayTpl(n, cap(e.ref))
+                                                : (
+                                                    e.type === Mixed
+                                                        ? YMLDefinitionPropObjArrayTpl(n)
+                                                        : YMLDefinitionPropPrimArrayTpl(n, stringifyType(e.type, false, true))
+                                                )
+                                        )
+                                        : (
+                                            !!e.ref
+                                                ? YMLDefinitionPropRelTpl(n, cap(e.ref))
+                                                : (
+                                                    e.type === Mixed
+                                                        ? YMLDefinitionPropObjTpl(n)
+                                                        : YMLDefinitionPropPrimTpl(n, stringifyType(e.type, false, true))
+                                                )
+                                        )
+                                    ).join('')
+                            )
+                        
+                        }\n${
+
+                            YMLDefinitionTypeTpl(
+                                `${cap(name)}PullBody`,
+                                Object.entries(entity.properties)
+                                    .filter(([propName, property]) => Array.isArray(property) && !property[0].skipChanges)
+                                    .map(([n, e]) => [n, Array.isArray(e) ? e[0] : e, Array.isArray(e)] as [string, _APISchemaEntityPropertyTyped, boolean])
+                                    .map(([n, e, ia]) => ia
+                                        ? (
+                                            !!e.ref
+                                                ? YMLDefinitionPropRelArrayTpl(n, cap(e.ref))
+                                                : (
+                                                    e.type === Mixed
+                                                        ? YMLDefinitionPropObjArrayTpl(n)
+                                                        : YMLDefinitionPropPrimArrayTpl(n, stringifyType(e.type, false, true))
+                                                )
+                                        )
+                                        : (
+                                            !!e.ref
+                                                ? YMLDefinitionPropRelTpl(n, cap(e.ref))
+                                                : (
+                                                    e.type === Mixed
+                                                        ? YMLDefinitionPropObjTpl(n)
+                                                        : YMLDefinitionPropPrimTpl(n, stringifyType(e.type, false, true))
+                                                )
+                                        )
+                                    ).join('')
+                            )
+                        
+                        }\n${
+
+                            YMLDefinitionTypeTpl(
+                                `${cap(name)}UpdateBody`,
+                                [
+                                    YMLDefinitionPropPrimTpl('id', 'string'),
+                                    YMLDefinitionPropRelTpl('changes', `${cap(name)}ChangesBody`),
+                                    YMLDefinitionPropRelTpl('push', `${cap(name)}PushBody`),
+                                    YMLDefinitionPropRelTpl('pull', `${cap(name)}PullBody`),
+                                ].join('')
+                            )
+                        
+                        }`
+                    },
+                    YML_pathsEntity: {
+                        entity, name, generated: YMLGetEndpoints({
+                            ...Object.entries(entity.routes)
+                                .filter(([ep, route]) => {
+                                    if (
+                                        route.skip
+                                        || entity.routes.all.skip
+                                        ||  (['GET'].some(v => ep.startsWith(v)) && entity.routes.query.skip)
+                                        ||  (['POST', 'PUT', 'DELETE'].some(v => ep.startsWith(v)) && entity.routes.mutation.skip)
+                                    ) {
+                                        return false;
+                                    }
+                                    return true;
+                                })
+                                .reduce((all, [k, v]) => ({ ...all, [k]: v }), {})
+                        })
+                            .map(({ ep, entries }) => YMLPathsEntityTpl(
+                                `/${name}s${epExpress2Swagger(ep, { id: 'id' })}`,
+                                Object.entries(entries).map(([verb, { key, ep: _ep, route }]: any) => YMLPathsEntityVerbTpl(
+                                    verb.toLowerCase(),
+                                    getYMLParametersFor(name, entity, entity.properties[route._ref], verb, key, _ep, route, entries, ep),
+                                    getYMLResponseFor(name, entity, entity.properties[route._ref], verb, key, _ep, route, entries, ep),
+                                    'sample description'
+                                )).join('')
+                            )).join('')
+                    }
+                },
                 TS_types: {
                     TS_typeImports: {
                         entity, name,
@@ -522,9 +721,47 @@ export class APIGen {
             TS_types.TS_mongooseModelPopulate.generated
         }
         `);
-        if (entities.length < 1) {
-            return console.log(`Nothing to generate. You might want to add \`entities\` in your \`APISchema\`.`);
+        const definitions = entities.map(({ YML_schema }) => `${
+            YML_schema.YML_definitionType.generated
+        }`);
+        const paths = entities.map(({ YML_schema }) => `${
+            YML_schema.YML_pathsEntity.generated
+        }`);
+        if (definitions.length < 1) {
         }
+        if (paths.length < 1) {
+        }
+        fs.writeFileSync(
+            `${outDir}/swagger.yml`,
+            `
+swagger: "2.0"
+info:
+    version: "0.0.1"
+    title: "Swagger API"
+host: localhost:${port}
+basePath: "/"
+schemes:
+    - http
+    - https
+consumes:
+    - application/json
+produces:
+    - application/json
+        \n${
+                YMLDefinitionTpl([
+                    ...definitions,
+                    ...[
+                        YMLDefinitionTypeTpl('AddIdBody', YMLDefinitionPropPrimTpl('addId', 'string')),
+                        YMLDefinitionTypeTpl('AddIdsBody', YMLDefinitionPropPrimArrayTpl('addIds', 'string')),
+                        YMLDefinitionTypeTpl('RemoveIdBody', YMLDefinitionPropPrimTpl('addId', 'string')),
+                        YMLDefinitionTypeTpl('RemoveIdsBody', YMLDefinitionPropPrimArrayTpl('addIds', 'string')),
+                    ]
+                ].join('\n'))
+            }\n${
+                YMLPathsTpl(paths.join('\n'))
+            }`,
+            { flag: 'w', encoding: 'utf8', mode: 0o644 }
+        );
         fs.writeFileSync(
             `${outDir}/types.ts`,
             entities[0].TS_types.TS_typeImports.generated + types.join('\n'),
@@ -561,4 +798,58 @@ export class APIGen {
     backup(outDir: string, backupOutDir: string) {
 
     }
+}
+
+
+function getYMLParametersFor(
+    name: string,
+    entity: any,
+    ref: any,
+    verb: string,
+    key: string,
+    _ep: string,
+    route: any,
+    entries: any,
+    ep: string
+) {
+    const cap = (s: string) => `${s.slice(0, 1).toUpperCase()}${s.slice(1)}`; // capitalize
+    if (route.parameters) {
+        return route.parameters;
+    }
+    switch (true) {
+        case verb === 'GET' && ep === '/':
+            return ``;
+        case verb === 'POST' && ep === '/':
+            return `${YMLPathsEntityBodyVarsTpl(`${cap(name)}CreateBody`, '')}`;
+        case verb === 'GET' && ep === '/:id':
+            return `${YMLPathsEntityVerbVarsTpl('id', '')}`;
+        case verb === 'PUT' && ep === '/:id':
+            return `${YMLPathsEntityVerbVarsTpl('id', '')}\n${YMLPathsEntityBodyVarsTpl(`${cap(name)}UpdateBody`, '')}`;
+        case verb === 'DELETE' && ep === '/:id':
+            return `${YMLPathsEntityVerbVarsTpl('id', '')}`;
+        case verb === 'GET' && ep === `/:id/${route._ref}`:
+            return `${YMLPathsEntityVerbVarsTpl('id', '')}`;
+        case verb === 'PUT' && ep === `/:id/${route._ref}/add`:
+            return `${YMLPathsEntityVerbVarsTpl('id', '')}\n${YMLPathsEntityBodyVarsTpl(Array.isArray(entity.properties[route._ref]) ? `AddIdsBody` : `AddIdBody`, '')}`;
+        case verb === 'PUT' && ep === `/:id/${route._ref}/remove`:
+            return `${YMLPathsEntityVerbVarsTpl('id', '')}\n${YMLPathsEntityBodyVarsTpl(Array.isArray(entity.properties[route._ref]) ? `RemoveIdsBody` : `RemoveIdBody`, '')}`;
+        default:
+            break ;
+    }
+    return ``;
+}
+
+function getYMLResponseFor(
+    name: string,
+    entity: any,
+    ref: any,
+    verb: string,
+    key: string,
+    _ep: string,
+    route: any,
+    entries: any,
+    ep: string
+) {
+    const cap = (s: string) => `${s.slice(0, 1).toUpperCase()}${s.slice(1)}`; // capitalize
+    return '';
 }

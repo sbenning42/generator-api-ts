@@ -15,8 +15,10 @@ export const video: APISchemaEntity = {
             required: true,
             skipCreate: true,
             skipChanges: true,
+            /*
             skipAdd: true,
             skipRemove: true,
+            */
             default: () => context().req.user.store
         },
     },

@@ -4,6 +4,7 @@
   "main": "main.ts",
   "license": "MIT",
   "scripts": {
+    "swagger": "ts-node-dev --transpileOnly ./swagger.ts",
     "gen": "ts-node-dev --transpileOnly ./src/gen.ts",
     "tsc": "tsc",
     "dev": "ts-node-dev --transpileOnly --respawn ./src/main.ts",
@@ -11,6 +12,7 @@
     "sync": "npm run gen && npm run dev"
   },
   "devDependencies": {
+    "@types/bluebird": "^3.5.27",
     "@types/body-parser": "^1.17.0",
     "@types/cors": "^2.8.5",
     "@types/dotenv": "^6.1.1",
@@ -23,17 +25,22 @@
     "@types/passport-jwt": "^3.0.1",
     "@types/passport-local": "^1.0.33",
     "@types/pino": "^5.8.7",
+    "@types/request": "^2.48.1",
+    "@types/swagger-ui-express": "^3.0.0",
     "@types/uuid": "^3.4.4",
+    "@types/yamljs": "^0.2.30",
     "ts-node-dev": "^1.0.0-pre.39",
     "typescript": "^3.4.5"
   },
   "dependencies": {
+    "bluebird": "^3.5.5",
     "body-parser": "^1.19.0",
     "connect-multiparty": "^2.2.0",
     "cors": "^2.8.5",
     "dotenv": "^8.0.0",
     "express": "^4.17.0",
     "helmet": "^3.18.0",
+    "http": "0.0.0",
     "jsonwebtoken": "^8.5.1",
     "mongoose": "^5.5.11",
     "morgan": "^1.9.1",
@@ -41,6 +48,9 @@
     "passport-jwt": "^4.0.0",
     "passport-local": "^1.0.0",
     "pino": "^5.12.6",
-    "uuid": "^3.3.2"
+    "request": "^2.88.0",
+    "swagger-ui-express": "^4.0.5",
+    "uuid": "^3.3.2",
+    "yamljs": "^0.3.0"
   }
 }

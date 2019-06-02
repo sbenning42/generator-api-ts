@@ -449,6 +449,8 @@ export class VideoRouter {
             .put('/:id', jwtMiddleware, mainVideoControllers.update)
             .delete('/:id', jwtMiddleware, deleteVideoFromStoreMiddleware, mainVideoControllers.delete)
             .get('/:id/store', mainVideoControllers.getStoreOf)
+            .put('/:id/store/add', jwtMiddleware, mainVideoControllers.addStoreTo)
+            .put('/:id/store/remove', jwtMiddleware, mainVideoControllers.removeStoreFrom)
             .post('/utils/upload', jwtMiddleware, multipartMiddleware, uploadVideoController, (_: Request, res: Response) => res.status(504).json({ message: 'Not implementd.' }));
     }
 
