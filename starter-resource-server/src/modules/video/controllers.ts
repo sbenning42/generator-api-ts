@@ -12,7 +12,11 @@ export class VideoControllers extends Singleton {
             L.info(`Got file: `, req['file']);
             L.info(`Got files: `, req['files']);
             L.info(`VideoControllers@uploadVideo: Not implemented yet.`);
-            res.status(504).json({ message: `Not implemented yet.` });
+            const file = req['files'] && req['files'].file;
+            if (!file) {
+                return res.status(400).json({ message: `Something went wrong.` });
+            }
+            res.json({ name: req['files'].file.path, json: req['files'].file });
         };
     }
 }

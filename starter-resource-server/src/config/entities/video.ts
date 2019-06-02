@@ -3,10 +3,13 @@ import { context } from "../context";
 
 export const video: APISchemaEntity = {
     properties: {
-        json: {
-            type: Object,
+        name: {
+            type: String,
             required: true,
+            unique: true,
+            skipChanges: true,
         },
+        json: Object,
         store: {
             type: 'Store',
             required: true,
@@ -14,14 +17,7 @@ export const video: APISchemaEntity = {
             skipChanges: true,
             skipAdd: true,
             skipRemove: true,
-            default: () => {
-                const {
-                    req: {
-                        user: { store }
-                    }
-                } = context();
-                return store;
-            }
+            default: () => context().req.user.store
         },
     },
     routes: {

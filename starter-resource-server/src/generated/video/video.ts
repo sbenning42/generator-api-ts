@@ -125,9 +125,10 @@ export class VideoUtils {
 
     sanitizeCreateBody(body: VideoCreateBody) {
         if (typeof(body.id) === 'string') {
-            body.id = new ObjectID(body.id);
+            delete body.id;
+            body._id = new ObjectID(body.id);
         }
-        return ['json'].reduce<VideoCreateBody>((sanitizedBody, key) => body[key] !== undefined
+        return ['_id', 'name', 'json'].reduce<VideoCreateBody>((sanitizedBody, key) => body[key] !== undefined
             ? {
                 ...sanitizedBody,
                 [key]: body[key]

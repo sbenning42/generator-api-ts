@@ -125,9 +125,10 @@ export class StoreUtils {
 
     sanitizeCreateBody(body: StoreCreateBody) {
         if (typeof(body.id) === 'string') {
-            body.id = new ObjectID(body.id);
+            delete body.id;
+            body._id = new ObjectID(body.id);
         }
-        return ['name'].reduce<StoreCreateBody>((sanitizedBody, key) => body[key] !== undefined
+        return ['_id', 'name'].reduce<StoreCreateBody>((sanitizedBody, key) => body[key] !== undefined
             ? {
                 ...sanitizedBody,
                 [key]: body[key]

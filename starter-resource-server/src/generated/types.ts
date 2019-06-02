@@ -16,7 +16,8 @@ export type ID = string | ObjectID;
 
 
 export interface User {
-    id: ID,
+    id?: ID,
+    _id?: ID,
    username: string;
    password: string;
    roles: string[];
@@ -28,8 +29,8 @@ export interface User {
 
 
 export interface UserCreateBody {
-    id?: ID;
-   id?: string;
+    id?: ID,
+    _id?: ID,
    username: string;
    password: string;
    store: Store;
@@ -130,7 +131,8 @@ export type UserPopulate = 'store';
 
 
 export interface Store {
-    id: ID,
+    id?: ID,
+    _id?: ID,
    name: string;
    videos?: Video[];
     createdAt: string;
@@ -139,8 +141,8 @@ export interface Store {
 
 
 export interface StoreCreateBody {
-    id?: ID;
-   id?: string;
+    id?: ID,
+    _id?: ID,
    name: string;
 }
 
@@ -214,8 +216,10 @@ export type StorePopulate = 'videos';
 
 
 export interface Video {
-    id: ID,
-   json: any;
+    id?: ID,
+    _id?: ID,
+   name: string;
+   json?: any;
    store: Store;
     createdAt: string;
     updatedAt: string;
@@ -223,9 +227,10 @@ export interface Video {
 
 
 export interface VideoCreateBody {
-    id?: ID;
-   id?: string;
-   json: any;
+    id?: ID,
+    _id?: ID,
+   name: string;
+   json?: any;
 }
 
 
@@ -259,9 +264,15 @@ export interface VideoRawUpdateBody {
 
 
 export const VideoSchema = new Schema({
+    name: {
+        type: String,
+        required: true,
+        unique: true,
+        select: true,
+    },
     json: {
         type: Mixed,
-        required: true,
+        required: false,
         unique: false,
         select: true,
     },
@@ -271,10 +282,7 @@ export const VideoSchema = new Schema({
         required: true,
         unique: false,
         select: true,
-        default: () => {
-                const { req: { user: { store } } } = context();
-                return store;
-            },
+        default: () => context().req.user.store,
     },
 }, { minimize: false, timestamps: true }); 
 
@@ -289,6 +297,7 @@ export type VideoCondition = any;
 export interface VideoProjection {
     createdAt: 0 | 1;
     updatedAt: 0 | 1;
+    name: 0 | 1;
     json: 0 | 1;
     store: 0 | 1;
 }

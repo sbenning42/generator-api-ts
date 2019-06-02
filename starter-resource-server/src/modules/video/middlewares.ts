@@ -27,7 +27,7 @@ export class VideoMiddlewares extends Singleton {
     addVideoToStore() {
         return async (req: Request, res: Response, next: NextFunction) => {
             const videoId = new ObjectID();
-            req.body.id = videoId; // important to not let Mongoose create _id for us
+            req.body._id = videoId; // important to not let Mongoose create _id for us
             const storeId = req.user.store;
             try {
                 await mainVideoService.addVideosToStore(storeId, videoId);

@@ -26,7 +26,8 @@ $1
 
 export const TSTypeTpl = (name: string, props: string) => rep(`
 export interface $0 {
-    id: ID,
+    id?: ID,
+    _id?: ID,
 $1
     createdAt: string;
     updatedAt: string;
@@ -37,7 +38,8 @@ export const TSTypePropTpl = (name: string, type: string, isArray: boolean = fal
 
 export const TSCreateBodyTpl = (name: string, props: string) => rep(`
 export interface $0CreateBody {
-    id?: ID;
+    id?: ID,
+    _id?: ID,
 $1
 }
 `, [name, props]);
@@ -322,9 +324,10 @@ export class $0Utils {
 
     sanitizeCreateBody(body: $0CreateBody) {
         if (typeof(body.id) === 'string') {
-            body.id = new ObjectID(body.id);
+            delete body.id;
+            body._id = new ObjectID(body.id);
         }
-        return [$1].reduce<$0CreateBody>((sanitizedBody, key) => body[key] !== undefined
+        return ['_id', $1].reduce<$0CreateBody>((sanitizedBody, key) => body[key] !== undefined
             ? {
                 ...sanitizedBody,
                 [key]: body[key]

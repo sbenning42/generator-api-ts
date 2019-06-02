@@ -125,9 +125,10 @@ export class UserUtils {
 
     sanitizeCreateBody(body: UserCreateBody) {
         if (typeof(body.id) === 'string') {
-            body.id = new ObjectID(body.id);
+            delete body.id;
+            body._id = new ObjectID(body.id);
         }
-        return ['username', 'password', 'store', 'json'].reduce<UserCreateBody>((sanitizedBody, key) => body[key] !== undefined
+        return ['_id', 'username', 'password', 'store', 'json'].reduce<UserCreateBody>((sanitizedBody, key) => body[key] !== undefined
             ? {
                 ...sanitizedBody,
                 [key]: body[key]

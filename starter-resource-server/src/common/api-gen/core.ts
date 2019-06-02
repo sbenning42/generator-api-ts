@@ -177,10 +177,7 @@ export class APIGen {
                         entity, name,
                         generated: TSCreateBodyTpl(
                             cap(name),
-                            Object.entries({
-                                id: { type: String, skipCreate: false, required: false } as any as _APISchemaEntityPropertyTyped,
-                                ...entity.properties
-                            })
+                            Object.entries(entity.properties)
                                 .filter(([propName, property]) => Array.isArray(property)
                                     ? !property[0].skipCreate
                                     : !property.skipCreate
