@@ -19,8 +19,6 @@ const {
   swagger
 } = environment;
 
-const swaggerDocument = YAML.load(swagger);
-
 /**
  * Use async main function to get access to `await` keyword
  */
@@ -39,7 +37,13 @@ async function main() {
     morgan('combined'), // use some HTTP logging support
   );
 
-  app.use('/docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
+  let swaggerDocument: any;
+  try {
+    swaggerDocument = YAML.load(swagger);
+    app.use('/docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
+  } catch (error) {
+    L.info('Cannot apply swagger.')
+  }
 
 
   /**

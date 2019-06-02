@@ -128,7 +128,7 @@ export class UserUtils {
             delete body.id;
             body._id = new ObjectID(body.id);
         }
-        return ['_id', 'username', 'password', 'store', 'json'].reduce<UserCreateBody>((sanitizedBody, key) => body[key] !== undefined
+        return ['_id', 'username', 'password', 'json'].reduce<UserCreateBody>((sanitizedBody, key) => body[key] !== undefined
             ? {
                 ...sanitizedBody,
                 [key]: body[key]
@@ -301,21 +301,6 @@ export class UserUtils {
     ) {
         return this.User.remove(condition, cb);
     }
-    
-    async findStoreOf(id: ID) {
-        const modelInstance = await this.findById(id, undefined, ['store']);
-        return modelInstance.store;
-    }
-
-
-    addStoreTo(id: ID, addId: ID) {
-        return this.updateById({ id, changes: { store: addId } } as any, undefined, undefined, undefined, true);
-    }
-
-    removeStoreFrom(id: ID) {
-        return this.updateById({ id, changes: { store: null } } as any, undefined, undefined, undefined, true);
-    }
-
 
 }
 
@@ -385,38 +370,6 @@ export class UserControllers {
         }
     }
 
-    
-    async getStoreOf(req: Request, res: Response) {
-        const { utils } = mainUserService;
-        const id = req.params.id;
-        try {
-            const relation = await utils.findStoreOf(id);
-            res.json(relation);
-        } catch (error) {
-            res.status(400).json({ error, message: 'Something went wrong.' });
-        }
-    }
-    
-    async addStoreTo(req: Request, res: Response) {
-        const { utils } = mainUserService;
-        const id = req.params.id;
-        const { addId } = req.body;
-        try {
-            res.json(await utils.addStoreTo(id, addId));
-        } catch (error) {
-            res.status(400).json({ error, message: 'Something went wrong.' });
-        }
-    }    
-    async removeStoreFrom(req: Request, res: Response) {
-        const { utils } = mainUserService;
-        const id = req.params.id;
-        const { removeId } = req.body;
-        try {
-            res.json(await utils.removeStoreFrom(id));
-        } catch (error) {
-            res.status(400).json({ error, message: 'Something went wrong.' });
-        }
-    }
 
 
 }
@@ -442,8 +395,7 @@ export class UserRouter {
             .get('/', jwtMiddleware, mainUserControllers.getAll)
             .post('/', mainUserControllers.create)
             .get('/:id', jwtMiddleware, mainUserControllers.getById)
-            .put('/:id', jwtMiddleware, mainUserControllers.update)
-            .get('/:id/store', jwtMiddleware, mainUserControllers.getStoreOf);
+            .put('/:id', jwtMiddleware, mainUserControllers.update);
     }
 
     applyRouter(app: Application) {

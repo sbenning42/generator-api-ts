@@ -49,9 +49,7 @@ export class PassportService<User extends { _id: string | ObjectID }> extends Si
                 const user = await User
                     .findOne({ [fields[0]]: username })
                     .select(`+${fields[0]} +${fields[1]}`);
-                console.log(`Got user: `, user);
                 if (!user || (user.get(`${fields[1]}`) !== password)) {
-                    console.log('HERE !!!');
                     return done(null, false);
                 } else {
                     return done(null, user);
