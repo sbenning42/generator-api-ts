@@ -37,8 +37,6 @@ export class PassportService<User extends { _id: string | ObjectID }> extends Si
             secret = uuid(),
             fields: [username = 'username', password = 'password'] = [],
         } = config;
-        console.log('USERNAME: ', username);
-        console.log('PASSWORD: ', password);
         this.config = { User, secret, fields: [username, password] };
         this.setupLocalStrategy();
         this.setupJWTStrategy();

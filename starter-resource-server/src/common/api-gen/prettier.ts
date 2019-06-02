@@ -107,7 +107,9 @@ export function prettifySchema(schema: _APISchema, L: { log: (...args: any[]) =>
                     return pretty(e, [bold, red]);
                 case i === 0:
                     return pretty(e + 's', [bold, green]);
-                case i === 2:
+                case i === 1:
+                    return pretty(e, [bold, yellow]);
+                case i === 2 && eps[1] === ':id':
                     return pretty(e, [green]);
             }
             return e;
@@ -306,7 +308,9 @@ export function prettifyRouter(name: string, router: Router, L: { log: (...args:
                     return pretty(e, [bold, red]);
                 case i === 0:
                     return pretty(e, [bold, green]);
-                case i === 2:
+                case i === 1:
+                    return pretty(e, [bold, yellow]);
+                case i === 2 && eps[1] === ':id':
                     return pretty(e, [green]);
             }
             return e;

@@ -28,7 +28,6 @@ export class VideoMiddlewares extends Singleton {
             const videoId = req.params.id;;
             const storeId = req.user.store;
             try {
-                console.log('will remove from ', storeId, videoId);
                 await mainVideoService.removeVideosFromStore(storeId, videoId);
                 next();
             } catch (error) {
