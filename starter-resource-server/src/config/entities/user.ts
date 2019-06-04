@@ -23,27 +23,23 @@ export const user: APISchemaEntity = {
             type: Object,
             default: {}
         },
+        todos: [{
+            type: 'Todo',
+            skipCreate: true,
+            skipChanges: true,
+            skipAdd: true,
+            skipRemove: true,
+        }]
     },
     routes: {
         all: {
-            middlewares: [
-                'jwt'
-            ]
+            middlewares: ['jwt']
+        },
+        mutation: {
+            middlewares: ['self'],
         },
         'POST /': {
-            excludeMiddlewares: [
-                'jwt'
-            ]
-        },
-        'PUT /:id': {
-            middlewares: [
-                'self'
-            ]
-        },
-        /*
-        'DELETE /:id': {
-            skip: true,
+            excludeMiddlewares: ['jwt', 'self']
         }
-        */
     }
 };

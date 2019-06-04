@@ -727,7 +727,7 @@ export class $0Router {
         app.use('/$2s', this.router);
     }
 }
-`, [name, routes.join(''), endpoint, middlewares.join(',\n            ')]);
+`, [name, routes.join(''), endpoint, Array.from(new Set(middlewares)).join(',\n            ')]);
 
 export const TSRouterRouteTpl = (verb: string, endpoint: string, controller: string) => rep(`
             .$0('$1', $2)`, [verb, endpoint, controller]);

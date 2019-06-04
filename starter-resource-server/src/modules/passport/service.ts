@@ -136,7 +136,7 @@ updateMany
 
     owner(
         Schema: Schema<Document>,
-        loc?: { key: string, on: any, name: string },
+        loc?: { key: string, on: any, name: string, field?: string },
         fors: ('deleteMany'
             |'find'
             |'deleteOne'
@@ -169,16 +169,17 @@ updateMany
         return async (req: Request, res: Response, _next: NextFunction) => {
             const { user: { id } } = req;
             const original = loc.on[loc.key];
+            const { field = 'owner' } = loc;
             fors.forEach(_for => {
                 Schema = Schema.pre(_for, function(next) {
                     if (_for === 'validate' || _for === 'save') {
-                        this['owner'] = id;
+                        this[field] = id;
                     } else if (_for === 'remove') {
-                        if (!this['id'] === id) {
+                        if (!this[field] === id) {
                             throw new Error('Unauthorized');
                         }
                     } else {
-                        this['where']({ owner: id });
+                        this['where']({ [field]: id });
                     }
                     next();
                 });

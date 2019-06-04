@@ -34,6 +34,10 @@ definitions:
                     type: string
             json:
                 type: object
+            todos:
+                type: array
+                items:
+                    $1
     UserCreateBody:
         type: object
         properties:
@@ -67,6 +71,66 @@ definitions:
                 $ref: '#/definitions/UserPushBody'
             pull:
                 $ref: '#/definitions/UserPullBody'
+    Todo:
+        type: object
+        properties:
+            title:
+                type: string
+            done:
+                type: boolean
+            tags:
+                type: array
+                items:
+                    type: string
+            owner:
+                type: string
+    TodoCreateBody:
+        type: object
+        properties:
+            title:
+                type: string
+            done:
+                type: boolean
+            tags:
+                type: array
+                items:
+                    type: string
+    TodoChangesBody:
+        type: object
+        properties:
+            title:
+                type: string
+            done:
+                type: boolean
+            tags:
+                type: array
+                items:
+                    type: string
+    TodoPushBody:
+        type: object
+        properties:
+            tags:
+                type: array
+                items:
+                    type: string
+    TodoPullBody:
+        type: object
+        properties:
+            tags:
+                type: array
+                items:
+                    type: string
+    TodoUpdateBody:
+        type: object
+        properties:
+            id:
+                type: string
+            changes:
+                $ref: '#/definitions/TodoChangesBody'
+            push:
+                $ref: '#/definitions/TodoPushBody'
+            pull:
+                $ref: '#/definitions/TodoPullBody'
     AddIdBody:
         type: object
         properties:
@@ -181,4 +245,126 @@ paths:
                     schema:
                 schema:
                   $ref: '#/definitions/User'
+    /users/{id}/todos:
+        get:
+            security:
+              - bearerAuth: []
+            tags: ['User']
+            description: "sample description"
+            parameters:
+                - name: id
+                  in: path
+                  required: true
+                  description: "Not provided"
+                  type: string
+            responses:
+                '200':
+                    description: "not provided."
+                    schema:
+                schema:
+                  $ref: '#/definitions/User'
+
+    /todos:
+        get:
+            tags: ['Todo']
+            description: "sample description"
+            responses:
+                '200':
+                    description: "not provided."
+                    schema:
+                schema:
+                  type: array
+                  items:
+                    $ref: '#/definitions/Todo'
+        post:
+            security:
+              - bearerAuth: []
+            tags: ['Todo']
+            description: "sample description"
+            parameters:
+                - name: body
+                  description: "Not provided"
+                  in: body
+                  schema:
+                    $ref: '#/definitions/TodoCreateBody'
+            responses:
+                '200':
+                    description: "not provided."
+                    schema:
+                schema:
+                  $ref: '#/definitions/Todo'
+    /todos/{id}:
+        get:
+            tags: ['Todo']
+            description: "sample description"
+            parameters:
+                - name: id
+                  in: path
+                  required: true
+                  description: "Not provided"
+                  type: string
+            responses:
+                '200':
+                    description: "not provided."
+                    schema:
+                schema:
+                  $ref: '#/definitions/Todo'
+        put:
+            security:
+              - bearerAuth: []
+            tags: ['Todo']
+            description: "sample description"
+            parameters:
+                - name: id
+                  in: path
+                  required: true
+                  description: "Not provided"
+                  type: string
+
+                - name: body
+                  description: "Not provided"
+                  in: body
+                  schema:
+                    $ref: '#/definitions/TodoUpdateBody'
+            responses:
+                '200':
+                    description: "not provided."
+                    schema:
+                schema:
+                  $ref: '#/definitions/Todo'
+        delete:
+            security:
+              - bearerAuth: []
+            tags: ['Todo']
+            description: "sample description"
+            parameters:
+                - name: id
+                  in: path
+                  required: true
+                  description: "Not provided"
+                  type: string
+            responses:
+                '200':
+                    description: "not provided."
+                    schema:
+                schema:
+                  $ref: '#/definitions/Todo'
+    /todos/{id}/owner:
+        get:
+            security:
+              - bearerAuth: []
+            tags: ['Todo']
+            description: "sample description"
+            parameters:
+                - name: id
+                  in: path
+                  required: true
+                  description: "Not provided"
+                  type: string
+            responses:
+                '200':
+                    description: "not provided."
+                    schema:
+                schema:
+                  $ref: '#/definitions/Todo'
 
