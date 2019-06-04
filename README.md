@@ -498,3 +498,5 @@ On met à jour, et on relance:
 	$ npm run sync
 
 Pratique!
+
+# @TODO: Correct. Continue. Improve
