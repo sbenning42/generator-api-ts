@@ -4,11 +4,13 @@ import passportLocal from 'passport-local';
 import passportJWT from 'passport-jwt';
 import JWT from 'jsonwebtoken';
 import { Request, Response, NextFunction } from 'express';
-import mongoose, { Model, Document } from 'mongoose';
+import mongoose, { Model, Document, Schema, model } from 'mongoose';
 import { ObjectID } from 'mongodb';
 import { Singleton } from '../../common/singleton/singleton';
 import { environment } from '../../environment';
-import { UserModel } from '../../generated/types';
+import { UserModel, UserSchema } from '../../generated/types';
+import { L } from '../../common/logger';
+import { context } from '../../config/context';
 
 export const InvalidTokenSchema = new mongoose.Schema({
     token: {
@@ -24,6 +26,7 @@ export const InvalidTokenModel = mongoose.model('InvalidToken', InvalidTokenSche
 
 export interface PassportServiceConfig<User> {
     User: Model<Document & User>;
+    UserSchema: Schema<Document & User>;
     secret?: string;
     fields?: [string, string?];
 }
@@ -33,11 +36,11 @@ export class PassportService<User extends { _id: string | ObjectID }> extends Si
     constructor(public config: PassportServiceConfig<User>) {
         super(PassportService);
         const {
-            User,
+            User, UserSchema,
             secret = uuid(),
             fields: [username = 'username', password = 'password'] = [],
         } = config;
-        this.config = { User, secret, fields: [username, password] };
+        this.config = { User, UserSchema, secret, fields: [username, password] };
         this.setupLocalStrategy();
         this.setupJWTStrategy();
     }
@@ -48,10 +51,12 @@ export class PassportService<User extends { _id: string | ObjectID }> extends Si
             async (username, password, done) => {
                 const user = await User
                     .findOne({ [fields[0]]: username })
-                    .select(`+${fields[0]} +${fields[1]}`);
-                if (!user || (user.get(`${fields[1]}`) !== password)) {
+                    .select(`+${fields[0]} +${fields[1]}`)
+                    .lean();
+                if (!user || (user[`${fields[1]}`] !== password)) {
                     return done(null, false);
                 } else {
+                    delete user[fields[1]];
                     return done(null, user);
                 }
             }
@@ -59,7 +64,7 @@ export class PassportService<User extends { _id: string | ObjectID }> extends Si
     }
 
     private setupJWTStrategy() {
-        const { User, secret } = this.config;
+        const { User, secret, fields } = this.config;
         const JWTOptions = {
             jwtFromRequest: passportJWT.ExtractJwt.fromAuthHeaderAsBearerToken(),
             secretOrKey: secret,
@@ -97,8 +102,93 @@ export class PassportService<User extends { _id: string | ObjectID }> extends Si
             if (!data) {
                 return passport.authenticate('jwt', { session: false })(req, res, next);
             } else {
-                res.status(401).send({ message: `Invalid token.` });
+                return res.status(401).send({ message: `Invalid token.` });
             }
+        };
+    }
+
+    self() {
+        return async (req: Request, res: Response, next: NextFunction) => {
+            const { user, params: { id } } = req;
+            if (!id || user.id !== id) {
+                L.info(`Not self: `, user.id, id);
+                return res.status(403).json({ message: 'Unauthorized.' });
+            }
+            context().self = id;
+            next();
+        };
+    }
+
+    /**
+     * count
+deleteMany
+deleteOne
+find
+findOne
+findOneAndDelete
+findOneAndRemove
+findOneAndUpdate
+remove
+update
+updateOne
+updateMany
+     */
+
+    owner(
+        Schema: Schema<Document>,
+        loc?: { key: string, on: any, name: string },
+        fors: ('deleteMany'
+            |'find'
+            |'deleteOne'
+            |'findOne'
+            |'findOneAndDelete'
+            |'findOneAndRemove'
+            |'findOneAndUpdate'
+            |'updateOne'
+            |'updateMany'
+            |'remove'
+            |'validate'
+            |'save'
+            |'update')[] = [
+                'validate',
+                'save',
+                'find',
+                'findOne',
+                'findOneAndDelete',
+                'findOneAndRemove',
+                'findOneAndUpdate',
+                'update',
+                'updateMany',
+                'updateOne',
+                'remove',
+                'deleteOne',
+                'deleteMany'
+            ]
+    ) {
+        Schema = Schema.clone();
+        return async (req: Request, res: Response, _next: NextFunction) => {
+            const { user: { id } } = req;
+            const original = loc.on[loc.key];
+            fors.forEach(_for => {
+                Schema = Schema.pre(_for, function(next) {
+                    if (_for === 'validate' || _for === 'save') {
+                        this['owner'] = id;
+                    } else if (_for === 'remove') {
+                        if (!this['id'] === id) {
+                            throw new Error('Unauthorized');
+                        }
+                    } else {
+                        this['where']({ owner: id });
+                    }
+                    next();
+                });
+                Schema = Schema.post(_for, function(next) {
+                    loc.on[loc.key] = original;
+                });
+            });
+            context().self = id;
+            loc.on[loc.key] = model(loc.key + `_PATCH_${uuid()}`, Schema, loc.name);
+            _next();          
         };
     }
 
@@ -119,11 +209,11 @@ export class PassportService<User extends { _id: string | ObjectID }> extends Si
         };
     }
 
-    hasRoleMiddleware(roles: string[]) {
+    hasRole(roles: string[]) {
         return async (req: Request, res: Response, next: NextFunction) => {
             const userRoles = req.user && req.user.roles ? req.user.roles : [];
             if (!roles.some(role => userRoles.includes(role))) {
-                res.status(403).json({ message: 'Unauthorized.' });
+                return res.status(403).json({ message: 'Unauthorized.' });
             }
             next();
         };
@@ -136,5 +226,6 @@ const {
 
 export const mainPassportService = new PassportService({
     secret: jwtSecret,
-    User: UserModel
+    User: UserModel,
+    UserSchema: UserSchema
 });

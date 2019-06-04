@@ -27,12 +27,17 @@ export const user: APISchemaEntity = {
     routes: {
         all: {
             middlewares: [
-                'jwtMiddleware'
+                'jwt'
             ]
         },
         'POST /': {
             excludeMiddlewares: [
-                'jwtMiddleware'
+                'jwt'
+            ]
+        },
+        'PUT /:id': {
+            middlewares: [
+                'self'
             ]
         },
         'DELETE /:id': {

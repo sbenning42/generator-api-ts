@@ -13,5 +13,9 @@ export const config: APISchemaConfig = {
         defaultScopes: false
     },
     outDir: PATH_GENERATED,
-    backupOutDir: BACKUP_GENERATED
+    backupOutDir: BACKUP_GENERATED,
+    passport: {
+        name: 'mainPassportService',
+        from: '../../modules/passport/service'
+    }
 };
