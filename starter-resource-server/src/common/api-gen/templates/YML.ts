@@ -16,9 +16,9 @@ export const YMLDefinitionPropPrimTpl = (name: string, type: string) => rep(`
 export const YMLDefinitionPropObjTpl = (name: string) => rep(`
             $0:
                 type: object`, [name]);
-export const YMLDefinitionPropRelTpl = (name: string, ref: string) => rep(`
+export const YMLDefinitionPropRelTpl = (name: string, ref: string, force = false) => rep(`
             $0:
-                $ref: '#/definitions/$1'`, [name, ref]);
+                $1`, [name, force ? `$ref: '#/definitions/${ref}'` : `type: string`]);
 export const YMLDefinitionPropPrimArrayTpl = (name: string, type: string) => rep(`
             $0:
                 type: array
@@ -29,11 +29,11 @@ export const YMLDefinitionPropObjArrayTpl = (name: string) => rep(`
                 type: array
                 items:
                     type: object`, [name]);
-export const YMLDefinitionPropRelArrayTpl = (name: string, ref: string) => rep(`
+export const YMLDefinitionPropRelArrayTpl = (name: string, ref: string, force = false) => rep(`
             $0:
                 type: array
                 items:
-                    $ref: '#/definitions/$1'`, [name, ref]);
+                    $1`, [name, , force ? `$ref: '#/definitions/${ref}'` : `type: string`]);
 
 export const YMLDefinitionTypeTpl = (capName: string, props: string) => props ? rep(`    $0:
         type: object
@@ -71,38 +71,42 @@ export const YMLGetEndpoints = (routes: any) => {
 export const YMLPathsEntityTpl = (endpoint: string, props: string) => rep(`    $0:$1
 `, [endpoint, props]);
 
-export const YMLPathsEntityVerbTpl = (verb: string, vars: string, resps: string, desc: string = '') => vars && resps ? rep(`
-        $0:
+export const YMLPathsEntityVerbTpl = (ep: string) => (verb: string, vars: string, resps: string, desc: string = '', sec: boolean = false) => vars && resps ? rep(`
+        $0:$5
+            tags: ['$4']
             description: "$1"
             parameters:$2
             responses:
                 '200':
                     description: "not provided."
-                    schema:$3`, [verb, desc, vars, resps])
+                    schema:$3`, [verb, desc, vars, resps, ep.split('/')[0], sec ? YMLsecureTPL() : ''])
         : (vars ? rep(`
-        $0:
+        $0:$4
+            tags: ['$3']
             description: "$1"
             parameters:$2
             responses:
                 '200':
                     description: "not provided."
                     schema:
-                        type: object`, [verb, desc, vars])
+                        type: object`, [verb, desc, vars, ep.split('/')[0], sec ? YMLsecureTPL() : ''])
         : (resps ? rep(`
-        $0:
+        $0:$4
+            tags: ['$3']
             description: "$1"
             responses:
                 '200':
                     description: "not provided."
-                    schema:$2`, [verb, desc, resps])
+                    schema:$2`, [verb, desc, resps, ep.split('/')[0], sec ? YMLsecureTPL() : ''])
         : rep(`
-        $0:
+        $0:$3
+            tags: ['$2']
             description: "$1"
             responses:
                 '200':
                     description: "not provided."
                     schema:
-                        type: object`, [verb, desc]))
+                        type: object`, [verb, desc, ep.split('/')[0], sec ? YMLsecureTPL() : '']))
         );
 
 export const YMLPathsEntityVerbVarsTpl = (name: string, desc: string) => rep(`
@@ -119,11 +123,20 @@ export const YMLPathsEntityBodyVarsTpl = (name: string, desc: string = '') => re
                   schema:
                     $ref: '#/definitions/$0'`, [name, desc || 'Not provided']);
 
-export const YMLPathsEntityVerbRespTpl = (endpoint: string, props: string) => rep(`
-                $0:
-$1`, [endpoint, props]);
+export const YMLPathsEntityVerbRespTpl = (ref: string) => rep(`
+                schema:
+                  $ref: '#/definitions/$0'`, [ref]);
+export const YMLPathsEntityVerbArrayRespTpl = (ref: string) => rep(`
+                schema:
+                  type: array
+                  items:
+                    $ref: '#/definitions/$0'`, [ref]);
 
 export const YMLPathsTpl = (props: string) => rep(`
 paths:
 $0
 `, [props]);
+
+const YMLsecureTPL = () => `
+            security:
+              - bearerAuth: []`;

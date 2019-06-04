@@ -16,7 +16,9 @@ import { environment } from './environment';
 
 const {
   port,
-  swagger
+  swagger,
+  swaggerPath,
+  swaggerOptions
 } = environment;
 
 /**
@@ -39,9 +41,9 @@ async function main() {
 
   try {
     const swaggerDocument = YAML.load(swagger);
-    app.use('/docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
+    app.use('/docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument, swaggerOptions));
   } catch (error) {
-    L.info('Cannot apply swagger.')
+    L.info('Cannot apply swagger.', error)
   }
 
 
@@ -54,7 +56,7 @@ async function main() {
    * Start `express` server
    */
   app.listen(port, () => {
-    L.info(`Server up and running. Swagger at http://localhost:${port}/${swagger}`);
+    L.info(`Server up and running. Swagger at http://localhost:${port}/${swaggerPath}`);
   });
 
 }

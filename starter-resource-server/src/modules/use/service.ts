@@ -6,9 +6,11 @@ import { mainPassportRouter } from '../passport/router';
 import { mainMongoService } from '../mongo/service';
 import { initContextMiddleware } from '../../config/context';
 import { applyUserAPI } from '../../generated/user/user';
-import { prettifyRouter } from '../../common/api-gen/prettier';
-import { mainPassportService } from '../passport/service';
 import { L } from '../../common/logger';
+import { applyTodoAPI, mainTodoService } from '../../generated/todo/todo';
+import { mainPassportService } from '../passport/service';
+import { TodoSchema } from '../../generated/types';
+import { mainTodoMiddlewares } from '../todo/middlewares';
 
 const {
 } = environment;
@@ -23,8 +25,6 @@ export class UseService extends Singleton {
     }
 
     async use(app: Application) {
-
-        const jwtMiddleware = mainPassportService.jwt();
         
         await mainMongoService.init();
         L.info(`DB: ${mainMongoService.url} connected.`);
@@ -32,9 +32,22 @@ export class UseService extends Singleton {
         app.use(initContextMiddleware, passport.initialize());
         mainPassportRouter.applyRouter(app, '/auth');
         
-        applyUserAPI(app, {
-            jwtMiddleware,
-        }, prettifyRouter, 'users', console);
+        applyUserAPI(app);
+        
+        /**
+         * You can add other `Application` handlers here
+         */
+        
+        const todoOwnerConfig = {
+            key: 'Todo',
+            name: 'todos',
+            // field: 'owner', // optional, default to 'owner'
+            on: mainTodoService.utils, 
+        };
+        const todoOwner = mainPassportService.owner(TodoSchema, todoOwnerConfig);
+        const reverseAddTodoOwner = mainTodoMiddlewares.reverseAddTodoOwner();
+        const reverseRemoveTodoOwner = mainTodoMiddlewares.reverseRemoveTodoOwner();
+        applyTodoAPI(app, { todoOwner, reverseAddTodoOwner, reverseRemoveTodoOwner });
 
     }
 }

@@ -48,7 +48,7 @@ import {
     _APISchemaEntityRoute
 } from './types';
 import { prettifySchema } from './prettier';
-import { YMLDefinitionTypeTpl, YMLDefinitionPropRelArrayTpl, YMLDefinitionPropObjArrayTpl, YMLDefinitionPropPrimArrayTpl, YMLDefinitionPropRelTpl, YMLDefinitionPropObjTpl, YMLDefinitionPropPrimTpl, YMLDefinitionTpl, YMLPathsEntityTpl, YMLGetEndpoints, YMLPathsEntityVerbTpl, YMLPathsTpl, epExpress2Swagger, YMLPathsEntityVerbVarsTpl, YMLPathsEntityBodyVarsTpl } from './templates/YML';
+import { YMLDefinitionTypeTpl, YMLDefinitionPropRelArrayTpl, YMLDefinitionPropObjArrayTpl, YMLDefinitionPropPrimArrayTpl, YMLDefinitionPropRelTpl, YMLDefinitionPropObjTpl, YMLDefinitionPropPrimTpl, YMLDefinitionTpl, YMLPathsEntityTpl, YMLGetEndpoints, YMLPathsEntityVerbTpl, YMLPathsTpl, epExpress2Swagger, YMLPathsEntityVerbVarsTpl, YMLPathsEntityBodyVarsTpl, YMLPathsEntityVerbRespTpl, YMLPathsEntityVerbArrayRespTpl } from './templates/YML';
 import { environment } from '../../environment';
 
 
@@ -318,9 +318,9 @@ export class APIGen {
                                 `${cap(name)}UpdateBody`,
                                 [
                                     YMLDefinitionPropPrimTpl('id', 'string'),
-                                    YMLDefinitionPropRelTpl('changes', `${cap(name)}ChangesBody`),
-                                    YMLDefinitionPropRelTpl('push', `${cap(name)}PushBody`),
-                                    YMLDefinitionPropRelTpl('pull', `${cap(name)}PullBody`),
+                                    YMLDefinitionPropRelTpl('changes', `${cap(name)}ChangesBody`, true),
+                                    YMLDefinitionPropRelTpl('push', `${cap(name)}PushBody`, true),
+                                    YMLDefinitionPropRelTpl('pull', `${cap(name)}PullBody`, true),
                                 ].join('')
                             )
                         
@@ -344,11 +344,12 @@ export class APIGen {
                         })
                             .map(({ ep, entries }) => YMLPathsEntityTpl(
                                 `/${name}s${epExpress2Swagger(ep, { id: 'id' })}`,
-                                Object.entries(entries).map(([verb, { key, ep: _ep, route }]: any) => YMLPathsEntityVerbTpl(
+                                Object.entries(entries).map(([verb, { key, ep: _ep, route }]: any) => YMLPathsEntityVerbTpl(cap(name))(
                                     verb.toLowerCase(),
                                     getYMLParametersFor(name, entity, entity.properties[route._ref], verb, key, _ep, route, entries, ep),
                                     getYMLResponseFor(name, entity, entity.properties[route._ref], verb, key, _ep, route, entries, ep),
-                                    'sample description'
+                                    'sample description',
+                                    isSecure(name, entity, entity.properties[route._ref], verb, key, _ep, route, entries, ep),
                                 )).join('')
                             )).join('')
                     }
@@ -495,7 +496,7 @@ export class APIGen {
                 TS_modules: {
                     TS_moduleImports: {
                         entity, name,
-                        generated: TSModuleImportsTpl(cap(name))
+                        generated: TSModuleImportsTpl(cap(name), [], schema.config.passport)
                     },
                     TS_utils: {
                         entity, name,
@@ -743,6 +744,12 @@ basePath: "/"
 schemes:
     - http
     - https
+
+securityDefinitions:
+    bearerAuth:
+        type: "apiKey"
+        name: "Authorization"
+        in: "header"
 consumes:
     - application/json
 produces:
@@ -753,8 +760,8 @@ produces:
                     ...[
                         YMLDefinitionTypeTpl('AddIdBody', YMLDefinitionPropPrimTpl('addId', 'string')),
                         YMLDefinitionTypeTpl('AddIdsBody', YMLDefinitionPropPrimArrayTpl('addIds', 'string')),
-                        YMLDefinitionTypeTpl('RemoveIdBody', YMLDefinitionPropPrimTpl('addId', 'string')),
-                        YMLDefinitionTypeTpl('RemoveIdsBody', YMLDefinitionPropPrimArrayTpl('addIds', 'string')),
+                        YMLDefinitionTypeTpl('RemoveIdBody', YMLDefinitionPropPrimTpl('removeId', 'string')),
+                        YMLDefinitionTypeTpl('RemoveIdsBody', YMLDefinitionPropPrimArrayTpl('removeIds', 'string')),
                     ]
                 ].join('\n'))
             }\n${
@@ -851,5 +858,51 @@ function getYMLResponseFor(
     ep: string
 ) {
     const cap = (s: string) => `${s.slice(0, 1).toUpperCase()}${s.slice(1)}`; // capitalize
-    return '';
+    //console.log(ref, route._ref, entity.properties[route._ref] ? (Array.isArray(entity.properties[route._ref]) ? entity.properties[route._ref][0].ref : entity.properties[route._ref].ref) : 'no ref');
+    if (route.responses) {
+        return route.responses;
+    }
+    switch (true) {
+        case verb === 'GET' && ep === '/':
+            return `${YMLPathsEntityVerbArrayRespTpl(cap(name))}`;
+        case verb === 'POST' && ep === '/':
+            return `${YMLPathsEntityVerbRespTpl(cap(name))}`;
+        case verb === 'GET' && ep === '/:id':
+            return `${YMLPathsEntityVerbRespTpl(cap(name))}`;
+        case verb === 'PUT' && ep === '/:id':
+            return `${YMLPathsEntityVerbRespTpl(cap(name))}`;
+        case verb === 'DELETE' && ep === '/:id':
+            return `${YMLPathsEntityVerbRespTpl(cap(name))}`;
+        case verb === 'GET' && ep === `/:id/${route._ref}`:
+            return `${YMLPathsEntityVerbRespTpl(cap(name))}`;
+        case verb === 'PUT' && ep === `/:id/${route._ref}/add`:
+            return Array.isArray(entity.properties[route._ref]) ? `${YMLPathsEntityVerbArrayRespTpl(ref)}` : `${YMLPathsEntityVerbRespTpl(ref)}`;
+        case verb === 'PUT' && ep === `/:id/${route._ref}/remove`:
+            return Array.isArray(entity.properties[route._ref]) ? `${YMLPathsEntityVerbArrayRespTpl(ref)}` : `${YMLPathsEntityVerbRespTpl(ref)}`;
+        default:
+            break ;
+    }
+    return ``;
+}
+
+const isSecure = (
+    name: string,
+    entity: any,
+    ref: any,
+    verb: string,
+    key: string,
+    _ep: string,
+    route: any,
+    entries: any,
+    ep: string
+) => {
+    return route && (
+        !(route.excludeMiddlewares && route.excludeMiddlewares.includes('jwt'))
+        && (
+            (route.middlewares && route.middlewares.includes('jwt'))
+            || (entity.routes.all && entity.routes.all.middlewares.includes('jwt'))
+            || (verb === 'GET' && entity.routes.query && entity.routes.query.middlewares.includes('jwt'))
+            || (verb !== 'GET' && entity.routes.mutation && entity.routes.mutation.middlewares.includes('jwt'))
+        )
+    )    
 }

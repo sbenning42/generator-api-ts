@@ -15,6 +15,7 @@ export interface APISchemaConfig {
     auth?: APISchemaAuthConfig;
     backupOutDir?: string;
     ymlSwagger?: string;
+    passport?: { name: string, from: string };
 }
 
 export type APISchemaEntityPropertyType = Boolean | Number | String | Date | Object | string;
@@ -111,12 +112,14 @@ export interface _APISchemaConfig {
     auth: _APISchemaAuthConfig;
     backupOutDir: string;
     ymlSwagger?: string;
+    passport?: { name: string, from: string };
 }
 
 export function strictAPISchemaConfig(config: APISchemaConfig): _APISchemaConfig {
     return {
         outDir: config.outDir,
         ymlSwagger: config.ymlSwagger,
+        passport: config.passport,
         backupOutDir: config.backupOutDir !== undefined
             ? config.backupOutDir
             : undefined,

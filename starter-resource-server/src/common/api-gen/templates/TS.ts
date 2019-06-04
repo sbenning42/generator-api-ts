@@ -180,7 +180,7 @@ export const TSMongooseModelPopulateTpl = (name: string, props: string) => rep(`
 export type $0Populate = $1;
 `, [name, props || `''`]);
 
-export const TSModuleImportsTpl = (name: string, ...customs: string[]) => rep(`
+export const TSModuleImportsTpl = (name: string, customs: string[] = [], pass?: { name: string, from: string }) => rep(`
 import { Request, Response, Router, Application } from 'express';
 import { ObjectID } from 'mongodb';
 import {
@@ -210,6 +210,7 @@ import {
     $0Populate,
 } from '../types';
 $1
+$2
 
 export type MongooseCB<T = any> = (err: any, results: T) => void;
 
@@ -245,7 +246,17 @@ export type QueryFindByIdAndUpdateOptions = {
 
 export type QueryFindByIdAndRemoveOptions = QueryFindOneAndRemoveOptions;
 
-`, [name, customs.length > 0 ? customs.join('\n') : '']);
+`, [name, customs.length > 0 ? customs.join('\n') : '', pass ? `
+import { ${pass.name} } from '${pass.from}';
+const thisPassport = {
+    jwt: ${pass.name}.jwt(),
+    self: ${pass.name}.self(),
+};
+` : `
+const thisPassport = {
+    
+};
+`]);
 
 /*
 import m, {} from 'mongoose';
@@ -698,6 +709,10 @@ export class $0Router {
     constructor(
         protected context: any = {},
     ) {
+        this.context = {
+            ...thisPassport,
+            ...this.context
+        } as any;
         this.setupRouter();
     }
 
@@ -712,7 +727,7 @@ export class $0Router {
         app.use('/$2s', this.router);
     }
 }
-`, [name, routes.join(''), endpoint, middlewares.join(',\n            ')]);
+`, [name, routes.join(''), endpoint, Array.from(new Set(middlewares)).join(',\n            ')]);
 
 export const TSRouterRouteTpl = (verb: string, endpoint: string, controller: string) => rep(`
             .$0('$1', $2)`, [verb, endpoint, controller]);

@@ -11,21 +11,21 @@ import {
 } from 'mongoose';
 import {
     ID,
-    User,
-    UserCreateBody,
-    UserChangesBody,
-    UserPushBody,
-    UserPullBody,
-    UserUpdateBody,
-    UserRawUpdateBody,
-    UserSchema,
-    UserModel,
-    UserDocument,
-    UserDocumentQuery,
-    UserDocumentsQuery,
-    UserCondition,
-    UserProjection,
-    UserPopulate,
+    Todo,
+    TodoCreateBody,
+    TodoChangesBody,
+    TodoPushBody,
+    TodoPullBody,
+    TodoUpdateBody,
+    TodoRawUpdateBody,
+    TodoSchema,
+    TodoModel,
+    TodoDocument,
+    TodoDocumentQuery,
+    TodoDocumentsQuery,
+    TodoCondition,
+    TodoProjection,
+    TodoPopulate,
 } from '../types';
 
 
@@ -38,23 +38,23 @@ const thisPassport = {
 
 export type MongooseCB<T = any> = (err: any, results: T) => void;
 
-const populateAll = <Q extends (UserDocumentQuery | UserDocumentsQuery)>(
+const populateAll = <Q extends (TodoDocumentQuery | TodoDocumentsQuery)>(
     query: Q,
-    populates: UserPopulate[],
+    populates: TodoPopulate[],
     idx: number = 0
 ) => idx < populates.length
     ? populateAll(query.populate(populates[idx]), populates, idx + 1)
     : query;
 
-const docPopulateAll = <D extends UserDocument | UserDocument[]>(
+const docPopulateAll = <D extends TodoDocument | TodoDocument[]>(
     doc: D,
-    populates: UserPopulate[],
+    populates: TodoPopulate[],
     idx: number = 0
 ) => idx < populates.length
     ? docPopulateAll(
         Array.isArray(doc)
             ? doc.map(d => d.populate(populates[idx]))
-            : (doc as UserDocument).populate(populates[idx]),
+            : (doc as TodoDocument).populate(populates[idx]),
         populates,
         idx + 1
     )
@@ -71,143 +71,142 @@ export type QueryFindByIdAndUpdateOptions = {
 export type QueryFindByIdAndRemoveOptions = QueryFindOneAndRemoveOptions;
 
 
-/********* USER Module *********/
+/********* TODO Module *********/
 
 
-export class UserUtils {
+export class TodoUtils {
 
-    UserSchema = UserSchema;
-    User = UserModel;
+    TodoSchema = TodoSchema;
+    Todo = TodoModel;
 
     findAll(
-        projection?: UserProjection,
-        populates: UserPopulate[] = [],
-        cb?: MongooseCB<UserDocument[]>,
+        projection?: TodoProjection,
+        populates: TodoPopulate[] = [],
+        cb?: MongooseCB<TodoDocument[]>,
         options: any = {},
     ) {
         return populateAll(
-            this.User.find({}, projection, options, cb),
+            this.Todo.find({}, projection, options, cb),
             populates
-        ) as UserDocumentsQuery;
+        ) as TodoDocumentsQuery;
     }
 
     findMany(
-        condition: UserCondition,
-        projection?: UserProjection,
-        populates: UserPopulate[] = [],
-        cb?: MongooseCB<UserDocument[]>,
+        condition: TodoCondition,
+        projection?: TodoProjection,
+        populates: TodoPopulate[] = [],
+        cb?: MongooseCB<TodoDocument[]>,
         options: any = {},
     ) {
         return populateAll(
-            this.User.find(condition, projection, options, cb),
+            this.Todo.find(condition, projection, options, cb),
             populates
-        ) as UserDocumentsQuery;
+        ) as TodoDocumentsQuery;
     }
 
     findOne(
-        condition: UserCondition,
-        projection?: UserProjection,
-        populates: UserPopulate[] = [],
-        cb?: MongooseCB<UserDocument>,
+        condition: TodoCondition,
+        projection?: TodoProjection,
+        populates: TodoPopulate[] = [],
+        cb?: MongooseCB<TodoDocument>,
         options: any = {},
     ) {
         return populateAll(
-            this.User.findOne(condition, projection, options, cb),
+            this.Todo.findOne(condition, projection, options, cb),
             populates
-        ) as UserDocumentQuery;
+        ) as TodoDocumentQuery;
     }
 
     findById(
         id: ID,
-        projection?: UserProjection,
-        populates: UserPopulate[] = [],
-        cb?: MongooseCB<UserDocument>,
+        projection?: TodoProjection,
+        populates: TodoPopulate[] = [],
+        cb?: MongooseCB<TodoDocument>,
         options: any = {},
     ) {
         return populateAll(
-            this.User.findById(id, projection, options, cb),
+            this.Todo.findById(id, projection, options, cb),
             populates
-        ) as UserDocumentQuery;
+        ) as TodoDocumentQuery;
     }
 
-    sanitizeCreateBody(body: UserCreateBody) {
+    sanitizeCreateBody(body: TodoCreateBody) {
         if (typeof(body.id) === 'string') {
-            delete body.id;
             body._id = new ObjectID(body.id);
         }
-        return ['_id', 'username', 'password', 'json'].reduce<UserCreateBody>((sanitizedBody, key) => body[key] !== undefined
+        return ['_id', 'title', 'done', 'tags'].reduce<TodoCreateBody>((sanitizedBody, key) => body[key] !== undefined
             ? {
                 ...sanitizedBody,
                 [key]: body[key]
             }
             : sanitizedBody,
-            {} as UserCreateBody
+            {} as TodoCreateBody
         );
     }
 
     async create(
-        body: UserCreateBody,
-        populates: UserPopulate[] = [],
-        cb?: MongooseCB<UserDocument>,
+        body: TodoCreateBody,
+        populates: TodoPopulate[] = [],
+        cb?: MongooseCB<TodoDocument>,
         options: SaveOptions = {},
         trusted: boolean = false
     ) {
         const sanitizedBody = this.sanitizeCreateBody(body);
-        const modelInstance = new this.User(sanitizedBody);
+        const modelInstance = new this.Todo(sanitizedBody);
         return docPopulateAll(
             await modelInstance.save(options, cb),
             populates
-        ) as UserDocument;
+        ) as TodoDocument;
     }
 
     async createMany(
-        bodies: UserCreateBody[],
-        populates: UserPopulate[] = [],
-        cb?: MongooseCB<UserDocument[]>,
+        bodies: TodoCreateBody[],
+        populates: TodoPopulate[] = [],
+        cb?: MongooseCB<TodoDocument[]>,
         options: SaveOptions = {},
         trusted: boolean = false
     ) {
-        const modelInstances = bodies.map(body => new this.User(this.sanitizeCreateBody(body)));
+        const modelInstances = bodies.map(body => new this.Todo(this.sanitizeCreateBody(body)));
         return docPopulateAll(
-            await this.User.insertMany(modelInstances, options, cb),
+            await this.Todo.insertMany(modelInstances, options, cb),
             populates
-        ) as UserDocument[];
+        ) as TodoDocument[];
     }
 
-    sanitizeChangesBody(body: UserChangesBody) {
-        return ['username', 'password', 'json'].reduce<UserChangesBody>((sanitizedBody, key) => body[key] !== undefined
+    sanitizeChangesBody(body: TodoChangesBody) {
+        return ['title', 'done', 'tags'].reduce<TodoChangesBody>((sanitizedBody, key) => body[key] !== undefined
             ? {
                 ...sanitizedBody,
                 [key]: body[key]
             }
             : sanitizedBody,
-            {} as UserChangesBody);
+            {} as TodoChangesBody);
     }
 
-    sanitizePushBody(body: UserPushBody) {
-        return [].reduce<UserPushBody>((sanitizedBody, key) => body[key] !== undefined
+    sanitizePushBody(body: TodoPushBody) {
+        return ['tags'].reduce<TodoPushBody>((sanitizedBody, key) => body[key] !== undefined
             ? {
                 ...sanitizedBody,
                 [key]: Array.isArray(body[key]) && body[key].length > 0 ? { $each: body[key] } : body[key]
             }
             : sanitizedBody,
-            {} as UserPushBody);
+            {} as TodoPushBody);
     }
 
-    sanitizePullBody(body: UserPullBody) {
-        return [].reduce<UserPullBody>((sanitizedBody, key) => body[key] !== undefined
+    sanitizePullBody(body: TodoPullBody) {
+        return ['tags'].reduce<TodoPullBody>((sanitizedBody, key) => body[key] !== undefined
             ? {
                 ...sanitizedBody,
                 [key]: Array.isArray(body[key]) && body[key].length > 0 ? { $each: body[key] } : body[key]
             }
             : sanitizedBody,
-            {} as UserPullBody);
+            {} as TodoPullBody);
     }
 
     updateById(
-        { id, changes = {}, push = {}, pull = {} }: UserUpdateBody,        
-        populates: UserPopulate[] = [],
-        cb?: MongooseCB<UserDocument>,
+        { id, changes = {}, push = {}, pull = {} }: TodoUpdateBody,        
+        populates: TodoPopulate[] = [],
+        cb?: MongooseCB<TodoDocument>,
         options: QueryFindByIdAndUpdateOptions = { new: true },
         trusted: boolean = false
     ) {
@@ -223,28 +222,28 @@ export class UserUtils {
             .filter(key => Object.keys(body[key] || {}).length > 0)
             .reduce((obj, key) => ({ ...obj, [key]: body[key] }), {});
         return populateAll(
-            this.User.findByIdAndUpdate(id, sanitizedBody, options, cb),
+            this.Todo.findByIdAndUpdate(id, sanitizedBody, options, cb),
             populates
-        ) as UserDocumentQuery;
+        ) as TodoDocumentQuery;
     }
 
     deleteById(
         id: ID,
-        populates: UserPopulate[] = [],
-        cb?: MongooseCB<UserDocument>,
+        populates: TodoPopulate[] = [],
+        cb?: MongooseCB<TodoDocument>,
         options: QueryFindByIdAndRemoveOptions = {},
     ) {
         return populateAll(
-            this.User.findByIdAndRemove(id, options, cb),
+            this.Todo.findByIdAndRemove(id, options, cb),
             populates
-        ) as UserDocumentQuery;
+        ) as TodoDocumentQuery;
     }
 
     updateOne(
-        condition: UserCondition,
-        { changes = {}, push = {}, pull = {} }: UserRawUpdateBody,        
-        populates: UserPopulate[] = [],
-        cb?: MongooseCB<UserDocument>,
+        condition: TodoCondition,
+        { changes = {}, push = {}, pull = {} }: TodoRawUpdateBody,        
+        populates: TodoPopulate[] = [],
+        cb?: MongooseCB<TodoDocument>,
         options: QueryFindOneAndUpdateOptions = { new: true },
         trusted: boolean = false
     ) {
@@ -260,27 +259,27 @@ export class UserUtils {
             .filter(key => Object.keys(body[key] || {}).length > 0)
             .reduce((obj, key) => ({ ...obj, [key]: body[key] }), {});
         return populateAll(
-            this.User.findOneAndUpdate(condition, sanitizedBody, options, cb),
+            this.Todo.findOneAndUpdate(condition, sanitizedBody, options, cb),
             populates
-        ) as UserDocumentQuery;
+        ) as TodoDocumentQuery;
     }
 
     deleteOne(
-        condition: UserCondition,
-        populates: UserPopulate[] = [],
-        cb?: MongooseCB<UserDocument>,
+        condition: TodoCondition,
+        populates: TodoPopulate[] = [],
+        cb?: MongooseCB<TodoDocument>,
         options: QueryFindOneAndRemoveOptions = {},
     ) {
         return populateAll(
-            this.User.findOneAndRemove(condition, options, cb),
+            this.Todo.findOneAndRemove(condition, options, cb),
             populates
-        ) as UserDocumentQuery;
+        ) as TodoDocumentQuery;
     }
 
     updateMany(
-        condition: UserCondition,
-        { changes = {}, push = {}, pull = {} }: UserRawUpdateBody,        
-        populates: UserPopulate[] = [],
+        condition: TodoCondition,
+        { changes = {}, push = {}, pull = {} }: TodoRawUpdateBody,        
+        populates: TodoPopulate[] = [],
         cb?: MongooseCB<any>,
         options: ModelUpdateOptions = {},
         trusted: boolean = false
@@ -297,54 +296,54 @@ export class UserUtils {
             .filter(key => Object.keys(body[key] || {}).length > 0)
             .reduce((obj, key) => ({ ...obj, [key]: body[key] }), {});
         return populateAll(
-            this.User.updateMany(condition, sanitizedBody, options, cb),
+            this.Todo.updateMany(condition, sanitizedBody, options, cb),
             populates
         );
     }
 
     deleteMany(
-        condition: UserCondition,
+        condition: TodoCondition,
         cb?: (err: any) => void,
     ) {
-        return this.User.remove(condition, cb);
+        return this.Todo.remove(condition, cb);
     }
     
-    async findTodosOf(id: ID) {
-        const modelInstance = await this.findById(id, undefined, ['todos']);
-        return modelInstance.todos;
+    async findOwnerOf(id: ID) {
+        const modelInstance = await this.findById(id, undefined, ['owner']);
+        return modelInstance.owner;
     }
 
 
-    addTodosTo(id: ID, ...addIds: ID[]) {
-        return this.updateById({ id, push: { todos: { $each: addIds } } } as any, undefined, undefined, undefined, true);
+    addOwnerTo(id: ID, addId: ID) {
+        return this.updateById({ id, changes: { owner: addId } } as any, undefined, undefined, undefined, true);
     }
 
-    removeTodosFrom(id: ID, ...removeIds: ID[]) {
-        return this.updateById({ id, pull: { todos: { $in: removeIds } } } as any, undefined, undefined, undefined, true);
+    removeOwnerFrom(id: ID) {
+        return this.updateById({ id, changes: { owner: null } } as any, undefined, undefined, undefined, true);
     }
 
 
 }
 
 
-export class UserService {
+export class TodoService {
     
-    utils: UserUtils = new UserUtils();
+    utils: TodoUtils = new TodoUtils();
 
 }
 
-export const mainUserService: UserService = new UserService();
+export const mainTodoService: TodoService = new TodoService();
 
 
-export class UserMiddlewares {
+export class TodoMiddlewares {
 
 }
 
 
-export class UserControllers {
+export class TodoControllers {
 
     async getAll(req: Request, res: Response) {
-        const { utils } = mainUserService;
+        const { utils } = mainTodoService;
         try {
             res.json(await utils.findAll());
         } catch (error) {
@@ -353,7 +352,7 @@ export class UserControllers {
     }
     
     async getById(req: Request, res: Response) {
-        const { utils } = mainUserService;
+        const { utils } = mainTodoService;
         const id = req.params.id;
         try {
             res.json(await utils.findById(id));
@@ -363,7 +362,7 @@ export class UserControllers {
     }
     
     async create(req: Request, res: Response) {
-        const { utils } = mainUserService;
+        const { utils } = mainTodoService;
         try {
             res.json(await utils.create(req.body));
         } catch (error) {
@@ -372,7 +371,7 @@ export class UserControllers {
     }
     
     async update(req: Request, res: Response) {
-        const { utils } = mainUserService;
+        const { utils } = mainTodoService;
         const id = req.params.id;
         const { changes, push, pull } = req.body;
         try {
@@ -383,7 +382,7 @@ export class UserControllers {
     }
     
     async delete(req: Request, res: Response) {
-        const { utils } = mainUserService;
+        const { utils } = mainTodoService;
         const id = req.params.id;
         try {
             res.json(await utils.deleteById(id));
@@ -393,33 +392,33 @@ export class UserControllers {
     }
 
     
-    async getTodosOf(req: Request, res: Response) {
-        const { utils } = mainUserService;
+    async getOwnerOf(req: Request, res: Response) {
+        const { utils } = mainTodoService;
         const id = req.params.id;
         try {
-            const relation = await utils.findTodosOf(id);
+            const relation = await utils.findOwnerOf(id);
             res.json(relation);
         } catch (error) {
             res.status(400).json({ error, message: 'Something went wrong.' });
         }
     }
     
-    async addTodosTo(req: Request, res: Response) {
-        const { utils } = mainUserService;
+    async addOwnerTo(req: Request, res: Response) {
+        const { utils } = mainTodoService;
         const id = req.params.id;
-        const { addIds } = req.body;
+        const { addId } = req.body;
         try {
-            res.json(await utils.addTodosTo(id, ...addIds));
+            res.json(await utils.addOwnerTo(id, addId));
         } catch (error) {
             res.status(400).json({ error, message: 'Something went wrong.' });
         }
     }    
-    async removeTodosFrom(req: Request, res: Response) {
-        const { utils } = mainUserService;
+    async removeOwnerFrom(req: Request, res: Response) {
+        const { utils } = mainTodoService;
         const id = req.params.id;
-        const { removeIds } = req.body;
+        const { removeId } = req.body;
         try {
-            res.json(await utils.removeTodosFrom(id, ...removeIds));
+            res.json(await utils.removeOwnerFrom(id));
         } catch (error) {
             res.status(400).json({ error, message: 'Something went wrong.' });
         }
@@ -428,10 +427,10 @@ export class UserControllers {
 
 }
 
-export const mainUserControllers: UserControllers = new UserControllers();
+export const mainTodoControllers: TodoControllers = new TodoControllers();
 
 
-export class UserRouter {
+export class TodoRouter {
     
     router = Router();
 
@@ -448,25 +447,27 @@ export class UserRouter {
     private setupRouter() {
         const {
             jwt,
-            self
+            todoOwner,
+            reverseAddTodoOwner,
+            reverseRemoveTodoOwner
         } = this.context;
         this.router
-            .get('/', jwt, mainUserControllers.getAll)
-            .post('/', mainUserControllers.create)
-            .get('/:id', jwt, mainUserControllers.getById)
-            .put('/:id', jwt, self, mainUserControllers.update)
-            .delete('/:id', jwt, self, mainUserControllers.delete)
-            .get('/:id/todos', jwt, mainUserControllers.getTodosOf);
+            .get('/', mainTodoControllers.getAll)
+            .post('/', jwt, todoOwner, reverseAddTodoOwner, mainTodoControllers.create)
+            .get('/:id', mainTodoControllers.getById)
+            .put('/:id', jwt, todoOwner, mainTodoControllers.update)
+            .delete('/:id', jwt, todoOwner, reverseRemoveTodoOwner, mainTodoControllers.delete)
+            .get('/:id/owner', jwt, mainTodoControllers.getOwnerOf);
     }
 
     applyRouter(app: Application) {
-        app.use('/users', this.router);
+        app.use('/todos', this.router);
     }
 }
 
 
-export function applyUserAPI<CTX>(app: Application, context?: CTX, prettifyRouter?: (...args: any[]) => void, ...args: any[]) {
-    const router = new UserRouter(context);
+export function applyTodoAPI<CTX>(app: Application, context?: CTX, prettifyRouter?: (...args: any[]) => void, ...args: any[]) {
+    const router = new TodoRouter(context);
     router.applyRouter(app);
     if (prettifyRouter && args.length > 1) {
         prettifyRouter(args[0], router.router, args[1]);
