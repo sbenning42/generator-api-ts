@@ -407,7 +407,8 @@ export class UserRouter {
             .get('/', jwt, mainUserControllers.getAll)
             .post('/', mainUserControllers.create)
             .get('/:id', jwt, mainUserControllers.getById)
-            .put('/:id', jwt, self, mainUserControllers.update);
+            .put('/:id', jwt, self, mainUserControllers.update)
+            .delete('/:id', jwt, mainUserControllers.delete);
     }
 
     applyRouter(app: Application) {

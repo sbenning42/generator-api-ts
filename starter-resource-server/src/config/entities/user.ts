@@ -40,8 +40,10 @@ export const user: APISchemaEntity = {
                 'self'
             ]
         },
+        /*
         'DELETE /:id': {
             skip: true,
         }
+        */
     }
 };

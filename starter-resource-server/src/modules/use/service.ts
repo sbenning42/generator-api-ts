@@ -9,8 +9,6 @@ import { applyUserAPI } from '../../generated/user/user';
 import { prettifyRouter } from '../../common/api-gen/prettier';
 import { mainPassportService } from '../passport/service';
 import { L } from '../../common/logger';
-import { applyTodoAPI, mainTodoService } from '../../generated/todo/todo';
-import { TodoSchema } from '../../generated/types';
 
 const {
 } = environment;
@@ -26,10 +24,12 @@ export class UseService extends Singleton {
 
     async use(app: Application) {
 
+        /*
         const todoOwner = mainPassportService.owner(
             TodoSchema,
             { key: 'Todo', on: mainTodoService.utils, name: 'todos' }
         );
+        */
         
         await mainMongoService.init();
         L.info(`DB: ${mainMongoService.url} connected.`);
@@ -38,7 +38,8 @@ export class UseService extends Singleton {
         mainPassportRouter.applyRouter(app, '/auth');
         
         applyUserAPI(app, {}, prettifyRouter, 'users', console);
-        applyTodoAPI(app, { todoOwner }, prettifyRouter, 'todos', console);
+        
+        // applyTodoAPI(app, { todoOwner }, prettifyRouter, 'todos', console);
 
     }
 }
