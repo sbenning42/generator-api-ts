@@ -33,7 +33,7 @@ export const YMLDefinitionPropRelArrayTpl = (name: string, ref: string, force = 
             $0:
                 type: array
                 items:
-                    $1`, [name, , force ? `$ref: '#/definitions/${ref}'` : `type: string`]);
+                    $1`, [name, force ? `$ref: '#/definitions/${ref}'` : `type: string`]);
 
 export const YMLDefinitionTypeTpl = (capName: string, props: string) => props ? rep(`    $0:
         type: object
@@ -124,13 +124,11 @@ export const YMLPathsEntityBodyVarsTpl = (name: string, desc: string = '') => re
                     $ref: '#/definitions/$0'`, [name, desc || 'Not provided']);
 
 export const YMLPathsEntityVerbRespTpl = (ref: string) => rep(`
-                schema:
-                  $ref: '#/definitions/$0'`, [ref]);
+                        $ref: '#/definitions/$0'`, [ref]);
 export const YMLPathsEntityVerbArrayRespTpl = (ref: string) => rep(`
-                schema:
-                  type: array
-                  items:
-                    $ref: '#/definitions/$0'`, [ref]);
+                        type: array
+                        items:
+                            $ref: '#/definitions/$0'`, [ref]);
 
 export const YMLPathsTpl = (props: string) => rep(`
 paths:

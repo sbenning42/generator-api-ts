@@ -132,6 +132,7 @@ export class TodoUtils {
 
     sanitizeCreateBody(body: TodoCreateBody) {
         if (typeof(body.id) === 'string') {
+            delete body.id;
             body._id = new ObjectID(body.id);
         }
         return ['_id', 'title', 'done', 'tags'].reduce<TodoCreateBody>((sanitizedBody, key) => body[key] !== undefined

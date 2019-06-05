@@ -3,6 +3,7 @@ export const environment = {
     uploadDir: process.env.UPLOAD_DIR,
     mongoUrl: process.env.MONGO_URL,
     jwtSecret: process.env.JWT_SECRET,
+    graphqlPath: process.env.GRAPHQL_PATH,
     swagger: process.env.SWAGGER_GENERATED,
     swaggerPath: process.env.SWAGGER_PATH,
     swaggerOptions: {

@@ -1,4 +1,5 @@
 import fs from 'fs';
+import YAML from 'yamljs';
 import {
     TSTypeTpl,
     TSUpdateBodyTpl,
@@ -800,6 +801,8 @@ produces:
                 { flag: 'w', encoding: 'utf8', mode: 0o644 }
             );
         });
+        const jsonSwagger = YAML.load(`${outDir}/swagger.yml`);
+        fs.writeFileSync(`${outDir}/swagger.json`, JSON.stringify(jsonSwagger), { flag: 'w', encoding: 'utf8', mode: 0o644 });
     }
     
     backup(outDir: string, backupOutDir: string) {
@@ -874,11 +877,11 @@ function getYMLResponseFor(
         case verb === 'DELETE' && ep === '/:id':
             return `${YMLPathsEntityVerbRespTpl(cap(name))}`;
         case verb === 'GET' && ep === `/:id/${route._ref}`:
-            return `${YMLPathsEntityVerbRespTpl(cap(name))}`;
+            return Array.isArray(entity.properties[route._ref]) ? `${YMLPathsEntityVerbArrayRespTpl(ref[0].ref)}` : `${YMLPathsEntityVerbRespTpl(ref.ref)}`;
         case verb === 'PUT' && ep === `/:id/${route._ref}/add`:
-            return Array.isArray(entity.properties[route._ref]) ? `${YMLPathsEntityVerbArrayRespTpl(ref)}` : `${YMLPathsEntityVerbRespTpl(ref)}`;
+            return Array.isArray(entity.properties[route._ref]) ? `${YMLPathsEntityVerbArrayRespTpl(ref[0].ref)}` : `${YMLPathsEntityVerbRespTpl(ref.ref)}`;
         case verb === 'PUT' && ep === `/:id/${route._ref}/remove`:
-            return Array.isArray(entity.properties[route._ref]) ? `${YMLPathsEntityVerbArrayRespTpl(ref)}` : `${YMLPathsEntityVerbRespTpl(ref)}`;
+            return Array.isArray(entity.properties[route._ref]) ? `${YMLPathsEntityVerbArrayRespTpl(ref[0].ref)}` : `${YMLPathsEntityVerbRespTpl(ref.ref)}`;
         default:
             break ;
     }

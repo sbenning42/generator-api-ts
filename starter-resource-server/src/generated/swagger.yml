@@ -37,7 +37,7 @@ definitions:
             todos:
                 type: array
                 items:
-                    $1
+                    type: string
     UserCreateBody:
         type: object
         properties:
@@ -168,10 +168,9 @@ paths:
                 '200':
                     description: "not provided."
                     schema:
-                schema:
-                  type: array
-                  items:
-                    $ref: '#/definitions/User'
+                        type: array
+                        items:
+                            $ref: '#/definitions/User'
         post:
             tags: ['User']
             description: "sample description"
@@ -185,8 +184,7 @@ paths:
                 '200':
                     description: "not provided."
                     schema:
-                schema:
-                  $ref: '#/definitions/User'
+                        $ref: '#/definitions/User'
     /users/{id}:
         get:
             security:
@@ -203,8 +201,7 @@ paths:
                 '200':
                     description: "not provided."
                     schema:
-                schema:
-                  $ref: '#/definitions/User'
+                        $ref: '#/definitions/User'
         put:
             security:
               - bearerAuth: []
@@ -226,8 +223,7 @@ paths:
                 '200':
                     description: "not provided."
                     schema:
-                schema:
-                  $ref: '#/definitions/User'
+                        $ref: '#/definitions/User'
         delete:
             security:
               - bearerAuth: []
@@ -243,8 +239,7 @@ paths:
                 '200':
                     description: "not provided."
                     schema:
-                schema:
-                  $ref: '#/definitions/User'
+                        $ref: '#/definitions/User'
     /users/{id}/todos:
         get:
             security:
@@ -261,8 +256,9 @@ paths:
                 '200':
                     description: "not provided."
                     schema:
-                schema:
-                  $ref: '#/definitions/User'
+                        type: array
+                        items:
+                            $ref: '#/definitions/Todo'
 
     /todos:
         get:
@@ -272,10 +268,9 @@ paths:
                 '200':
                     description: "not provided."
                     schema:
-                schema:
-                  type: array
-                  items:
-                    $ref: '#/definitions/Todo'
+                        type: array
+                        items:
+                            $ref: '#/definitions/Todo'
         post:
             security:
               - bearerAuth: []
@@ -291,8 +286,7 @@ paths:
                 '200':
                     description: "not provided."
                     schema:
-                schema:
-                  $ref: '#/definitions/Todo'
+                        $ref: '#/definitions/Todo'
     /todos/{id}:
         get:
             tags: ['Todo']
@@ -307,8 +301,7 @@ paths:
                 '200':
                     description: "not provided."
                     schema:
-                schema:
-                  $ref: '#/definitions/Todo'
+                        $ref: '#/definitions/Todo'
         put:
             security:
               - bearerAuth: []
@@ -330,8 +323,7 @@ paths:
                 '200':
                     description: "not provided."
                     schema:
-                schema:
-                  $ref: '#/definitions/Todo'
+                        $ref: '#/definitions/Todo'
         delete:
             security:
               - bearerAuth: []
@@ -347,8 +339,7 @@ paths:
                 '200':
                     description: "not provided."
                     schema:
-                schema:
-                  $ref: '#/definitions/Todo'
+                        $ref: '#/definitions/Todo'
     /todos/{id}/owner:
         get:
             security:
@@ -365,6 +356,5 @@ paths:
                 '200':
                     description: "not provided."
                     schema:
-                schema:
-                  $ref: '#/definitions/Todo'
+                        $ref: '#/definitions/User'
 

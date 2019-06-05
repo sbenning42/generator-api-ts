@@ -11,6 +11,7 @@ import { applyTodoAPI, mainTodoService } from '../../generated/todo/todo';
 import { mainPassportService } from '../passport/service';
 import { TodoSchema } from '../../generated/types';
 import { mainTodoMiddlewares } from '../todo/middlewares';
+import { mainGraphqlService } from '../graphql/service';
 
 const {
 } = environment;
@@ -48,6 +49,9 @@ export class UseService extends Singleton {
         const reverseAddTodoOwner = mainTodoMiddlewares.reverseAddTodoOwner();
         const reverseRemoveTodoOwner = mainTodoMiddlewares.reverseRemoveTodoOwner();
         applyTodoAPI(app, { todoOwner, reverseAddTodoOwner, reverseRemoveTodoOwner });
+
+        await mainGraphqlService.getSchema();
+        await mainGraphqlService.applyMiddleware(app);
 
     }
 }
