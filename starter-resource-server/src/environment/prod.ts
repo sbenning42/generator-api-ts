@@ -4,6 +4,7 @@ export const environment = {
     mongoUrl: process.env.MONGO_URL,
     jwtSecret: process.env.JWT_SECRET,
     graphqlPath: process.env.GRAPHQL_PATH,
+    graphqlSchema: process.env.GRAPHQL_GENERATED,
     swagger: process.env.SWAGGER_GENERATED,
     swaggerPath: process.env.SWAGGER_PATH,
     swaggerOptions: {
