@@ -57,7 +57,7 @@ Vous pouvez maintenant accéder à tous les *Web Services*.
 ## Extends
 
 Pour étendre l'*API*, nous allons définir et enregistrer  des **schémas d'entités**.
-Ces **schémas** seront *parsé* par le programme `./src/gen.ts` de manière à générer les *types TypeScripts* utiles pour manipuler l'**entité**. De plus il générera un **Router** *CRUD express* pouvant être utilé dans l'*API* `./src/main.ts`.
+Ces **schémas** seront *parsé* par le programme `./src/gen.ts` de manière à générer les *types TypeScripts* utiles pour manipuler l'**entité**. De plus il générera un **Router** *CRUD express* pouvant être utilé dans le programme `./src/main.ts`.
 
 ## Exemple - Todos
 
