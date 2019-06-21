@@ -51,12 +51,14 @@ import {
 import { prettifySchema } from './prettier';
 import { YMLDefinitionTypeTpl, YMLDefinitionPropRelArrayTpl, YMLDefinitionPropObjArrayTpl, YMLDefinitionPropPrimArrayTpl, YMLDefinitionPropRelTpl, YMLDefinitionPropObjTpl, YMLDefinitionPropPrimTpl, YMLDefinitionTpl, YMLPathsEntityTpl, YMLGetEndpoints, YMLPathsEntityVerbTpl, YMLPathsTpl, epExpress2Swagger, YMLPathsEntityVerbVarsTpl, YMLPathsEntityBodyVarsTpl, YMLPathsEntityVerbRespTpl, YMLPathsEntityVerbArrayRespTpl } from './templates/YML';
 import { environment } from '../../environment';
+import { generateGQL } from './core-gql';
 
 
 /***************************************** Core **************************************************/
 
 const {
-    port
+    port,
+    graphqlSchema
 } = environment;
 
 export interface APIEntityFieldGen {
@@ -679,14 +681,14 @@ export class APIGen {
                     },
                     TS_applyAPI: {
                         entity, name, generated: TSApplyAPI(cap(name)),
-                    },
-                }
+                    }
+                },
             })) as APIEntityGen[];
         const types = entities.map(entity => entity.TS_types);
         const modules = entities.map(entity => entity.TS_modules);
         const outDir = schema.config.outDir;
         const backupOutDir = schema.config.backupOutDir;
-        return entities;
+        return { entities, schema };
         /*
         if (backupOutDir) {
             this.backup(outDir, backupOutDir);
@@ -695,7 +697,7 @@ export class APIGen {
         */
     }
     
-    write(outDir: string, entities: APIEntityGen[]) {
+    write(outDir: string, {entities, schema}: {entities: APIEntityGen[], schema: _APISchema}) {
         if (!fs.existsSync(outDir)) {
             fs.mkdirSync(outDir, { mode: 0o755 });
         }
@@ -803,6 +805,11 @@ produces:
         });
         const jsonSwagger = YAML.load(`${outDir}/swagger.yml`);
         fs.writeFileSync(`${outDir}/swagger.json`, JSON.stringify(jsonSwagger), { flag: 'w', encoding: 'utf8', mode: 0o644 });
+        fs.writeFileSync(
+            graphqlSchema,
+            generateGQL(schema),
+            { flag: 'w', encoding: 'utf8', mode: 0o644 }
+        );
     }
     
     backup(outDir: string, backupOutDir: string) {
