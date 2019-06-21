@@ -1,4 +1,6 @@
-# DRAFT !!!!!
+# THIS IS A DIRTY DOC DRAFT !!!!!
+# Stay tuned for official doc to release soon !
+
 
 # APIGen
 
