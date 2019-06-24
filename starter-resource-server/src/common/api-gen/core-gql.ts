@@ -105,25 +105,29 @@ export const generateGQL= (schema: _APISchema) => {
                     excludeMiddlewares,
                     auth,
                     _ref,
+                    
                 } = route;
-                const isArray = Array.isArray(properties[route._ref]);
+                const parameters = '';
+                const responses = '';
+                console.log(ep);
+                const isArray = Array.isArray(properties[route._ref]) || ep === 'GET /';
                 const refProperty = isArray ? (properties[route._ref] || [])[0] : properties[route._ref];
                 return [
                     ep,
                     ep.includes(':')
                         ? GQLQueryPropertyWithArgsTpl({
                             name: ep,
-                            type: GQLTypePropertyTypeTpl(
+                            type: responses || GQLTypePropertyTypeTpl(
                                 refProperty ? refProperty.type : cap(name),
                                 isArray,
                                 false,
                                 refProperty ? refProperty.ref : cap(name)
                             ),
-                            args: GQLTypePropertyTpl({ name: 'id', type: 'String', required: true, isArray: false })
+                            args: parameters || GQLTypePropertyTpl({ name: 'id', type: 'String', required: true, isArray: false })
                         })
                         : GQLQueryPropertyTpl({
                             name: ep,
-                            type: GQLTypePropertyTypeTpl(
+                            type: responses || GQLTypePropertyTypeTpl(
                                 refProperty ? refProperty.type : cap(name),
                                 isArray,
                                 false,
@@ -148,6 +152,8 @@ export const generateGQL= (schema: _APISchema) => {
                     auth,
                     _ref,
                 } = route;
+                const parameters = '';
+                const responses = '';
                 const isArray = Array.isArray(properties[route._ref]);
                 const refProperty = isArray ? (properties[route._ref] || [])[0] : properties[route._ref];
                 return [
@@ -155,17 +161,17 @@ export const generateGQL= (schema: _APISchema) => {
                     ep.includes(':')
                         ? GQLMutationPropertyWithArgsTpl({
                             name: ep,
-                            type: GQLTypePropertyTypeTpl(
+                            type: responses || GQLTypePropertyTypeTpl(
                                 refProperty ? refProperty.type : cap(name),
                                 isArray,
                                 false,
                                 refProperty ? refProperty.ref : cap(name)
                             ),
-                            args: GQLTypePropertyTpl({ name: 'id', type: 'String', required: true, isArray: false })
+                            args: parameters || GQLTypePropertyTpl({ name: 'id', type: 'String', required: true, isArray: false })
                         })
                         : GQLMutationPropertyTpl({
                             name: ep,
-                            type: GQLTypePropertyTypeTpl(
+                            type: responses || GQLTypePropertyTypeTpl(
                                 refProperty ? refProperty.type : cap(name),
                                 isArray,
                                 false,

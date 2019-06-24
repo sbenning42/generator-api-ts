@@ -38,7 +38,7 @@ type Query {
   all: User
   query: User
   mutation: User
-  GET /: User
+  GET /: [User]
   POST /: User
   GET /:id(  id: String): User
   PUT /:id(  id: String): User
@@ -53,7 +53,7 @@ type Query {
   all: Todo
   query: Todo
   mutation: Todo
-  GET /: Todo
+  GET /: [Todo]
   POST /: Todo
   GET /:id(  id: String): Todo
   PUT /:id(  id: String): Todo

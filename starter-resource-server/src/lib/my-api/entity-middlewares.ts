@@ -1,0 +1,9 @@
+export const validate = () => {};
+export const hasRolesOr = () => {};
+export const hasRolesAnd = () => {};
+export const hasRolesCombine = () => {};
+export const jwt = () => {};
+export const self = () => {};
+export const owner = () => {};
+export const skip = () => {};
+export const reverseCascade = () => {};

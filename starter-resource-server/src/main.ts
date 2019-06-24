@@ -13,6 +13,9 @@ import YAML from 'yamljs';
 import { L } from './common/logger';
 import { mainUseService } from './modules/use/service';
 import { environment } from './environment';
+import { test } from './common/my-api/test';
+import { MyApiEngine } from './lib/my-api/engine';
+import { myApi } from './lib/my-api/goal';
 
 const {
   port,
@@ -46,11 +49,13 @@ async function main() {
     L.info('Cannot apply swagger.', error)
   }
 
+  const engine = new MyApiEngine(myApi);
 
   /**
    * Apply application handlers
    */
-  await mainUseService.use(app);
+  // test()
+  // await mainUseService.use(app);
 
   /**
    * Start `express` server
