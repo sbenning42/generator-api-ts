@@ -184,6 +184,35 @@ export const swaggerObjectPropertyArrayDefinitionTPL = (args: { name: string, ty
 export const swaggerObjectPropertyRefDefinitionTPL = (args: { name: string, type: string }) => apply(_swaggerObjectPropertyRefDefinitionTPL, args);
 export const swaggerObjectPropertyRefArrayDefinitionTPL = (args: { name: string, type: string }) => apply(_swaggerObjectPropertyRefArrayDefinitionTPL, args);
 
+export const _functionArrayTPL = `[
+$functions
+]`
+
+export const _functionTPL = `
+export function $name($arguments) {
+$implementation
+}
+`;
+
+export const _functionArgumentTPL = `$name$required: $type$isArray`;
+
+export const functionTPL = (args: { name: string, arguments: string[], implementation: string }) => apply(_functionTPL, {
+    name: args.name,
+    arguments: args.arguments.join(', '),
+    implementation: args.implementation
+});
+
+export const functionArgumentTPL = (args: { name: string, required: boolean, type: string, isArray: boolean }) => apply(_functionArgumentTPL, {
+    name: args.name,
+    required: args.required ? 'true' : 'false',
+    isArray: args.isArray ? '[]' : '',
+    type: args.type
+});
+
+export const functionArrayTPL = (args: { functions: string[] }) => apply(_functionArrayTPL, {
+    functions: args.functions.join(',\n')
+});
+
 export const capitalize = (s: string) => `${s.slice(0, 1).toLocaleUpperCase()}${s.slice(1)}`;
 
 export const stringifyTypeForTS = (_type: MyApiAllowedTypeUnion) => {
@@ -280,5 +309,12 @@ export const stringifyTypeForSwagger = (_type: MyApiAllowedTypeUnion) => {
 };
 
 export const stringifyDefaultForMongoose = (_default: any) => {
-    return ``;
+    switch (true) {
+        case typeof(_default) === 'function':
+            return _default.toString().replace(/\w*_\d*\./g, '');
+        case typeof(_default) === 'string':
+            return _default;
+        default:
+            return JSON.stringify(_default);
+    }
 };

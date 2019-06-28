@@ -16,7 +16,10 @@ import {
     mongooseSchemaPropertyTPL,
     stringifyTypeForMongoose,
     stringifyDefaultForMongoose,
-    mongooseModelTPL
+    mongooseModelTPL,
+    functionArrayTPL,
+    functionTPL,
+    functionArgumentTPL
 } from "./templates";
 import { CANNOT } from "./constantes";
 
@@ -111,7 +114,7 @@ export class MyApiEngine {
                         ).replace('[]', '') })
                         : swaggerObjectPropertyDefinitionTPL({ name: fieldName, type: stringifyTypeForSwagger(
                             typeof(field.type) === 'string' && field.type !== 'ID'
-                                ? (field.type.includes('[') ? '[ObjectID]' : 'ObjectID')
+                                ? ((field.type as string).includes('[') ? '[ObjectID]' : 'ObjectID')
                                 : field.type
                         ).replace('[]', '') })
                     ))
@@ -168,7 +171,7 @@ export class MyApiEngine {
                     ).replace('[]', '') })
                     : swaggerObjectPropertyDefinitionTPL({ name: fieldName, type: stringifyTypeForSwagger(
                         typeof(field.type) === 'string' && field.type !== 'ID'
-                            ? (field.type.includes('[') ? '[ObjectID]' : 'ObjectID')
+                            ? ((field.type as string).includes('[') ? '[ObjectID]' : 'ObjectID')
                             : field.type
                     ).replace('[]', '') })
                 ))
@@ -219,7 +222,7 @@ export class MyApiEngine {
                     ).replace('[]', '') })
                     : swaggerObjectPropertyDefinitionTPL({ name: fieldName, type: stringifyTypeForSwagger(
                         typeof(field.type) === 'string' && field.type !== 'ID'
-                            ? (field.type.includes('[') ? '[ObjectID]' : 'ObjectID')
+                            ? ((field.type as string).includes('[') ? '[ObjectID]' : 'ObjectID')
                             : field.type
                     ).replace('[]', '') })
                 ))
@@ -276,7 +279,7 @@ export class MyApiEngine {
                     ).replace('[]', '') })
                     : swaggerObjectPropertyDefinitionTPL({ name: fieldName, type: stringifyTypeForSwagger(
                         typeof(field.type) === 'string' && field.type !== 'ID'
-                            ? (field.type.includes('[') ? '[ObjectID]' : 'ObjectID')
+                            ? ((field.type as string).includes('[') ? '[ObjectID]' : 'ObjectID')
                             : field.type
                     ).replace('[]', '') })
                 ))
@@ -333,7 +336,7 @@ export class MyApiEngine {
                     ).replace('[]', '') })
                     : swaggerObjectPropertyDefinitionTPL({ name: fieldName, type: stringifyTypeForSwagger(
                         typeof(field.type) === 'string' && field.type !== 'ID'
-                            ? (field.type.includes('[') ? '[ObjectID]' : 'ObjectID')
+                            ? ((field.type as string).includes('[') ? '[ObjectID]' : 'ObjectID')
                             : field.type
                     ).replace('[]', '') })
                 ))
@@ -429,6 +432,30 @@ export class MyApiEngine {
             swaggerUpdatePayload
         ].join(',\n') });
 
+        const canSelectGuards = Object.entries(this.api.apis)
+            .map(([apiName, api]) => Object.entries(api.fields)
+                .map(([fieldName, field]) => `export const canSelect${capitalize(apiName)}${capitalize(fieldName)}Guards = ${functionArrayTPL({ functions: (field.canSelect || [])
+                    .map(cs => '    ' + cs.toString().replace(/\w*_\d*\./g, '')) })}`).join(';\n')
+            ).join('\n');
+
+        const canCreateGuards = Object.entries(this.api.apis)
+            .map(([apiName, api]) => Object.entries(api.fields)
+                .map(([fieldName, field]) => `export const canCreate${capitalize(apiName)}${capitalize(fieldName)}Guards = ${functionArrayTPL({ functions: (field.canCreate || [])
+                    .map(cs => '    ' + cs.toString().replace(/\w*_\d*\./g, '')) })}`).join(';\n')
+            ).join('\n');
+
+        const canUpdateGuards = Object.entries(this.api.apis)
+            .map(([apiName, api]) => Object.entries(api.fields)
+                .map(([fieldName, field]) => `export const canUpdate${capitalize(apiName)}${capitalize(fieldName)}Guards = ${functionArrayTPL({ functions: (field.canUpdate || [])
+                    .map(cs => '    ' + cs.toString().replace(/\w*_\d*\./g, '')) })}`).join(';\n')
+            ).join('\n');
+
+        
+        const validators = Object.entries(this.api.apis)
+        .map(([apiName, api]) => Object.entries(api.fields)
+            .map(([fieldName, field]) => `export const ${apiName}${capitalize(fieldName)}Validators = ${functionArrayTPL({ functions: (field.validators || [])
+                .map(cs => '    ' + cs.toString().replace(/\w*_\d*\./g, '')) })}`).join(';\n')
+        ).join('\n');
 
 
         console.log('modelsWithRelations: ', modelsWithRelations);
@@ -444,6 +471,11 @@ export class MyApiEngine {
 
         console.log('swaggerDefinitions: ', swaggerDefinitions);
 
+        console.log('canSelectGuards: ', canSelectGuards);
+        console.log('canCreateGuards: ', canCreateGuards);
+        console.log('canUpdateGuards: ', canUpdateGuards);
+
+        console.log('validators: ', validators);
         /*
         console.log('swaggerModelsWithRelations: ', swaggerModelsWithRelations);
         console.log('swaggerModelsWithoutRelations: ', swaggerModelsWithoutRelations);

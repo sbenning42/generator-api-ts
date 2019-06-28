@@ -1,9 +1,6 @@
 import { MyApiDescription } from "./types";
 import { CANNOT } from "./constantes";
 
-const minLength = (n: number, label: string = '') => (s: string) => s.length < n ? {[`minLength-${n}`]: `${label} too short.`} : null;
-const maxLength = (n: number, label: string = '') => (s: string) => s.length > n ? {[`maxLength-${n}`]: `${label} too long.`} : null;
-
 export const myApi: MyApiDescription = {
     
     config: {
@@ -24,8 +21,8 @@ export const myApi: MyApiDescription = {
                     required: true,
                     unique: true,
                     validators: [
-                        minLength(3, 'Username'),
-                        maxLength(255, 'Username')
+                        (s: string) => s.length < 3 ? {[`minLength-3`]: `Username too short.`} : null,
+                        (s: string) => s.length > 255 ? {[`maxLength-255`]: `Username too long.`} : null
                     ],
                 },
                 password: {
@@ -34,8 +31,8 @@ export const myApi: MyApiDescription = {
                     canSelect: CANNOT, // put `select: false` in the mongoose Schema + call function to know if context can bypass the mongoose rule on 'GET /' and 'GET /:id'
                     canUpdate: CANNOT, // call function to know if context can update this field on 'PUT /:id' route
                     validators: [
-                        minLength(8, 'Password'),
-                        maxLength(255, 'Password')
+                        (s: string) => s.length < 8 ? {[`minLength-8`]: `Password too short.`} : null,
+                        (s: string) => s.length > 255 ? {[`maxLength-255`]: `Password too long.`} : null
                     ], // call those function on 'POST /' and 'PUT /:id' to know if the provided field value is valid
                 },
                 roles: {
@@ -99,8 +96,8 @@ export const myApi: MyApiDescription = {
                     required: true,
                     unique: true,
                     validators: [
-                        minLength(3, 'Title'),
-                        maxLength(255, 'Title')
+                        (s: string) => s.length < 3 ? {[`minLength-3`]: `Title too short.`} : null,
+                        (s: string) => s.length > 255 ? {[`maxLength-255`]: `Title too long.`} : null
                     ],
                 },
                 author: {
@@ -139,8 +136,8 @@ export const myApi: MyApiDescription = {
                     required: true,
                     unique: true,
                     validators: [
-                        minLength(3, 'Title'),
-                        maxLength(255, 'Title')
+                        (s: string) => s.length < 3 ? {[`minLength-3`]: `Title too short.`} : null,
+                        (s: string) => s.length > 255 ? {[`maxLength-255`]: `Title too long.`} : null
                     ],
                 },
                 done: {
