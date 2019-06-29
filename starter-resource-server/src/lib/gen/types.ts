@@ -46,6 +46,9 @@ export type GenSchema = {
         passportFields?: [string, string?];
         iAmModelName?: string;
         outDir?: string;
+        genLibModulePath?: string;
+        contextName?: string;
+        contextPath?: string;
     };
     apis: {
         [api: string]: {
@@ -84,7 +87,7 @@ export type GenSchema = {
                     };
                     populate?: boolean;
                     populateAll?: boolean;
-                    reverse?: string;
+                    reverse?: string[];
                 }
             };
             webServices: {
@@ -162,12 +165,21 @@ export type GenGenerated = {
                 pullPayloadModel: string;
             };
             imports: string;
+            dynamicImports: string;
             defaultProjectionObject: string;
             defaultPopulateObject: string;
+            fieldForCreate: string;
+            fieldForUpdateSet: string;
+            fieldForUpdatePush: string;
+            fieldForUpdatePull: string;
             runCanSelectGuards: string;
             runCanCreateGuards: string;
             runCanUpdateGuards: string;
+            runAllCanSelectGuards: string;
+            runAllCanCreateGuards: string;
+            runAllCanUpdateGuards: string;
             runValidators: string;
+            runAllValidators: string;
             utilityService: string;
             mainService: string;
             mainMiddlewares: string;

@@ -10,7 +10,6 @@ import {
     GenTypeUnion
 } from "./types";
 import { mainPassportService } from "../../modules/passport/service";
-import { filter } from 'bluebird';
 
 export const applyTemplate = <A extends { [key: string]: string }>(template: string, args: A) => Object.entries(args || {})
     .reduce((steps, [key, value]) => steps.replace(new RegExp(`\\\$${key}`, 'g'), value), template);
@@ -20,7 +19,7 @@ export const capitalize = (s: string) => `${s.slice(0, 1).toLocaleUpperCase()}${
 export const mongooseSchemaTemplate = `
 export const $name = new mongoose.Schema({
 $properties
-}, { minimize: false, timestamps: true })
+}, { minimize: false, timestamps: true });
 `;
 export const mongooseSchemaPropertyTemplate = `    $name: {
         type: $type,
@@ -82,6 +81,43 @@ export const stringifyTypeForInterfaceProperty = (_type: GenTypeUnion, followRel
     }
 };
 
+export const getVerbForRouter = (wsEp: string) => {
+    switch (true) {
+        case wsEp.includes('GET'):
+            return 'get';
+        case wsEp.includes('POST'):
+            return 'post';
+        case wsEp.includes('PUT'):
+            return 'put';
+        case wsEp.includes('DELETE'):
+            return 'delete';
+        default:
+            throw new Error(`getVerbForRouter: Do not know verb in ${wsEp}`);
+    }
+};
+export const getPathForRouter = (wsEp: string) => {
+    switch (true) {
+        default:
+            return wsEp.split(' ')[1];
+    }
+};
+export const getControllerMethodForRouter = (wsEp: string) => {
+    switch (true) {
+        case wsEp === 'GET /':
+            return 'getAll';
+        case wsEp === 'POST /':
+            return 'create';
+        case wsEp === 'GET /:id':
+            return 'getById';
+        case wsEp === 'PUT /:id':
+            return 'update';
+        case wsEp === 'DELETE /:id':
+            return 'delete';
+        default:
+            return ``;
+    }
+};
+
 export const mongooseModelTemplate = `
 export const $name = mongoose.model('$modelName', $schemaName);
 `;
@@ -133,63 +169,64 @@ $properties
 `;
 export const defaultPopulateObjectPropertyTemplate = `    $name: $populate,`;
 
+export const fieldForCreateTemplate = `
+export const $name = [$fields];
+`;
+export const fieldForUpdateSetTemplate = `
+export const $name = [$fields];
+`;
+export const fieldForUpdatePushTemplate = `
+export const $name = [$fields];
+`;
+export const fieldForUpdatePullTemplate = `
+export const $name = [$fields];
+`;
 
 export const runGuardsTemplate = `
-export const $name = (context: GenContext) => {
-    const guards = context.schema.$path;
-    return Promise.all(guards.map(guard => guard(context)))
-        .then((results: GenGuardReturnUnion[]) => results.reduce((step, result) => {
+export const $name = async (context: GenContext) => {
+    const guards = context.schema.apis.$api.model.$field.guards
+        && context.schema.apis.$api.model.$field.guards.$guards;
+    return Promise.all((guards || []).map(guard => guard(context)))
+        .then((results: LibGuardReturnUnion[]) => results.reduce((step, result) => {
             if (step || result) {
                 if (!step) {
-                    step = resutl;
+                    step = result;
                 } else if (result) {
-                    step = { ...step, ...result };
+                    step = {
+                        ...step,
+                        ['$field']: {
+                            ...(step['$field'] ? step['$field'] : {}),
+                            ...result
+                        }
+                    };
                 }
             }
             return step;
-        }, null))
-        .catch((error: any) => ({ topLevel: 'An error occured' }));
+        }, null));
 };
 `;
-export const runCanCreateGuardsTemplate = `
-export const $name = (context: GenContext) => {
-    const guards = context.schema.$path;
-    return Promise.all(guards.map(guard => guard(context)))
-        .then((results: GenGuardReturnUnion[]) => results.reduce((step, result) => {
-            if (step || result) {
-                if (!step) {
-                    step = resutl;
-                } else if (result) {
-                    step = { ...step, ...result };
-                }
-            }
-            return step;
-        }, null))
-        .catch((error: any) => ({ topLevel: 'An error occured' }))
+export const runAllGuardsTemplate = `
+export const $name = async (context: GenContext) => {
+    return Promise.all([
+$guards
+    ]);
 };
 `;
-export const runCanUpdateGuardsTemplate = `
-export const $name = (context: GenContext) => {
-    const guards = context.schema.$path;
-    return Promise.all(guards.map(guard => guard(context)))
-        .then((results: GenGuardReturnUnion[]) => results.reduce((step, result) => {
-            if (step || result) {
-                if (!step) {
-                    step = resutl;
-                } else if (result) {
-                    step = { ...step, ...result };
-                }
-            }
-            return step;
-        }, null))
-        .catch((error: any) => ({ topLevel: 'An error occured' }))
-};
-`;
+export const runAllGuardsGuardTemplate = `        $guard(context),`;
+export const runCanSelectGuardsTemplate = applyTemplate(runGuardsTemplate, { guards: `canSelect` });
+export const runAllCanSelectGuardsTemplate = runAllGuardsTemplate;
+export const runAllCanSelectGuardsGuardTemplate = runAllGuardsGuardTemplate;
+export const runCanCreateGuardsTemplate = applyTemplate(runGuardsTemplate, { guards: `canCreate` });
+export const runAllCanCreateGuardsTemplate = runAllGuardsTemplate;
+export const runAllCanCreateGuardsGuardTemplate = runAllGuardsGuardTemplate;
+export const runCanUpdateGuardsTemplate = applyTemplate(runGuardsTemplate, { guards: `canUpdate` });
+export const runAllCanUpdateGuardsTemplate = runAllGuardsTemplate;
+export const runAllCanUpdateGuardsGuardTemplate = runAllGuardsGuardTemplate;
 export const runValidatorsTemplate = `
-export const $name = (input: $type) => {
-    const validators = context.schema.$path.validators;
+export const $name = (input: $type, context: GenContext) => {
+    const validators = context.schema.apis.$api.model.$field.validators;
     return Object.values(validators).reduce((step, validator) => {
-        const validate = validator(input);
+        const validate = (validator as LibValidator)(input);
         if (step || validate) {
             if (!step) {
                 step = validate;
@@ -197,106 +234,393 @@ export const $name = (input: $type) => {
                 step = { ...step, ...validate };
             }
         }
+        return step;
     }, null);
 };
+`; 
+export const runAllValidatorsTemplate = `
+export const $name = (context: GenContext) => {
+    const validators = Object.entries(context.schema.apis.$api.model)
+        .map(([fieldName, field]: [string, any]) => [fieldName, field, field.validators || {}] as [string, any, LibValidator]);
+    const validations = validators.map(([fieldName, field, validators]) => Object.entries(validators)
+        .map(([validatorName, validator]) => [validatorName, validator(context.req[fieldName], context)] as [string, LibValidatorReturnUnion])
+    );
+    if (validations.some(([validationName, validation]) => !!validation)) {
+        return validations;
+    }
+    return null;
+};
 `;
+
+export const dynamicImportsTemplate = `
+import {
+$types
+} from '../types';
+`;
+
 export const utilityServiceTemplate = `
 export class $name {
+
+    context: GenContext;
 
     model = $modelName;
 
     constructor() {
     }
 
-    find(
-        mongooseQueryObject: $queryObject,
-        mongooseProjectionObject: $projectionObject,
-        mongoosePopulateObject: $populateObject,
-        mongooseQueryOptions: any,
+    populateAll(query: any, populates: string[], idx: number = 0) {
+        if (idx === populates.length) {
+            return query;
+        }
+        return this.populateAll(query.populate(populates[idx]), populates, idx + 1);
+    }
+
+    async applyAllCanSelectGuards(query: Promise<any> | DocumentQuery<any, any>) {
+        const deleteThem = (results: LibGuardReturnUnion[], instance: any) => {
+            results.forEach(result => Object.keys(result || {}).forEach(fieldName => {
+                delete instance[fieldName];
+            }));
+        };
+        const results = await $runAllCanSelectGuards(this.context);
+        return query
+            .then(result => {
+                Array.isArray(result)
+                    ? result.forEach(res => deleteThem(results, res))
+                    : deleteThem(results, result);
+                return result;
+            });
+    }
+
+    async applyAllCanCreateGuards(_payload: $createPayloadModel) {
+        const payload = $fieldForCreate
+            .reduce((step, fieldName) => ({ ...step, [fieldName]: _payload[fieldName] }), {});
+        const deleteThem = (results: LibGuardReturnUnion[], body: any) => {
+            results.forEach(result => Object.keys(result || {}).forEach(fieldName => {
+                delete body[fieldName];
+            }));
+        };
+        const results = await $runAllCanCreateGuards(this.context);
+        deleteThem(results, payload);
+        return payload;
+    }
+
+    async applyAllCanUpdateGuards(_payload: $updatePayloadModel) {
+        const payload = {
+            id: _payload.id,
+            $set: $fieldForUpdateSet
+                .filter(fieldName => _payload.$set && fieldName in Object.keys(_payload.$set))
+                .reduce((step, fieldName) => ({ ...step, [fieldName]: _payload.$set[fieldName] }), {}),
+            $push: $fieldForUpdatePush
+                .filter(fieldName => _payload.$push && fieldName in Object.keys(_payload.$push))
+                .reduce((step, fieldName) => ({ ...step, [fieldName]: _payload.$push[fieldName] }), {}),
+            $pull: $fieldForUpdatePull
+                .filter(fieldName => _payload.$pull && fieldName in Object.keys(_payload.$pull))
+                .reduce((step, fieldName) => ({ ...step, [fieldName]: _payload.$pull[fieldName] }), {}),
+        };
+        const deleteThem = (results: LibGuardReturnUnion[], body: any) => {
+            results.forEach(result => Object.keys(result || {}).forEach(fieldName => {
+                delete body[fieldName];
+            }));
+        };
+        const results = await $runAllCanUpdateGuards(this.context);
+        deleteThem(results, payload.$set);
+        deleteThem(results, payload.$push);
+        deleteThem(results, payload.$pull);
+        return payload;
+    }
+
+    async find(
+        mongooseQueryObject?: $queryObject,
+        mongooseProjectionObject?: $projectionObject,
+        mongoosePopulateObject: $populateObject = {},
+        mongooseQueryOptions?: any,
+        lean: boolean = false,
+        exec: boolean = false,
+        cb?: any
     ) {
-        return this.model.find(
+        const populates = Object.keys(mongoosePopulateObject).filter(key => mongoosePopulateObject[key]);
+        const query = () => this.populateAll(this.model.find(
+            mongooseQueryObject,
+            mongooseProjectionObject,
+            mongooseQueryOptions
+        ), populates);
+        const queryLean = () => lean ? query().lean() : query();
+        const queryExec = () => exec ? queryLean().exec(cb) : queryLean();
+        return this.applyAllCanSelectGuards(queryExec());
+    }
+
+    async create(
+        _createPayload: $createPayloadModel,
+    ) {
+        const createPayload = await this.applyAllCanCreateGuards(_createPayload);
+        const instance = new this.model(createPayload);
+        return instance.save();
+    }
+
+    async update(
+        _updatePayload: $updatePayloadModel,
+        lean: boolean = false,
+        exec: boolean = false,
+        cb?: any
+    ) {
+        const updatePayload = await this.applyAllCanUpdateGuards(_updatePayload);
+        const query = () => this.model.findByIdAndUpdate(updatePayload.id, {
+            $set: updatePayload.$set,
+            $push: Object.entries(updatePayload.$push || {}).reduce((step, [fieldName, toPush]) => ({
+                ...step,
+                [fieldName]: { $each: toPush }
+            }), {}),
+            $pull: Object.entries(updatePayload.$pull || {}).reduce((step, [fieldName, toPull]) => ({
+                ...step,
+                [fieldName]: { $in: toPull }
+            }), {}),
+        });
+        const queryLean = () => lean ? query().lean() : query();
+        const queryExec = () => exec ? queryLean().exec(cb) : queryLean();
+        return queryExec();
+    }
+
+    async delete(
+        id: ID,
+        lean: boolean = false,
+        exec: boolean = false,
+        cb?: any
+    ) {
+        const query = () => this.model.findByIdAndRemove(id);
+        const queryLean = () => lean ? query().lean() : query();
+        const queryExec = () => exec ? queryLean().exec(cb) : queryLean();
+        return queryExec();
+    }
+
+    async findLean(
+        mongooseQueryObject?: $queryObject,
+        mongooseProjectionObject?: $projectionObject,
+        mongoosePopulateObject: $populateObject = {},
+        mongooseQueryOptions?: any
+    ) {
+        return this.find(
             mongooseQueryObject,
             mongooseProjectionObject,
             mongoosePopulateObject,
-            mongooseQueryOptions
+            mongooseQueryOptions,
+            true
         );
     }
 
-    create(
-        createPayload: $createPayloadModel,
-        mongooseProjectionObject: $projectionObject,
-        mongoosePopulateObject: $populateObject,
+    async createLean(createPayload: $createPayloadModel) {
+        return this.create(createPayload);
+    }
+
+    async updateLean(updatePayload: $updatePayloadModel) {
+        return this.update(updatePayload, true);
+    }
+
+    async deleteLean(id: ID) {
+        return this.delete(id, true);
+    }
+
+    async findExec(
+        mongooseQueryObject?: $queryObject,
+        mongooseProjectionObject?: $projectionObject,
+        mongoosePopulateObject: $populateObject = {},
+        mongooseQueryOptions?: any,
+        cb?: any,
     ) {
-
+        return this.find(
+            mongooseQueryObject,
+            mongooseProjectionObject,
+            mongoosePopulateObject,
+            mongooseQueryOptions,
+            false,
+            true,
+            cb
+        );
     }
 
-    update() {
+    async createExec(createPayload: $createPayloadModel) {
+        return this.create(createPayload);
     }
 
-    delete() {
+    async updateExec(updatePayload: $updatePayloadModel, cb?: any) {
+        return this.update(updatePayload, false, true, cb);
     }
 
-    findLean() {
-        return this.find().lean();
+    async deleteExec(id: ID, cb?: any) {
+        return this.delete(id, false, true, cb);
     }
 
-    createLean() {
-        return this.create().lean();
+    async findLeanExec(
+        mongooseQueryObject?: $queryObject,
+        mongooseProjectionObject?: $projectionObject,
+        mongoosePopulateObject: $populateObject = {},
+        mongooseQueryOptions?: any,
+        cb?: any
+    ) {
+        return this.find(
+            mongooseQueryObject,
+            mongooseProjectionObject,
+            mongoosePopulateObject,
+            mongooseQueryOptions,
+            true,
+            true,
+            cb
+        );
     }
 
-    updateLean() {
-        return this.update().lean();
+    async createLeanExec(createPayload: $createPayloadModel) {
+        return this.create(createPayload);
     }
 
-    deleteLean() {
-        return this.delete().lean();
+    async updateLeanExec(updatePayload: $updatePayloadModel, cb?: any) {
+        return this.update(updatePayload, true, true, cb);
     }
 
-    findExec() {
-        return this.find().exec();
-    }
-
-    createExec() {
-        return this.create().exec();
-    }
-
-    updateExec() {
-        return this.update().exec();
-    }
-
-    deleteExec() {
-        return this.delete().exec();
-    }
-
-    findLeanExec() {
-        return this.findLean().exec();
-    }
-
-    createLeanExec() {
-        return this.createLean().exec();
-    }
-
-    updateLeanExec() {
-        return this.updateLean().exec();
-    }
-
-    deleteLeanExec() {
-        return this.deleteLean().exec();
+    async deleteLeanExec(id: ID, cb?: any) {
+        return this.delete(id, true, true, cb);
     }
 }
+
+export const $instance = new $name();
+
 `;
 
 export const mainServiceTemplate = `
+export class $name {
+
+    utils = $utilsInstance;
+
+    constructor() {}
+
+    async getAll() {
+        return this.utils.find({}, $defaultProjectionObject, $defaultPopulateObject);
+    }
+    
+    async getById(id: ID) {
+        return this.utils.find({ id }, $defaultProjectionObject, $defaultPopulateObject);
+    }
+    
+    async create(createPayload: $createPayloadModel) {
+        return this.utils.create(createPayload);
+    }
+    
+    async update(updatePayload: $updatePayloadModel) {
+        return this.utils.update(updatePayload);
+    }
+    
+    async delete(id: ID) {
+        return this.utils.delete(id);
+    }
+}
+
+export const $instance = new $name();
+
 `;
 
 export const mainMiddlewaresTemplate = `
+/*
+
+export class $name {
+    constructor() {}
+}
+
+export const $instance = new $name();
+
+*/
 `;
 
 export const mainControllersTemplate = `
+export class $name {
+    
+    service = $serviceInstance;
+
+    constructor() {}
+
+    getAll() {
+        return async (req: Request, res: Response) => {
+            try {
+                const response = await this.service.getAll();
+                res.json({ response });
+            } catch (error) {
+                res.status(400).send(error);
+            }
+        };
+    }
+    
+    getById() {
+        return async (req: Request, res: Response) => {
+            const id = req.params.id;
+            try {
+                const response = await this.service.getById(id);
+                res.json({ response });
+            } catch (error) {
+                res.status(400).send(error);
+            }
+        };
+    }
+    
+    create() {
+        return async (req: Request, res: Response) => {
+            const payload = req.body;
+            try {
+                const response = await this.service.create(payload);
+                res.json({ response });
+            } catch (error) {
+                res.status(400).send(error);
+            }
+        };
+    }
+    
+    update() {
+        return async (req: Request, res: Response) => {
+            const id = req.params.id;
+            const payload = req.body;
+            try {
+                const response = await this.service.update({ id, ...payload });
+                res.json({ response });
+            } catch (error) {
+                res.status(400).send(error);
+            }
+        };
+    }
+    
+    delete() {
+        return async (req: Request, res: Response) => {
+            const id = req.params.id;
+            try {
+                const response = await this.service.delete(id);
+                res.json({ response });
+            } catch (error) {
+                res.status(400).send(error);
+            }
+        };
+    }
+
+}
+
+export const $instance = new $name();
 `;
 
 export const mainRouterTemplate = `
+export class $name {
+
+    controller = $controllerInstance;
+    router: any;
+
+    constructor() {
+        this.router = Router()
+$webServices;
+    }
+
+    applyRouter(app: Application) {
+        app.use('$path', this.router);
+    }
+
+}
+
+export const $instance = new $name();
 `;
+
+export const mainRouterWebServiceTemplate = `            .$verb('$path', $middlewares)`;
 
 export const applyRouterTemplate = `
 `;
@@ -513,18 +837,46 @@ export type ID = string | number | ObjectID;
                                     .join('\n'),
                             }),
                         },
+                        imports: `
+import {
+    Application,
+    Router,
+    Request,
+    Response,
+    NextFunction
+} from 'express';
+import { DocumentQuery } from 'mongoose';
+import { ObjectID } from 'mongodb';
+import {
+    GenContext,
+    LibGuardReturnUnion,
+    LibValidator,
+    LibValidatorReturnUnion
+} from '${config.genLibModulePath || "../../lib/gen/types" }';
+                        `,
+                        dynamicImports: applyTemplate(dynamicImportsTemplate, {
+                            types: [
+                                `    ID`,
+                                `    ${capitalize(apiName)}Model`,
+                                `    ${capitalize(apiName)}CreatePayloadModel`,
+                                `    ${capitalize(apiName)}UpdatePayloadModel`,
+                                `    ${capitalize(apiName)}QueryObject`,
+                                `    ${capitalize(apiName)}ProjectionObject`,
+                                `    ${capitalize(apiName)}PopulateObject`,
+                            ].join(',\n')
+                        }),
                         defaultProjectionObject: applyTemplate(defaultProjectionObjectTemplate, {
-                            name: `Default${capitalize(apiName)}ProjectionObject`,
+                            name: `default${capitalize(apiName)}ProjectionObject`,
                             properties: Object.entries(api.model)
                                 .filter(([fieldName, field]) => !(field.guards && field.guards.canSelect && field.guards.canSelect.length))
                                 .map(([fieldName, field]) => applyTemplate(defaultProjectionObjectPropertyTemplate, {
                                     name: fieldName,
-                                    project: '1'
+                                    project: '1 as 0 | 1'
                                 }))
                                 .join('\n')
                         }),
                         defaultPopulateObject: applyTemplate(defaultPopulateObjectTemplate, {
-                            name: `Default${capitalize(apiName)}PopulateObject`,
+                            name: `default${capitalize(apiName)}PopulateObject`,
                             properties: Object.entries(api.model)
                                 .filter(([fieldName, field]) => typeof((Array.isArray(field.type) ? field.type[0] : field.type)) === 'string'
                                     && !(field.guards && field.guards.canSelect && field.guards.canSelect.length)
@@ -537,20 +889,172 @@ export type ID = string | number | ObjectID;
                                 .join('\n')
                         }),
                         
-                        runCanSelectGuards: '',
-                        runCanCreateGuards: '',
-                        runCanUpdateGuards: '',
-                        runValidators: '',
+                        
+                        runCanSelectGuards: Object.entries(api.model)
+                            .filter(([fieldName, field]) => true)
+                            .map(([fieldName, field]) => applyTemplate(runCanSelectGuardsTemplate, {
+                                name: `runCanSelect${capitalize(apiName)}${capitalize(fieldName)}Guards`,
+                                api: apiName,
+                                field: fieldName
+                            }))
+                            .join('\n'),
+                        runAllCanSelectGuards: applyTemplate(runAllCanSelectGuardsTemplate, {
+                            name: `runAllCanSelect${capitalize(apiName)}Guards`,
+                            guards: Object.entries(api.model)
+                                .filter(([fieldName, field]) => true)
+                                .map(([fieldName, field]) => applyTemplate(runAllCanSelectGuardsGuardTemplate, {
+                                    guard: `runCanSelect${capitalize(apiName)}${capitalize(fieldName)}Guards`
+                                }))
+                                .join('\n')
+                        }),
+                        runCanCreateGuards: Object.entries(api.model)
+                            .filter(([fieldName, field]) => true)
+                            .map(([fieldName, field]) => applyTemplate(runCanCreateGuardsTemplate, {
+                                name: `runCanCreate${capitalize(apiName)}${capitalize(fieldName)}Guards`,
+                                api: apiName,
+                                field: fieldName
+                            }))
+                            .join('\n'),
+                        runAllCanCreateGuards: applyTemplate(runAllCanCreateGuardsTemplate, {
+                            name: `runAllCanCreate${capitalize(apiName)}Guards`,
+                            guards: Object.entries(api.model)
+                                .filter(([fieldName, field]) => true)
+                                .map(([fieldName, field]) => applyTemplate(runAllCanCreateGuardsGuardTemplate, {
+                                    guard: `runCanCreate${capitalize(apiName)}${capitalize(fieldName)}Guards`
+                                }))
+                                .join('\n')
+                        }),
+                        runCanUpdateGuards: Object.entries(api.model)
+                            .filter(([fieldName, field]) => true)
+                            .map(([fieldName, field]) => applyTemplate(runCanUpdateGuardsTemplate, {
+                                name: `runCanUpdate${capitalize(apiName)}${capitalize(fieldName)}Guards`,
+                                api: apiName,
+                                field: fieldName
+                            }))
+                            .join('\n'),
+                        runAllCanUpdateGuards: applyTemplate(runAllCanUpdateGuardsTemplate, {
+                            name: `runAllCanUpdate${capitalize(apiName)}Guards`,
+                            guards: Object.entries(api.model)
+                                .filter(([fieldName, field]) => true)
+                                .map(([fieldName, field]) => applyTemplate(runAllCanUpdateGuardsGuardTemplate, {
+                                    guard: `runCanUpdate${capitalize(apiName)}${capitalize(fieldName)}Guards`
+                                }))
+                                .join('\n')
+                        }),
+                        runValidators: Object.entries(api.model)
+                            .filter(([fieldName, field]) => true)
+                            .map(([fieldName, field]) => applyTemplate(runValidatorsTemplate, {
+                                name: `run${capitalize(apiName)}${capitalize(fieldName)}Validators`,
+                                type: stringifyTypeForInterfaceProperty(field.type, false),
+                                api: apiName,
+                                field: fieldName
+                            }))
+                            .join('\n'),
+                        
+                        runAllValidators: applyTemplate(runAllValidatorsTemplate, {
+                            name: `runAll${capitalize(apiName)}Validators`,
+                            api: apiName
+                        }),
+
+                        fieldForCreate: applyTemplate(fieldForCreateTemplate, {
+                            name: `fieldForCreate${capitalize(apiName)}`,
+                            fields: Object.entries({
+                                id: {
+                                    type: 'ID',
+                                    required: true,
+                                } as any,
+                                ...api.model
+                            })
+                            .filter(([fieldName, field]) => !field.guards
+                                || !field.guards.canCreate
+                                || field.guards.canCreate !== ALWAYS_CANNOT
+                            ).map(([fieldName, field]) => `'${fieldName}'`).join(', ')
+                        }),
+                        fieldForUpdateSet: applyTemplate(fieldForUpdateSetTemplate, {
+                            name: `fieldForUpdateSet${capitalize(apiName)}`,
+                            fields: Object.entries(api.model)
+                                .filter(([fieldName, field]) => !field.guards
+                                    || !field.guards.canUpdate
+                                    || field.guards.canUpdate !== ALWAYS_CANNOT
+                                )
+                                .map(([fieldName, field]) => `'${fieldName}'`)
+                                .join(', '),
+                        }),
+                        fieldForUpdatePush: applyTemplate(fieldForUpdatePushTemplate, {
+                            name: `fieldForUpdatePush${capitalize(apiName)}`,
+                            fields: Object.entries(api.model)
+                                .filter(([fieldName, field]) => Array.isArray(field.type) && (!field.guards
+                                    || !field.guards.canUpdate
+                                    || field.guards.canUpdate !== ALWAYS_CANNOT)
+                                )
+                                .map(([fieldName, field]) => `'${fieldName}'`)
+                                .join(', ')
+                        }),
+                        fieldForUpdatePull: applyTemplate(fieldForUpdatePullTemplate, {
+                            name: `fieldForUpdatePull${capitalize(apiName)}`,
+                            fields: Object.entries(api.model)
+                                .filter(([fieldName, field]) => Array.isArray(field.type) && (!field.guards
+                                    || !field.guards.canUpdate
+                                    || field.guards.canUpdate !== ALWAYS_CANNOT)
+                                )
+                                .map(([fieldName, field]) => `'${fieldName}'`)
+                                .join(', ')
+                        }),
                         utilityService: applyTemplate(utilityServiceTemplate, {
+                            name: `${capitalize(apiName)}UtilityService`,
+                            instance: `main${capitalize(apiName)}UtilityService`,
+                            modelName: `${capitalize(apiName)}Model`,
+                            runAllCanSelectGuards: `runAllCanSelect${capitalize(apiName)}Guards`,
+                            runAllCanCreateGuards: `runAllCanCreate${capitalize(apiName)}Guards`,
+                            runAllCanUpdateGuards: `runAllCanUpdate${capitalize(apiName)}Guards`,
+                            runAllValidators: `runAll${capitalize(apiName)}Validators`,
+                            createPayloadModel: `${capitalize(apiName)}CreatePayloadModel`,
+                            updatePayloadModel: `${capitalize(apiName)}UpdatePayloadModel`,
+                            fieldForCreate: `fieldForCreate${capitalize(apiName)}`,
+                            fieldForUpdateSet: `fieldForUpdateSet${capitalize(apiName)}`,
+                            fieldForUpdatePush: `fieldForUpdatePush${capitalize(apiName)}`,
+                            fieldForUpdatePull: `fieldForUpdatePull${capitalize(apiName)}`,
+                            queryObject: `${capitalize(apiName)}QueryObject`,
+                            projectionObject: `${capitalize(apiName)}ProjectionObject`,
+                            populateObject: `${capitalize(apiName)}PopulateObject`,
 
                         }),
                         mainService: applyTemplate(mainServiceTemplate, {
+                            name: `${capitalize(apiName)}Service`,
+                            utilsInstance: `main${capitalize(apiName)}UtilityService`,
+                            defaultProjectionObject: `default${capitalize(apiName)}ProjectionObject`,
+                            defaultPopulateObject: `default${capitalize(apiName)}PopulateObject`,
+                            createPayloadModel: `${capitalize(apiName)}CreatePayloadModel`,
+                            updatePayloadModel: `${capitalize(apiName)}UpdatePayloadModel`,
+                            instance: `main${capitalize(apiName)}Service`,
                         }),
                         mainMiddlewares: applyTemplate(mainMiddlewaresTemplate, {
                         }),
                         mainControllers: applyTemplate(mainControllersTemplate, {
+                            name: `${capitalize(apiName)}Controller`,
+                            serviceInstance: `main${capitalize(apiName)}Service`,
+                            createPayloadModel: `${capitalize(apiName)}CreatePayloadModel`,
+                            updatePayloadModel: `${capitalize(apiName)}UpdatePayloadModel`,
+                            instance: `main${capitalize(apiName)}Controller`
                         }),
                         mainRouter: applyTemplate(mainRouterTemplate, {
+                            name: `${capitalize(apiName)}Router`,
+                            controllerInstance: `main${capitalize(apiName)}Controller`,
+                            instance: `main${capitalize(apiName)}Router`,
+                            path: `/${apiName}`,
+                            webServices: Object.entries({
+                                ...api.webServices
+                            })
+                            .filter(([wsEp, ws]) => /(GET|POST|PUT|DELETE) \/(\w|\/)*/i.test(wsEp))
+                            .map(([wsEp, ws]) => applyTemplate(mainRouterWebServiceTemplate, {
+                                verb: getVerbForRouter(wsEp),
+                                path: getPathForRouter(wsEp),
+                                middlewares: (getControllerMethodForRouter(wsEp) ? [
+                                    `...${config.contextName}.schema.apis.${apiName}.webServices['${wsEp}'].middlewares`,
+                                    `this.controller.${getControllerMethodForRouter(wsEp)}()`
+                                ] : [`...${config.contextName}.schema.apis.${apiName}.webServices['${wsEp}'].middlewares`]).join(', ')
+                            }))
+                            .join('\n')
                         }),
                         applyRouter: applyTemplate(applyRouterTemplate, {
                         }),
@@ -574,8 +1078,21 @@ export type ID = string | number | ObjectID;
             }
             fs.writeFileSync(outTypescriptPath, [
                 generated[apiName].typescript.imports,
+                generated[apiName].typescript.dynamicImports,
+                generated[apiName].typescript.fieldForCreate,
+                generated[apiName].typescript.fieldForUpdateSet,
+                generated[apiName].typescript.fieldForUpdatePush,
+                generated[apiName].typescript.fieldForUpdatePull,
                 generated[apiName].typescript.defaultProjectionObject,
                 generated[apiName].typescript.defaultPopulateObject,
+                generated[apiName].typescript.runCanSelectGuards,
+                generated[apiName].typescript.runCanCreateGuards,
+                generated[apiName].typescript.runCanUpdateGuards,
+                generated[apiName].typescript.runValidators,
+                generated[apiName].typescript.runAllCanSelectGuards,
+                generated[apiName].typescript.runAllCanCreateGuards,
+                generated[apiName].typescript.runAllCanUpdateGuards,
+                generated[apiName].typescript.runAllValidators,
                 generated[apiName].typescript.utilityService,
                 generated[apiName].typescript.mainService,
                 generated[apiName].typescript.mainMiddlewares,

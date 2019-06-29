@@ -456,6 +456,8 @@ export class MyApiEngine {
                 jwtSecret: 'secret',
                 passportFields: ['username', 'password'],
                 iAmModelName: 'User',
+                outDir: './src/generated-v2',
+                genLibModulePath: '../../lib/gen/types'
             },
             apis: {
                 user: {
@@ -571,7 +573,7 @@ export class MyApiEngine {
                                 canCreate: alwaysCannot,
                                 canUpdate: alwaysCannot,
                             },
-                            reverse: 'todos',
+                            reverse: ['todos'],
                             populate: true
                         }
                     },
