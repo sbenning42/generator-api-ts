@@ -7,11 +7,6 @@ import { mainMongoService } from '../mongo/service';
 import { initContextMiddleware } from '../../config/context';
 import { applyUserAPI } from '../../generated/user/user';
 import { L } from '../../common/logger';
-import { applyTodoAPI, mainTodoService } from '../../generated/todo/todo';
-import { mainPassportService } from '../passport/service';
-import { TodoSchema } from '../../generated/types';
-import { mainTodoMiddlewares } from '../todo/middlewares';
-import { mainGraphqlService } from '../graphql/service';
 
 const {
 } = environment;
@@ -32,12 +27,7 @@ export class UseService extends Singleton {
         
         app.use(initContextMiddleware, passport.initialize());
         mainPassportRouter.applyRouter(app, '/auth');
-        
-        applyUserAPI(app);
-        
-        /**
-         * You can add other `Application` handlers here
-         */
+        /*
         
         const todoOwnerConfig = {
             key: 'Todo',
@@ -52,7 +42,7 @@ export class UseService extends Singleton {
 
         await mainGraphqlService.getSchema();
         await mainGraphqlService.applyMiddleware(app);
-
+*/
     }
 }
 

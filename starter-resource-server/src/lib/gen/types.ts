@@ -36,7 +36,7 @@ export interface LibGenContext {
         iOwn: LibMiddlewareFactory;
     };
 }
-export type GenContext = CustomGenContext & { lib: LibGenContext };
+export type GenContext = CustomGenContext & { lib: LibGenContext } & { schema: GenSchema };
 
 export type GenTypeUnion = Boolean | String | Number | Date | Object | string | [Boolean] | [String] | [Number] | [Date] | [Object] | [string];
 
@@ -46,9 +46,7 @@ export type GenSchema = {
         passportFields?: [string, string?];
         iAmModelName?: string;
         outDir?: string;
-        genLibModulePath?: string;
-        contextName?: string;
-        contextPath?: string;
+        genLibDir?: string;
     };
     apis: {
         [api: string]: {

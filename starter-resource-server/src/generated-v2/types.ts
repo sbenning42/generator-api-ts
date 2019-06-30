@@ -8,7 +8,7 @@ export const Mixed = mongoose.Schema.Types.Mixed;
 export type ID = string | number | ObjectID;
 
                             
-export const UserSchema = new mongoose.Schema({
+export const Userv2Schema = new mongoose.Schema({
     username: {
         type: String,
         required: true,
@@ -57,13 +57,13 @@ export const UserSchema = new mongoose.Schema({
         unique: false,
         select: true,
         default: [],
-        ref: 'Todo',
+        ref: 'Todov2',
     }
 }, { minimize: false, timestamps: true });
 
-export const UserModel = mongoose.model('User', UserSchema);
-export type UserQueryObject = any
-export interface UserProjectionObject {
+export const Userv2Model = mongoose.model('Userv2', Userv2Schema);
+export type Userv2QueryObject = any
+export interface Userv2ProjectionObject {
    username?: 0 | 1;
    password?: 0 | 1;
    roles?: 0 | 1;
@@ -73,11 +73,11 @@ export interface UserProjectionObject {
    todos?: 0 | 1;
 }
 
-export interface UserPopulateObject {
+export interface Userv2PopulateObject {
    todos?: boolean;
 }
 
-export interface User {
+export interface Userv2 {
    id: ID;
    username: string;
    password?: string;
@@ -88,7 +88,7 @@ export interface User {
    todos?: ObjectID[];
 }
 
-export interface UserPopulated {
+export interface Userv2Populated {
    id: ID;
    username: string;
    password?: string;
@@ -96,10 +96,10 @@ export interface UserPopulated {
    email: string;
    birthdate: Date;
    json?: any;
-   todos?: Todo[];
+   todos?: Todov2[];
 }
 
-export interface UserCreatePayloadModel {
+export interface Userv2CreatePayloadModel {
    id: ID;
    username: string;
    password: string;
@@ -108,14 +108,14 @@ export interface UserCreatePayloadModel {
    json?: any;
 }
 
-export interface UserUpdatePayloadModel {
+export interface Userv2UpdatePayloadModel {
    id: ID;
-   $set?: UserSetPayloadModel;
-   $push?: UserPushPayloadModel;
-   $pull?: UserPullPayloadModel;
+   $set?: Userv2SetPayloadModel;
+   $push?: Userv2PushPayloadModel;
+   $pull?: Userv2PullPayloadModel;
 }
 
-export interface UserSetPayloadModel {
+export interface Userv2SetPayloadModel {
    username?: string;
    roles?: string[];
    email?: string;
@@ -123,16 +123,16 @@ export interface UserSetPayloadModel {
    json?: any;
 }
 
-export interface UserPushPayloadModel {
+export interface Userv2PushPayloadModel {
    roles?: string[];
 }
 
-export interface UserPullPayloadModel {
+export interface Userv2PullPayloadModel {
    roles?: string[];
 }
 
 
-export const TodoSchema = new mongoose.Schema({
+export const Todov2Schema = new mongoose.Schema({
     title: {
         type: String,
         required: true,
@@ -160,24 +160,24 @@ export const TodoSchema = new mongoose.Schema({
         unique: false,
         select: true,
         default: ({ user }) => user.id,
-        ref: 'User',
+        ref: 'Userv2',
     }
 }, { minimize: false, timestamps: true });
 
-export const TodoModel = mongoose.model('Todo', TodoSchema);
-export type TodoQueryObject = any
-export interface TodoProjectionObject {
+export const Todov2Model = mongoose.model('Todov2', Todov2Schema);
+export type Todov2QueryObject = any
+export interface Todov2ProjectionObject {
    title?: 0 | 1;
    done?: 0 | 1;
    json?: 0 | 1;
    author?: 0 | 1;
 }
 
-export interface TodoPopulateObject {
+export interface Todov2PopulateObject {
    author?: boolean;
 }
 
-export interface Todo {
+export interface Todov2 {
    id: ID;
    title: string;
    done: boolean;
@@ -185,38 +185,38 @@ export interface Todo {
    author: ObjectID;
 }
 
-export interface TodoPopulated {
+export interface Todov2Populated {
    id: ID;
    title: string;
    done: boolean;
    json?: any;
-   author: User;
+   author: Userv2;
 }
 
-export interface TodoCreatePayloadModel {
+export interface Todov2CreatePayloadModel {
    id: ID;
    title: string;
    done: boolean;
    json?: any;
 }
 
-export interface TodoUpdatePayloadModel {
+export interface Todov2UpdatePayloadModel {
    id: ID;
-   $set?: TodoSetPayloadModel;
-   $push?: TodoPushPayloadModel;
-   $pull?: TodoPullPayloadModel;
+   $set?: Todov2SetPayloadModel;
+   $push?: Todov2PushPayloadModel;
+   $pull?: Todov2PullPayloadModel;
 }
 
-export interface TodoSetPayloadModel {
+export interface Todov2SetPayloadModel {
    title?: string;
    done?: boolean;
    json?: any;
 }
 
-export interface TodoPushPayloadModel {
+export interface Todov2PushPayloadModel {
 
 }
 
-export interface TodoPullPayloadModel {
+export interface Todov2PullPayloadModel {
 
 }

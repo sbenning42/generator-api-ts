@@ -235,7 +235,7 @@ export const $name = (input: $type, context: GenContext) => {
             }
         }
         return step;
-    }, null);
+    }, null as LibValidatorReturnUnion);
 };
 `; 
 export const runAllValidatorsTemplate = `
@@ -489,7 +489,9 @@ export class $name {
 
     utils = $utilsInstance;
 
-    constructor() {}
+    constructor() {
+        this.utils.context = gen.context;
+    }
 
     async getAll() {
         return this.utils.find({}, $defaultProjectionObject, $defaultPopulateObject);
@@ -606,7 +608,9 @@ export class $name {
     controller = $controllerInstance;
     router: any;
 
-    constructor() {
+    constructor() {}
+
+    initialize() {
         this.router = Router()
 $webServices;
     }
@@ -627,6 +631,7 @@ export const applyRouterTemplate = `
 
 
 export class GenCore {
+
     context: GenContext = {
         lib: {
             guards: {
@@ -641,10 +646,77 @@ export class GenCore {
                 hasRole: mainPassportService.hasRole,
                 iOwn: mainPassportService.owner,
             },
-        }
+        },
+        schema: null
     };
 
-    generate({ config, apis }: GenSchema): GenGenerated {
+    register(schema: GenSchema) {
+        this.context.schema = schema;
+    }
+
+    generate(write: boolean = true): GenGenerated {
+        const { config, apis } = this.context.schema;
+        Object.entries(apis)
+            .forEach(([apiName, api]) => {
+                const allMiddlewares = api.webServices.all && api.webServices.all.middlewares || [];
+                const queriesMiddlewares = api.webServices.queries && api.webServices.queries.middlewares || [];
+                const queryMiddlewares = api.webServices.query && api.webServices.query.middlewares || [];
+                const mutationMiddlewares = api.webServices.mutation && api.webServices.mutation.middlewares || [];
+                const queriesExcludes = api.webServices.queries && api.webServices.queries.excludes || {};
+                const queryExcludes = api.webServices.query && api.webServices.query.excludes || {};
+                const mutationExcludes = api.webServices.mutation && api.webServices.mutation.excludes || {};
+                const allSkip = api.webServices.all && api.webServices.all.skip || false;
+                const queriesSkip = api.webServices.queries && api.webServices.queries.skip || false;
+                const querySkip = api.webServices.query && api.webServices.query.skip || false;
+                const mutationSkip = api.webServices.mutation && api.webServices.mutation.skip || false;
+                ['GET /', 'POST /', 'GET /:id', 'PUT /:id', 'DELETE /:id']
+                    .forEach(wsEp => {
+                        if (!api.webServices[wsEp]) {
+                            api.webServices[wsEp] = {
+                                middlewares: [],
+                                excludes: [],
+                                skip: false,
+                            };
+                        }
+                    });
+                Object.entries(api.webServices)
+                    .filter(([wsEp, ws]) => /(GET|POST|PUT|DELETE)/.test(wsEp))
+                    .forEach(([wsEp, ws]) => {
+                        const wsController = getControllerMethodForRouter(wsEp);
+                        const wsMiddlewares = ws.middlewares || [];
+                        const wsExcludes = ws.excludes || {};
+                        const wsSkip = ws.skip || false;
+                        let middlewares;
+                        let skip;
+                        if (wsEp.startsWith('GET /')) {
+                            if (wsEp.startsWith('GET /:id')) {
+                                middlewares = [
+                                    ...allMiddlewares,
+                                    ...queryMiddlewares,
+                                    ...wsMiddlewares
+                                ].filter((m, idx) => !(idx in queryExcludes || idx in wsExcludes));
+                                skip = allSkip || querySkip || wsSkip;
+                            } else {
+                                middlewares = [
+                                    ...allMiddlewares,
+                                    ...queriesMiddlewares,
+                                    ...wsMiddlewares
+                                ].filter((m, idx) => !(idx in queriesExcludes || idx in wsExcludes));
+                                skip = allSkip || queriesSkip || wsSkip;
+                            }
+                        } else {
+                            middlewares = [
+                                ...allMiddlewares,
+                                ...mutationMiddlewares,
+                                ...wsMiddlewares
+                            ].filter((m, idx) => !(idx in mutationExcludes || idx in wsExcludes));
+                            skip = allSkip || mutationSkip || wsSkip;
+                        }
+                        ws.middlewares = middlewares;
+                        ws.skip = skip;
+                        console.log(`For ${wsEp}: middlewares: `, ws.middlewares, `, skip: ${ws.skip}.`);
+                    });
+            });
         const generated = Object.entries(apis)
             .reduce((steps, [apiName, api]) => ({
                 ...steps,
@@ -852,7 +924,9 @@ import {
     LibGuardReturnUnion,
     LibValidator,
     LibValidatorReturnUnion
-} from '${config.genLibModulePath || "../../lib/gen/types" }';
+} from '${config.genLibDir || "../../lib/gen"}/types';
+
+import { gen } from '${config.genLibDir || "../../lib/gen"}/core';
                         `,
                         dynamicImports: applyTemplate(dynamicImportsTemplate, {
                             types: [
@@ -1045,14 +1119,14 @@ import {
                             webServices: Object.entries({
                                 ...api.webServices
                             })
-                            .filter(([wsEp, ws]) => /(GET|POST|PUT|DELETE) \/(\w|\/)*/i.test(wsEp))
+                            .filter(([wsEp, ws]) => /(GET|POST|PUT|DELETE) \/(\w|\/)*/i.test(wsEp) && !ws.skip)
                             .map(([wsEp, ws]) => applyTemplate(mainRouterWebServiceTemplate, {
                                 verb: getVerbForRouter(wsEp),
                                 path: getPathForRouter(wsEp),
                                 middlewares: (getControllerMethodForRouter(wsEp) ? [
-                                    `...${config.contextName}.schema.apis.${apiName}.webServices['${wsEp}'].middlewares`,
+                                    `...gen.context.schema.apis.${apiName}.webServices['${wsEp}'].middlewares`,
                                     `this.controller.${getControllerMethodForRouter(wsEp)}()`
-                                ] : [`...${config.contextName}.schema.apis.${apiName}.webServices['${wsEp}'].middlewares`]).join(', ')
+                                ] : [`...gen.context.schema.apis.${apiName}.webServices['${wsEp}'].middlewares`]).join(', ')
                             }))
                             .join('\n')
                         }),
@@ -1061,61 +1135,65 @@ import {
                     }
                 }
             }), {}) as GenGenerated;
-        config.outDir = config.outDir !== undefined ? config.outDir : './src/gen-generated';
-        if (!fs.existsSync(config.outDir)) {
-            fs.mkdirSync(config.outDir, { mode: 0o755 });
-        }
-        const outTypescriptTypesPath = `${config.outDir}/types.ts`;
-        const outSwaggerPath = `${config.outDir}/swagger.json`;
-        const outGraphqlPath = `${config.outDir}/schema.graphql`;
-        const types = [];
-        Object.entries(apis).forEach(([apiName, api]) => {
-            const outTypescriptDir = `${config.outDir}/${apiName}`;
-            const outTypescriptPath = `${config.outDir}/${apiName}/${apiName}.ts`;
-            types.push(generated[apiName].typescript.types);
-            if (!fs.existsSync(outTypescriptDir)) {
-                fs.mkdirSync(outTypescriptDir, { mode: 0o755 });
+        if (write) {
+            config.outDir = config.outDir !== undefined ? config.outDir : './src/gen-generated';
+            if (!fs.existsSync(config.outDir)) {
+                fs.mkdirSync(config.outDir, { mode: 0o755 });
             }
-            fs.writeFileSync(outTypescriptPath, [
-                generated[apiName].typescript.imports,
-                generated[apiName].typescript.dynamicImports,
-                generated[apiName].typescript.fieldForCreate,
-                generated[apiName].typescript.fieldForUpdateSet,
-                generated[apiName].typescript.fieldForUpdatePush,
-                generated[apiName].typescript.fieldForUpdatePull,
-                generated[apiName].typescript.defaultProjectionObject,
-                generated[apiName].typescript.defaultPopulateObject,
-                generated[apiName].typescript.runCanSelectGuards,
-                generated[apiName].typescript.runCanCreateGuards,
-                generated[apiName].typescript.runCanUpdateGuards,
-                generated[apiName].typescript.runValidators,
-                generated[apiName].typescript.runAllCanSelectGuards,
-                generated[apiName].typescript.runAllCanCreateGuards,
-                generated[apiName].typescript.runAllCanUpdateGuards,
-                generated[apiName].typescript.runAllValidators,
-                generated[apiName].typescript.utilityService,
-                generated[apiName].typescript.mainService,
-                generated[apiName].typescript.mainMiddlewares,
-                generated[apiName].typescript.mainControllers,
-                generated[apiName].typescript.mainRouter,
-                generated[apiName].typescript.applyRouter,
-            ].join('\n'), { mode: 0o644, flag: 'w' });
-        });
-        fs.writeFileSync(outTypescriptTypesPath, types.map((type, idx) => [
-            idx ? '' : type.imports,
-            type.mongooseSchema,
-            type.mongooseModel,
-            type.mongooseQueryObject,
-            type.mongooseProjectionObject,
-            type.mongoosePopulateObject,
-            type.bddModel,
-            type.populatedModel,
-            type.createPayloadModel,
-            type.updatePayloadModel,
-            type.setPayloadModel,
-            type.pushPayloadModel,
-            type.pullPayloadModel,
-        ].join('')).join('\n'), { mode: 0o644, flag: 'w' });
+            const outTypescriptTypesPath = `${config.outDir}/types.ts`;
+            const outSwaggerPath = `${config.outDir}/swagger.json`;
+            const outGraphqlPath = `${config.outDir}/schema.graphql`;
+            const types = [];
+            Object.entries(apis).forEach(([apiName, api]) => {
+                const outTypescriptDir = `${config.outDir}/${apiName}`;
+                const outTypescriptPath = `${config.outDir}/${apiName}/${apiName}.ts`;
+                types.push(generated[apiName].typescript.types);
+                if (!fs.existsSync(outTypescriptDir)) {
+                    fs.mkdirSync(outTypescriptDir, { mode: 0o755 });
+                }
+                fs.writeFileSync(outTypescriptPath, [
+                    generated[apiName].typescript.imports,
+                    generated[apiName].typescript.dynamicImports,
+                    generated[apiName].typescript.fieldForCreate,
+                    generated[apiName].typescript.fieldForUpdateSet,
+                    generated[apiName].typescript.fieldForUpdatePush,
+                    generated[apiName].typescript.fieldForUpdatePull,
+                    generated[apiName].typescript.defaultProjectionObject,
+                    generated[apiName].typescript.defaultPopulateObject,
+                    generated[apiName].typescript.runCanSelectGuards,
+                    generated[apiName].typescript.runCanCreateGuards,
+                    generated[apiName].typescript.runCanUpdateGuards,
+                    generated[apiName].typescript.runValidators,
+                    generated[apiName].typescript.runAllCanSelectGuards,
+                    generated[apiName].typescript.runAllCanCreateGuards,
+                    generated[apiName].typescript.runAllCanUpdateGuards,
+                    generated[apiName].typescript.runAllValidators,
+                    generated[apiName].typescript.utilityService,
+                    generated[apiName].typescript.mainService,
+                    generated[apiName].typescript.mainMiddlewares,
+                    generated[apiName].typescript.mainControllers,
+                    generated[apiName].typescript.mainRouter,
+                    generated[apiName].typescript.applyRouter,
+                ].join('\n'), { mode: 0o644, flag: 'w' });
+            });
+            fs.writeFileSync(outTypescriptTypesPath, types.map((type, idx) => [
+                idx ? '' : type.imports,
+                type.mongooseSchema,
+                type.mongooseModel,
+                type.mongooseQueryObject,
+                type.mongooseProjectionObject,
+                type.mongoosePopulateObject,
+                type.bddModel,
+                type.populatedModel,
+                type.createPayloadModel,
+                type.updatePayloadModel,
+                type.setPayloadModel,
+                type.pushPayloadModel,
+                type.pullPayloadModel,
+            ].join('')).join('\n'), { mode: 0o644, flag: 'w' });
+        }
         return generated;
     }
 }
+
+export const gen = new GenCore();

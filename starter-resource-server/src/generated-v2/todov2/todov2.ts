@@ -14,32 +14,34 @@ import {
     LibValidator,
     LibValidatorReturnUnion
 } from '../../lib/gen/types';
+
+import { gen } from '../../lib/gen/core';
                         
 
 import {
     ID,
-    TodoModel,
-    TodoCreatePayloadModel,
-    TodoUpdatePayloadModel,
-    TodoQueryObject,
-    TodoProjectionObject,
-    TodoPopulateObject
+    Todov2Model,
+    Todov2CreatePayloadModel,
+    Todov2UpdatePayloadModel,
+    Todov2QueryObject,
+    Todov2ProjectionObject,
+    Todov2PopulateObject
 } from '../types';
 
 
-export const fieldForCreateTodo = ['id', 'title', 'done', 'json'];
+export const fieldForCreateTodov2 = ['id', 'title', 'done', 'json'];
 
 
-export const fieldForUpdateSetTodo = ['title', 'done', 'json'];
+export const fieldForUpdateSetTodov2 = ['title', 'done', 'json'];
 
 
-export const fieldForUpdatePushTodo = [];
+export const fieldForUpdatePushTodov2 = [];
 
 
-export const fieldForUpdatePullTodo = [];
+export const fieldForUpdatePullTodov2 = [];
 
 
-export const defaultTodoProjectionObject = {
+export const defaultTodov2ProjectionObject = {
     title: 1 as 0 | 1,
     done: 1 as 0 | 1,
     json: 1 as 0 | 1,
@@ -47,14 +49,14 @@ export const defaultTodoProjectionObject = {
 };
 
 
-export const defaultTodoPopulateObject = {
+export const defaultTodov2PopulateObject = {
     author: true,
 };
 
 
-export const runCanSelectTodoTitleGuards = async (context: GenContext) => {
-    const guards = context.schema.apis.todo.model.title.guards
-        && context.schema.apis.todo.model.title.guards.canSelect;
+export const runCanSelectTodov2TitleGuards = async (context: GenContext) => {
+    const guards = context.schema.apis.todov2.model.title.guards
+        && context.schema.apis.todov2.model.title.guards.canSelect;
     return Promise.all((guards || []).map(guard => guard(context)))
         .then((results: LibGuardReturnUnion[]) => results.reduce((step, result) => {
             if (step || result) {
@@ -75,9 +77,9 @@ export const runCanSelectTodoTitleGuards = async (context: GenContext) => {
 };
 
 
-export const runCanSelectTodoDoneGuards = async (context: GenContext) => {
-    const guards = context.schema.apis.todo.model.done.guards
-        && context.schema.apis.todo.model.done.guards.canSelect;
+export const runCanSelectTodov2DoneGuards = async (context: GenContext) => {
+    const guards = context.schema.apis.todov2.model.done.guards
+        && context.schema.apis.todov2.model.done.guards.canSelect;
     return Promise.all((guards || []).map(guard => guard(context)))
         .then((results: LibGuardReturnUnion[]) => results.reduce((step, result) => {
             if (step || result) {
@@ -98,9 +100,9 @@ export const runCanSelectTodoDoneGuards = async (context: GenContext) => {
 };
 
 
-export const runCanSelectTodoJsonGuards = async (context: GenContext) => {
-    const guards = context.schema.apis.todo.model.json.guards
-        && context.schema.apis.todo.model.json.guards.canSelect;
+export const runCanSelectTodov2JsonGuards = async (context: GenContext) => {
+    const guards = context.schema.apis.todov2.model.json.guards
+        && context.schema.apis.todov2.model.json.guards.canSelect;
     return Promise.all((guards || []).map(guard => guard(context)))
         .then((results: LibGuardReturnUnion[]) => results.reduce((step, result) => {
             if (step || result) {
@@ -121,9 +123,9 @@ export const runCanSelectTodoJsonGuards = async (context: GenContext) => {
 };
 
 
-export const runCanSelectTodoAuthorGuards = async (context: GenContext) => {
-    const guards = context.schema.apis.todo.model.author.guards
-        && context.schema.apis.todo.model.author.guards.canSelect;
+export const runCanSelectTodov2AuthorGuards = async (context: GenContext) => {
+    const guards = context.schema.apis.todov2.model.author.guards
+        && context.schema.apis.todov2.model.author.guards.canSelect;
     return Promise.all((guards || []).map(guard => guard(context)))
         .then((results: LibGuardReturnUnion[]) => results.reduce((step, result) => {
             if (step || result) {
@@ -144,9 +146,9 @@ export const runCanSelectTodoAuthorGuards = async (context: GenContext) => {
 };
 
 
-export const runCanCreateTodoTitleGuards = async (context: GenContext) => {
-    const guards = context.schema.apis.todo.model.title.guards
-        && context.schema.apis.todo.model.title.guards.canCreate;
+export const runCanCreateTodov2TitleGuards = async (context: GenContext) => {
+    const guards = context.schema.apis.todov2.model.title.guards
+        && context.schema.apis.todov2.model.title.guards.canCreate;
     return Promise.all((guards || []).map(guard => guard(context)))
         .then((results: LibGuardReturnUnion[]) => results.reduce((step, result) => {
             if (step || result) {
@@ -167,9 +169,9 @@ export const runCanCreateTodoTitleGuards = async (context: GenContext) => {
 };
 
 
-export const runCanCreateTodoDoneGuards = async (context: GenContext) => {
-    const guards = context.schema.apis.todo.model.done.guards
-        && context.schema.apis.todo.model.done.guards.canCreate;
+export const runCanCreateTodov2DoneGuards = async (context: GenContext) => {
+    const guards = context.schema.apis.todov2.model.done.guards
+        && context.schema.apis.todov2.model.done.guards.canCreate;
     return Promise.all((guards || []).map(guard => guard(context)))
         .then((results: LibGuardReturnUnion[]) => results.reduce((step, result) => {
             if (step || result) {
@@ -190,9 +192,9 @@ export const runCanCreateTodoDoneGuards = async (context: GenContext) => {
 };
 
 
-export const runCanCreateTodoJsonGuards = async (context: GenContext) => {
-    const guards = context.schema.apis.todo.model.json.guards
-        && context.schema.apis.todo.model.json.guards.canCreate;
+export const runCanCreateTodov2JsonGuards = async (context: GenContext) => {
+    const guards = context.schema.apis.todov2.model.json.guards
+        && context.schema.apis.todov2.model.json.guards.canCreate;
     return Promise.all((guards || []).map(guard => guard(context)))
         .then((results: LibGuardReturnUnion[]) => results.reduce((step, result) => {
             if (step || result) {
@@ -213,9 +215,9 @@ export const runCanCreateTodoJsonGuards = async (context: GenContext) => {
 };
 
 
-export const runCanCreateTodoAuthorGuards = async (context: GenContext) => {
-    const guards = context.schema.apis.todo.model.author.guards
-        && context.schema.apis.todo.model.author.guards.canCreate;
+export const runCanCreateTodov2AuthorGuards = async (context: GenContext) => {
+    const guards = context.schema.apis.todov2.model.author.guards
+        && context.schema.apis.todov2.model.author.guards.canCreate;
     return Promise.all((guards || []).map(guard => guard(context)))
         .then((results: LibGuardReturnUnion[]) => results.reduce((step, result) => {
             if (step || result) {
@@ -236,9 +238,9 @@ export const runCanCreateTodoAuthorGuards = async (context: GenContext) => {
 };
 
 
-export const runCanUpdateTodoTitleGuards = async (context: GenContext) => {
-    const guards = context.schema.apis.todo.model.title.guards
-        && context.schema.apis.todo.model.title.guards.canUpdate;
+export const runCanUpdateTodov2TitleGuards = async (context: GenContext) => {
+    const guards = context.schema.apis.todov2.model.title.guards
+        && context.schema.apis.todov2.model.title.guards.canUpdate;
     return Promise.all((guards || []).map(guard => guard(context)))
         .then((results: LibGuardReturnUnion[]) => results.reduce((step, result) => {
             if (step || result) {
@@ -259,9 +261,9 @@ export const runCanUpdateTodoTitleGuards = async (context: GenContext) => {
 };
 
 
-export const runCanUpdateTodoDoneGuards = async (context: GenContext) => {
-    const guards = context.schema.apis.todo.model.done.guards
-        && context.schema.apis.todo.model.done.guards.canUpdate;
+export const runCanUpdateTodov2DoneGuards = async (context: GenContext) => {
+    const guards = context.schema.apis.todov2.model.done.guards
+        && context.schema.apis.todov2.model.done.guards.canUpdate;
     return Promise.all((guards || []).map(guard => guard(context)))
         .then((results: LibGuardReturnUnion[]) => results.reduce((step, result) => {
             if (step || result) {
@@ -282,9 +284,9 @@ export const runCanUpdateTodoDoneGuards = async (context: GenContext) => {
 };
 
 
-export const runCanUpdateTodoJsonGuards = async (context: GenContext) => {
-    const guards = context.schema.apis.todo.model.json.guards
-        && context.schema.apis.todo.model.json.guards.canUpdate;
+export const runCanUpdateTodov2JsonGuards = async (context: GenContext) => {
+    const guards = context.schema.apis.todov2.model.json.guards
+        && context.schema.apis.todov2.model.json.guards.canUpdate;
     return Promise.all((guards || []).map(guard => guard(context)))
         .then((results: LibGuardReturnUnion[]) => results.reduce((step, result) => {
             if (step || result) {
@@ -305,9 +307,9 @@ export const runCanUpdateTodoJsonGuards = async (context: GenContext) => {
 };
 
 
-export const runCanUpdateTodoAuthorGuards = async (context: GenContext) => {
-    const guards = context.schema.apis.todo.model.author.guards
-        && context.schema.apis.todo.model.author.guards.canUpdate;
+export const runCanUpdateTodov2AuthorGuards = async (context: GenContext) => {
+    const guards = context.schema.apis.todov2.model.author.guards
+        && context.schema.apis.todov2.model.author.guards.canUpdate;
     return Promise.all((guards || []).map(guard => guard(context)))
         .then((results: LibGuardReturnUnion[]) => results.reduce((step, result) => {
             if (step || result) {
@@ -328,8 +330,8 @@ export const runCanUpdateTodoAuthorGuards = async (context: GenContext) => {
 };
 
 
-export const runTodoTitleValidators = (input: string, context: GenContext) => {
-    const validators = context.schema.apis.todo.model.title.validators;
+export const runTodov2TitleValidators = (input: string, context: GenContext) => {
+    const validators = context.schema.apis.todov2.model.title.validators;
     return Object.values(validators).reduce((step, validator) => {
         const validate = (validator as LibValidator)(input);
         if (step || validate) {
@@ -340,12 +342,12 @@ export const runTodoTitleValidators = (input: string, context: GenContext) => {
             }
         }
         return step;
-    }, null);
+    }, null as LibValidatorReturnUnion);
 };
 
 
-export const runTodoDoneValidators = (input: boolean, context: GenContext) => {
-    const validators = context.schema.apis.todo.model.done.validators;
+export const runTodov2DoneValidators = (input: boolean, context: GenContext) => {
+    const validators = context.schema.apis.todov2.model.done.validators;
     return Object.values(validators).reduce((step, validator) => {
         const validate = (validator as LibValidator)(input);
         if (step || validate) {
@@ -356,12 +358,12 @@ export const runTodoDoneValidators = (input: boolean, context: GenContext) => {
             }
         }
         return step;
-    }, null);
+    }, null as LibValidatorReturnUnion);
 };
 
 
-export const runTodoJsonValidators = (input: any, context: GenContext) => {
-    const validators = context.schema.apis.todo.model.json.validators;
+export const runTodov2JsonValidators = (input: any, context: GenContext) => {
+    const validators = context.schema.apis.todov2.model.json.validators;
     return Object.values(validators).reduce((step, validator) => {
         const validate = (validator as LibValidator)(input);
         if (step || validate) {
@@ -372,12 +374,12 @@ export const runTodoJsonValidators = (input: any, context: GenContext) => {
             }
         }
         return step;
-    }, null);
+    }, null as LibValidatorReturnUnion);
 };
 
 
-export const runTodoAuthorValidators = (input: ObjectID, context: GenContext) => {
-    const validators = context.schema.apis.todo.model.author.validators;
+export const runTodov2AuthorValidators = (input: ObjectID, context: GenContext) => {
+    const validators = context.schema.apis.todov2.model.author.validators;
     return Object.values(validators).reduce((step, validator) => {
         const validate = (validator as LibValidator)(input);
         if (step || validate) {
@@ -388,42 +390,43 @@ export const runTodoAuthorValidators = (input: ObjectID, context: GenContext) =>
             }
         }
         return step;
-    }, null);
+    }, null as LibValidatorReturnUnion);
 };
 
 
-export const runAllCanSelectTodoGuards = async (context: GenContext) => {
+export const runAllCanSelectTodov2Guards = async (context: GenContext) => {
+    console.log('here');
     return Promise.all([
-        runCanSelectTodoTitleGuards(context),
-        runCanSelectTodoDoneGuards(context),
-        runCanSelectTodoJsonGuards(context),
-        runCanSelectTodoAuthorGuards(context),
+        runCanSelectTodov2TitleGuards(context),
+        runCanSelectTodov2DoneGuards(context),
+        runCanSelectTodov2JsonGuards(context),
+        runCanSelectTodov2AuthorGuards(context),
     ]);
 };
 
 
-export const runAllCanCreateTodoGuards = async (context: GenContext) => {
+export const runAllCanCreateTodov2Guards = async (context: GenContext) => {
     return Promise.all([
-        runCanCreateTodoTitleGuards(context),
-        runCanCreateTodoDoneGuards(context),
-        runCanCreateTodoJsonGuards(context),
-        runCanCreateTodoAuthorGuards(context),
+        runCanCreateTodov2TitleGuards(context),
+        runCanCreateTodov2DoneGuards(context),
+        runCanCreateTodov2JsonGuards(context),
+        runCanCreateTodov2AuthorGuards(context),
     ]);
 };
 
 
-export const runAllCanUpdateTodoGuards = async (context: GenContext) => {
+export const runAllCanUpdateTodov2Guards = async (context: GenContext) => {
     return Promise.all([
-        runCanUpdateTodoTitleGuards(context),
-        runCanUpdateTodoDoneGuards(context),
-        runCanUpdateTodoJsonGuards(context),
-        runCanUpdateTodoAuthorGuards(context),
+        runCanUpdateTodov2TitleGuards(context),
+        runCanUpdateTodov2DoneGuards(context),
+        runCanUpdateTodov2JsonGuards(context),
+        runCanUpdateTodov2AuthorGuards(context),
     ]);
 };
 
 
-export const runAllTodoValidators = (context: GenContext) => {
-    const validators = Object.entries(context.schema.apis.todo.model)
+export const runAllTodov2Validators = (context: GenContext) => {
+    const validators = Object.entries(context.schema.apis.todov2.model)
         .map(([fieldName, field]: [string, any]) => [fieldName, field, field.validators || {}] as [string, any, LibValidator]);
     const validations = validators.map(([fieldName, field, validators]) => Object.entries(validators)
         .map(([validatorName, validator]) => [validatorName, validator(context.req[fieldName], context)] as [string, LibValidatorReturnUnion])
@@ -435,11 +438,11 @@ export const runAllTodoValidators = (context: GenContext) => {
 };
 
 
-export class TodoUtilityService {
+export class Todov2UtilityService {
 
     context: GenContext;
 
-    model = TodoModel;
+    model = Todov2Model;
 
     constructor() {
     }
@@ -457,7 +460,7 @@ export class TodoUtilityService {
                 delete instance[fieldName];
             }));
         };
-        const results = await runAllCanSelectTodoGuards(this.context);
+        const results = await runAllCanSelectTodov2Guards(this.context);
         return query
             .then(result => {
                 Array.isArray(result)
@@ -467,29 +470,29 @@ export class TodoUtilityService {
             });
     }
 
-    async applyAllCanCreateGuards(_payload: TodoCreatePayloadModel) {
-        const payload = fieldForCreateTodo
+    async applyAllCanCreateGuards(_payload: Todov2CreatePayloadModel) {
+        const payload = fieldForCreateTodov2
             .reduce((step, fieldName) => ({ ...step, [fieldName]: _payload[fieldName] }), {});
         const deleteThem = (results: LibGuardReturnUnion[], body: any) => {
             results.forEach(result => Object.keys(result || {}).forEach(fieldName => {
                 delete body[fieldName];
             }));
         };
-        const results = await runAllCanCreateTodoGuards(this.context);
+        const results = await runAllCanCreateTodov2Guards(this.context);
         deleteThem(results, payload);
         return payload;
     }
 
-    async applyAllCanUpdateGuards(_payload: TodoUpdatePayloadModel) {
+    async applyAllCanUpdateGuards(_payload: Todov2UpdatePayloadModel) {
         const payload = {
             id: _payload.id,
-            $set: fieldForUpdateSetTodo
+            $set: fieldForUpdateSetTodov2
                 .filter(fieldName => _payload.$set && fieldName in Object.keys(_payload.$set))
                 .reduce((step, fieldName) => ({ ...step, [fieldName]: _payload.$set[fieldName] }), {}),
-            $push: fieldForUpdatePushTodo
+            $push: fieldForUpdatePushTodov2
                 .filter(fieldName => _payload.$push && fieldName in Object.keys(_payload.$push))
                 .reduce((step, fieldName) => ({ ...step, [fieldName]: _payload.$push[fieldName] }), {}),
-            $pull: fieldForUpdatePullTodo
+            $pull: fieldForUpdatePullTodov2
                 .filter(fieldName => _payload.$pull && fieldName in Object.keys(_payload.$pull))
                 .reduce((step, fieldName) => ({ ...step, [fieldName]: _payload.$pull[fieldName] }), {}),
         };
@@ -498,7 +501,7 @@ export class TodoUtilityService {
                 delete body[fieldName];
             }));
         };
-        const results = await runAllCanUpdateTodoGuards(this.context);
+        const results = await runAllCanUpdateTodov2Guards(this.context);
         deleteThem(results, payload.$set);
         deleteThem(results, payload.$push);
         deleteThem(results, payload.$pull);
@@ -506,9 +509,9 @@ export class TodoUtilityService {
     }
 
     async find(
-        mongooseQueryObject?: TodoQueryObject,
-        mongooseProjectionObject?: TodoProjectionObject,
-        mongoosePopulateObject: TodoPopulateObject = {},
+        mongooseQueryObject?: Todov2QueryObject,
+        mongooseProjectionObject?: Todov2ProjectionObject,
+        mongoosePopulateObject: Todov2PopulateObject = {},
         mongooseQueryOptions?: any,
         lean: boolean = false,
         exec: boolean = false,
@@ -526,7 +529,7 @@ export class TodoUtilityService {
     }
 
     async create(
-        _createPayload: TodoCreatePayloadModel,
+        _createPayload: Todov2CreatePayloadModel,
     ) {
         const createPayload = await this.applyAllCanCreateGuards(_createPayload);
         const instance = new this.model(createPayload);
@@ -534,7 +537,7 @@ export class TodoUtilityService {
     }
 
     async update(
-        _updatePayload: TodoUpdatePayloadModel,
+        _updatePayload: Todov2UpdatePayloadModel,
         lean: boolean = false,
         exec: boolean = false,
         cb?: any
@@ -569,9 +572,9 @@ export class TodoUtilityService {
     }
 
     async findLean(
-        mongooseQueryObject?: TodoQueryObject,
-        mongooseProjectionObject?: TodoProjectionObject,
-        mongoosePopulateObject: TodoPopulateObject = {},
+        mongooseQueryObject?: Todov2QueryObject,
+        mongooseProjectionObject?: Todov2ProjectionObject,
+        mongoosePopulateObject: Todov2PopulateObject = {},
         mongooseQueryOptions?: any
     ) {
         return this.find(
@@ -583,11 +586,11 @@ export class TodoUtilityService {
         );
     }
 
-    async createLean(createPayload: TodoCreatePayloadModel) {
+    async createLean(createPayload: Todov2CreatePayloadModel) {
         return this.create(createPayload);
     }
 
-    async updateLean(updatePayload: TodoUpdatePayloadModel) {
+    async updateLean(updatePayload: Todov2UpdatePayloadModel) {
         return this.update(updatePayload, true);
     }
 
@@ -596,9 +599,9 @@ export class TodoUtilityService {
     }
 
     async findExec(
-        mongooseQueryObject?: TodoQueryObject,
-        mongooseProjectionObject?: TodoProjectionObject,
-        mongoosePopulateObject: TodoPopulateObject = {},
+        mongooseQueryObject?: Todov2QueryObject,
+        mongooseProjectionObject?: Todov2ProjectionObject,
+        mongoosePopulateObject: Todov2PopulateObject = {},
         mongooseQueryOptions?: any,
         cb?: any,
     ) {
@@ -613,11 +616,11 @@ export class TodoUtilityService {
         );
     }
 
-    async createExec(createPayload: TodoCreatePayloadModel) {
+    async createExec(createPayload: Todov2CreatePayloadModel) {
         return this.create(createPayload);
     }
 
-    async updateExec(updatePayload: TodoUpdatePayloadModel, cb?: any) {
+    async updateExec(updatePayload: Todov2UpdatePayloadModel, cb?: any) {
         return this.update(updatePayload, false, true, cb);
     }
 
@@ -626,9 +629,9 @@ export class TodoUtilityService {
     }
 
     async findLeanExec(
-        mongooseQueryObject?: TodoQueryObject,
-        mongooseProjectionObject?: TodoProjectionObject,
-        mongoosePopulateObject: TodoPopulateObject = {},
+        mongooseQueryObject?: Todov2QueryObject,
+        mongooseProjectionObject?: Todov2ProjectionObject,
+        mongoosePopulateObject: Todov2PopulateObject = {},
         mongooseQueryOptions?: any,
         cb?: any
     ) {
@@ -643,11 +646,11 @@ export class TodoUtilityService {
         );
     }
 
-    async createLeanExec(createPayload: TodoCreatePayloadModel) {
+    async createLeanExec(createPayload: Todov2CreatePayloadModel) {
         return this.create(createPayload);
     }
 
-    async updateLeanExec(updatePayload: TodoUpdatePayloadModel, cb?: any) {
+    async updateLeanExec(updatePayload: Todov2UpdatePayloadModel, cb?: any) {
         return this.update(updatePayload, true, true, cb);
     }
 
@@ -656,29 +659,31 @@ export class TodoUtilityService {
     }
 }
 
-export const mainTodoUtilityService = new TodoUtilityService();
+export const mainTodov2UtilityService = new Todov2UtilityService();
 
 
 
-export class TodoService {
+export class Todov2Service {
 
-    utils = mainTodoUtilityService;
+    utils = mainTodov2UtilityService;
 
-    constructor() {}
+    constructor() {
+        this.utils.context = gen.context;
+    }
 
     async getAll() {
-        return this.utils.find({}, defaultTodoProjectionObject, defaultTodoPopulateObject);
+        return this.utils.find({}, defaultTodov2ProjectionObject, defaultTodov2PopulateObject);
     }
     
     async getById(id: ID) {
-        return this.utils.find({ id }, defaultTodoProjectionObject, defaultTodoPopulateObject);
+        return this.utils.find({ id }, defaultTodov2ProjectionObject, defaultTodov2PopulateObject);
     }
     
-    async create(createPayload: TodoCreatePayloadModel) {
+    async create(createPayload: Todov2CreatePayloadModel) {
         return this.utils.create(createPayload);
     }
     
-    async update(updatePayload: TodoUpdatePayloadModel) {
+    async update(updatePayload: Todov2UpdatePayloadModel) {
         return this.utils.update(updatePayload);
     }
     
@@ -687,7 +692,7 @@ export class TodoService {
     }
 }
 
-export const mainTodoService = new TodoService();
+export const mainTodov2Service = new Todov2Service();
 
 
 
@@ -702,9 +707,9 @@ export const $instance = new $name();
 */
 
 
-export class TodoController {
+export class Todov2Controller {
     
-    service = mainTodoService;
+    service = mainTodov2Service;
 
     constructor() {}
 
@@ -770,25 +775,32 @@ export class TodoController {
 
 }
 
-export const mainTodoController = new TodoController();
+export const mainTodov2Controller = new Todov2Controller();
 
 
-export class TodoRouter {
+export class Todov2Router {
 
-    controller = mainTodoController;
+    controller = mainTodov2Controller;
     router: any;
 
-    constructor() {
+    constructor() {}
+
+    initialize() {
         this.router = Router()
-            .get('/:id/author', ...undefined.schema.apis.todo.webServices['GET /:id/author'].middlewares);
+            .get('/:id/author', ...gen.context.schema.apis.todov2.webServices['GET /:id/author'].middlewares)
+            .get('/', ...gen.context.schema.apis.todov2.webServices['GET /'].middlewares, this.controller.getAll())
+            .post('/', ...gen.context.schema.apis.todov2.webServices['POST /'].middlewares, this.controller.create())
+            .get('/:id', ...gen.context.schema.apis.todov2.webServices['GET /:id'].middlewares, this.controller.getById())
+            .put('/:id', ...gen.context.schema.apis.todov2.webServices['PUT /:id'].middlewares, this.controller.update())
+            .delete('/:id', ...gen.context.schema.apis.todov2.webServices['DELETE /:id'].middlewares, this.controller.delete());
     }
 
     applyRouter(app: Application) {
-        app.use('/todo', this.router);
+        app.use('/todov2', this.router);
     }
 
 }
 
-export const mainTodoRouter = new TodoRouter();
+export const mainTodov2Router = new Todov2Router();
 
 

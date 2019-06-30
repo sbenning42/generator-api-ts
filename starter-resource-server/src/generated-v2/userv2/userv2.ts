@@ -14,32 +14,34 @@ import {
     LibValidator,
     LibValidatorReturnUnion
 } from '../../lib/gen/types';
+
+import { gen } from '../../lib/gen/core';
                         
 
 import {
     ID,
-    UserModel,
-    UserCreatePayloadModel,
-    UserUpdatePayloadModel,
-    UserQueryObject,
-    UserProjectionObject,
-    UserPopulateObject
+    Userv2Model,
+    Userv2CreatePayloadModel,
+    Userv2UpdatePayloadModel,
+    Userv2QueryObject,
+    Userv2ProjectionObject,
+    Userv2PopulateObject
 } from '../types';
 
 
-export const fieldForCreateUser = ['id', 'username', 'password', 'email', 'birthdate', 'json'];
+export const fieldForCreateUserv2 = ['id', 'username', 'password', 'email', 'birthdate', 'json'];
 
 
-export const fieldForUpdateSetUser = ['username', 'roles', 'email', 'birthdate', 'json'];
+export const fieldForUpdateSetUserv2 = ['username', 'roles', 'email', 'birthdate', 'json'];
 
 
-export const fieldForUpdatePushUser = ['roles'];
+export const fieldForUpdatePushUserv2 = ['roles'];
 
 
-export const fieldForUpdatePullUser = ['roles'];
+export const fieldForUpdatePullUserv2 = ['roles'];
 
 
-export const defaultUserProjectionObject = {
+export const defaultUserv2ProjectionObject = {
     username: 1 as 0 | 1,
     roles: 1 as 0 | 1,
     email: 1 as 0 | 1,
@@ -49,14 +51,14 @@ export const defaultUserProjectionObject = {
 };
 
 
-export const defaultUserPopulateObject = {
+export const defaultUserv2PopulateObject = {
     todos: true,
 };
 
 
-export const runCanSelectUserUsernameGuards = async (context: GenContext) => {
-    const guards = context.schema.apis.user.model.username.guards
-        && context.schema.apis.user.model.username.guards.canSelect;
+export const runCanSelectUserv2UsernameGuards = async (context: GenContext) => {
+    const guards = context.schema.apis.userv2.model.username.guards
+        && context.schema.apis.userv2.model.username.guards.canSelect;
     return Promise.all((guards || []).map(guard => guard(context)))
         .then((results: LibGuardReturnUnion[]) => results.reduce((step, result) => {
             if (step || result) {
@@ -77,9 +79,9 @@ export const runCanSelectUserUsernameGuards = async (context: GenContext) => {
 };
 
 
-export const runCanSelectUserPasswordGuards = async (context: GenContext) => {
-    const guards = context.schema.apis.user.model.password.guards
-        && context.schema.apis.user.model.password.guards.canSelect;
+export const runCanSelectUserv2PasswordGuards = async (context: GenContext) => {
+    const guards = context.schema.apis.userv2.model.password.guards
+        && context.schema.apis.userv2.model.password.guards.canSelect;
     return Promise.all((guards || []).map(guard => guard(context)))
         .then((results: LibGuardReturnUnion[]) => results.reduce((step, result) => {
             if (step || result) {
@@ -100,9 +102,9 @@ export const runCanSelectUserPasswordGuards = async (context: GenContext) => {
 };
 
 
-export const runCanSelectUserRolesGuards = async (context: GenContext) => {
-    const guards = context.schema.apis.user.model.roles.guards
-        && context.schema.apis.user.model.roles.guards.canSelect;
+export const runCanSelectUserv2RolesGuards = async (context: GenContext) => {
+    const guards = context.schema.apis.userv2.model.roles.guards
+        && context.schema.apis.userv2.model.roles.guards.canSelect;
     return Promise.all((guards || []).map(guard => guard(context)))
         .then((results: LibGuardReturnUnion[]) => results.reduce((step, result) => {
             if (step || result) {
@@ -123,9 +125,9 @@ export const runCanSelectUserRolesGuards = async (context: GenContext) => {
 };
 
 
-export const runCanSelectUserEmailGuards = async (context: GenContext) => {
-    const guards = context.schema.apis.user.model.email.guards
-        && context.schema.apis.user.model.email.guards.canSelect;
+export const runCanSelectUserv2EmailGuards = async (context: GenContext) => {
+    const guards = context.schema.apis.userv2.model.email.guards
+        && context.schema.apis.userv2.model.email.guards.canSelect;
     return Promise.all((guards || []).map(guard => guard(context)))
         .then((results: LibGuardReturnUnion[]) => results.reduce((step, result) => {
             if (step || result) {
@@ -146,9 +148,9 @@ export const runCanSelectUserEmailGuards = async (context: GenContext) => {
 };
 
 
-export const runCanSelectUserBirthdateGuards = async (context: GenContext) => {
-    const guards = context.schema.apis.user.model.birthdate.guards
-        && context.schema.apis.user.model.birthdate.guards.canSelect;
+export const runCanSelectUserv2BirthdateGuards = async (context: GenContext) => {
+    const guards = context.schema.apis.userv2.model.birthdate.guards
+        && context.schema.apis.userv2.model.birthdate.guards.canSelect;
     return Promise.all((guards || []).map(guard => guard(context)))
         .then((results: LibGuardReturnUnion[]) => results.reduce((step, result) => {
             if (step || result) {
@@ -169,9 +171,9 @@ export const runCanSelectUserBirthdateGuards = async (context: GenContext) => {
 };
 
 
-export const runCanSelectUserJsonGuards = async (context: GenContext) => {
-    const guards = context.schema.apis.user.model.json.guards
-        && context.schema.apis.user.model.json.guards.canSelect;
+export const runCanSelectUserv2JsonGuards = async (context: GenContext) => {
+    const guards = context.schema.apis.userv2.model.json.guards
+        && context.schema.apis.userv2.model.json.guards.canSelect;
     return Promise.all((guards || []).map(guard => guard(context)))
         .then((results: LibGuardReturnUnion[]) => results.reduce((step, result) => {
             if (step || result) {
@@ -192,9 +194,9 @@ export const runCanSelectUserJsonGuards = async (context: GenContext) => {
 };
 
 
-export const runCanSelectUserTodosGuards = async (context: GenContext) => {
-    const guards = context.schema.apis.user.model.todos.guards
-        && context.schema.apis.user.model.todos.guards.canSelect;
+export const runCanSelectUserv2TodosGuards = async (context: GenContext) => {
+    const guards = context.schema.apis.userv2.model.todos.guards
+        && context.schema.apis.userv2.model.todos.guards.canSelect;
     return Promise.all((guards || []).map(guard => guard(context)))
         .then((results: LibGuardReturnUnion[]) => results.reduce((step, result) => {
             if (step || result) {
@@ -215,9 +217,9 @@ export const runCanSelectUserTodosGuards = async (context: GenContext) => {
 };
 
 
-export const runCanCreateUserUsernameGuards = async (context: GenContext) => {
-    const guards = context.schema.apis.user.model.username.guards
-        && context.schema.apis.user.model.username.guards.canCreate;
+export const runCanCreateUserv2UsernameGuards = async (context: GenContext) => {
+    const guards = context.schema.apis.userv2.model.username.guards
+        && context.schema.apis.userv2.model.username.guards.canCreate;
     return Promise.all((guards || []).map(guard => guard(context)))
         .then((results: LibGuardReturnUnion[]) => results.reduce((step, result) => {
             if (step || result) {
@@ -238,9 +240,9 @@ export const runCanCreateUserUsernameGuards = async (context: GenContext) => {
 };
 
 
-export const runCanCreateUserPasswordGuards = async (context: GenContext) => {
-    const guards = context.schema.apis.user.model.password.guards
-        && context.schema.apis.user.model.password.guards.canCreate;
+export const runCanCreateUserv2PasswordGuards = async (context: GenContext) => {
+    const guards = context.schema.apis.userv2.model.password.guards
+        && context.schema.apis.userv2.model.password.guards.canCreate;
     return Promise.all((guards || []).map(guard => guard(context)))
         .then((results: LibGuardReturnUnion[]) => results.reduce((step, result) => {
             if (step || result) {
@@ -261,9 +263,9 @@ export const runCanCreateUserPasswordGuards = async (context: GenContext) => {
 };
 
 
-export const runCanCreateUserRolesGuards = async (context: GenContext) => {
-    const guards = context.schema.apis.user.model.roles.guards
-        && context.schema.apis.user.model.roles.guards.canCreate;
+export const runCanCreateUserv2RolesGuards = async (context: GenContext) => {
+    const guards = context.schema.apis.userv2.model.roles.guards
+        && context.schema.apis.userv2.model.roles.guards.canCreate;
     return Promise.all((guards || []).map(guard => guard(context)))
         .then((results: LibGuardReturnUnion[]) => results.reduce((step, result) => {
             if (step || result) {
@@ -284,9 +286,9 @@ export const runCanCreateUserRolesGuards = async (context: GenContext) => {
 };
 
 
-export const runCanCreateUserEmailGuards = async (context: GenContext) => {
-    const guards = context.schema.apis.user.model.email.guards
-        && context.schema.apis.user.model.email.guards.canCreate;
+export const runCanCreateUserv2EmailGuards = async (context: GenContext) => {
+    const guards = context.schema.apis.userv2.model.email.guards
+        && context.schema.apis.userv2.model.email.guards.canCreate;
     return Promise.all((guards || []).map(guard => guard(context)))
         .then((results: LibGuardReturnUnion[]) => results.reduce((step, result) => {
             if (step || result) {
@@ -307,9 +309,9 @@ export const runCanCreateUserEmailGuards = async (context: GenContext) => {
 };
 
 
-export const runCanCreateUserBirthdateGuards = async (context: GenContext) => {
-    const guards = context.schema.apis.user.model.birthdate.guards
-        && context.schema.apis.user.model.birthdate.guards.canCreate;
+export const runCanCreateUserv2BirthdateGuards = async (context: GenContext) => {
+    const guards = context.schema.apis.userv2.model.birthdate.guards
+        && context.schema.apis.userv2.model.birthdate.guards.canCreate;
     return Promise.all((guards || []).map(guard => guard(context)))
         .then((results: LibGuardReturnUnion[]) => results.reduce((step, result) => {
             if (step || result) {
@@ -330,9 +332,9 @@ export const runCanCreateUserBirthdateGuards = async (context: GenContext) => {
 };
 
 
-export const runCanCreateUserJsonGuards = async (context: GenContext) => {
-    const guards = context.schema.apis.user.model.json.guards
-        && context.schema.apis.user.model.json.guards.canCreate;
+export const runCanCreateUserv2JsonGuards = async (context: GenContext) => {
+    const guards = context.schema.apis.userv2.model.json.guards
+        && context.schema.apis.userv2.model.json.guards.canCreate;
     return Promise.all((guards || []).map(guard => guard(context)))
         .then((results: LibGuardReturnUnion[]) => results.reduce((step, result) => {
             if (step || result) {
@@ -353,9 +355,9 @@ export const runCanCreateUserJsonGuards = async (context: GenContext) => {
 };
 
 
-export const runCanCreateUserTodosGuards = async (context: GenContext) => {
-    const guards = context.schema.apis.user.model.todos.guards
-        && context.schema.apis.user.model.todos.guards.canCreate;
+export const runCanCreateUserv2TodosGuards = async (context: GenContext) => {
+    const guards = context.schema.apis.userv2.model.todos.guards
+        && context.schema.apis.userv2.model.todos.guards.canCreate;
     return Promise.all((guards || []).map(guard => guard(context)))
         .then((results: LibGuardReturnUnion[]) => results.reduce((step, result) => {
             if (step || result) {
@@ -376,9 +378,9 @@ export const runCanCreateUserTodosGuards = async (context: GenContext) => {
 };
 
 
-export const runCanUpdateUserUsernameGuards = async (context: GenContext) => {
-    const guards = context.schema.apis.user.model.username.guards
-        && context.schema.apis.user.model.username.guards.canUpdate;
+export const runCanUpdateUserv2UsernameGuards = async (context: GenContext) => {
+    const guards = context.schema.apis.userv2.model.username.guards
+        && context.schema.apis.userv2.model.username.guards.canUpdate;
     return Promise.all((guards || []).map(guard => guard(context)))
         .then((results: LibGuardReturnUnion[]) => results.reduce((step, result) => {
             if (step || result) {
@@ -399,9 +401,9 @@ export const runCanUpdateUserUsernameGuards = async (context: GenContext) => {
 };
 
 
-export const runCanUpdateUserPasswordGuards = async (context: GenContext) => {
-    const guards = context.schema.apis.user.model.password.guards
-        && context.schema.apis.user.model.password.guards.canUpdate;
+export const runCanUpdateUserv2PasswordGuards = async (context: GenContext) => {
+    const guards = context.schema.apis.userv2.model.password.guards
+        && context.schema.apis.userv2.model.password.guards.canUpdate;
     return Promise.all((guards || []).map(guard => guard(context)))
         .then((results: LibGuardReturnUnion[]) => results.reduce((step, result) => {
             if (step || result) {
@@ -422,9 +424,9 @@ export const runCanUpdateUserPasswordGuards = async (context: GenContext) => {
 };
 
 
-export const runCanUpdateUserRolesGuards = async (context: GenContext) => {
-    const guards = context.schema.apis.user.model.roles.guards
-        && context.schema.apis.user.model.roles.guards.canUpdate;
+export const runCanUpdateUserv2RolesGuards = async (context: GenContext) => {
+    const guards = context.schema.apis.userv2.model.roles.guards
+        && context.schema.apis.userv2.model.roles.guards.canUpdate;
     return Promise.all((guards || []).map(guard => guard(context)))
         .then((results: LibGuardReturnUnion[]) => results.reduce((step, result) => {
             if (step || result) {
@@ -445,9 +447,9 @@ export const runCanUpdateUserRolesGuards = async (context: GenContext) => {
 };
 
 
-export const runCanUpdateUserEmailGuards = async (context: GenContext) => {
-    const guards = context.schema.apis.user.model.email.guards
-        && context.schema.apis.user.model.email.guards.canUpdate;
+export const runCanUpdateUserv2EmailGuards = async (context: GenContext) => {
+    const guards = context.schema.apis.userv2.model.email.guards
+        && context.schema.apis.userv2.model.email.guards.canUpdate;
     return Promise.all((guards || []).map(guard => guard(context)))
         .then((results: LibGuardReturnUnion[]) => results.reduce((step, result) => {
             if (step || result) {
@@ -468,9 +470,9 @@ export const runCanUpdateUserEmailGuards = async (context: GenContext) => {
 };
 
 
-export const runCanUpdateUserBirthdateGuards = async (context: GenContext) => {
-    const guards = context.schema.apis.user.model.birthdate.guards
-        && context.schema.apis.user.model.birthdate.guards.canUpdate;
+export const runCanUpdateUserv2BirthdateGuards = async (context: GenContext) => {
+    const guards = context.schema.apis.userv2.model.birthdate.guards
+        && context.schema.apis.userv2.model.birthdate.guards.canUpdate;
     return Promise.all((guards || []).map(guard => guard(context)))
         .then((results: LibGuardReturnUnion[]) => results.reduce((step, result) => {
             if (step || result) {
@@ -491,9 +493,9 @@ export const runCanUpdateUserBirthdateGuards = async (context: GenContext) => {
 };
 
 
-export const runCanUpdateUserJsonGuards = async (context: GenContext) => {
-    const guards = context.schema.apis.user.model.json.guards
-        && context.schema.apis.user.model.json.guards.canUpdate;
+export const runCanUpdateUserv2JsonGuards = async (context: GenContext) => {
+    const guards = context.schema.apis.userv2.model.json.guards
+        && context.schema.apis.userv2.model.json.guards.canUpdate;
     return Promise.all((guards || []).map(guard => guard(context)))
         .then((results: LibGuardReturnUnion[]) => results.reduce((step, result) => {
             if (step || result) {
@@ -514,9 +516,9 @@ export const runCanUpdateUserJsonGuards = async (context: GenContext) => {
 };
 
 
-export const runCanUpdateUserTodosGuards = async (context: GenContext) => {
-    const guards = context.schema.apis.user.model.todos.guards
-        && context.schema.apis.user.model.todos.guards.canUpdate;
+export const runCanUpdateUserv2TodosGuards = async (context: GenContext) => {
+    const guards = context.schema.apis.userv2.model.todos.guards
+        && context.schema.apis.userv2.model.todos.guards.canUpdate;
     return Promise.all((guards || []).map(guard => guard(context)))
         .then((results: LibGuardReturnUnion[]) => results.reduce((step, result) => {
             if (step || result) {
@@ -537,8 +539,8 @@ export const runCanUpdateUserTodosGuards = async (context: GenContext) => {
 };
 
 
-export const runUserUsernameValidators = (input: string, context: GenContext) => {
-    const validators = context.schema.apis.user.model.username.validators;
+export const runUserv2UsernameValidators = (input: string, context: GenContext) => {
+    const validators = context.schema.apis.userv2.model.username.validators;
     return Object.values(validators).reduce((step, validator) => {
         const validate = (validator as LibValidator)(input);
         if (step || validate) {
@@ -549,12 +551,12 @@ export const runUserUsernameValidators = (input: string, context: GenContext) =>
             }
         }
         return step;
-    }, null);
+    }, null as LibValidatorReturnUnion);
 };
 
 
-export const runUserPasswordValidators = (input: string, context: GenContext) => {
-    const validators = context.schema.apis.user.model.password.validators;
+export const runUserv2PasswordValidators = (input: string, context: GenContext) => {
+    const validators = context.schema.apis.userv2.model.password.validators;
     return Object.values(validators).reduce((step, validator) => {
         const validate = (validator as LibValidator)(input);
         if (step || validate) {
@@ -565,12 +567,12 @@ export const runUserPasswordValidators = (input: string, context: GenContext) =>
             }
         }
         return step;
-    }, null);
+    }, null as LibValidatorReturnUnion);
 };
 
 
-export const runUserRolesValidators = (input: string[], context: GenContext) => {
-    const validators = context.schema.apis.user.model.roles.validators;
+export const runUserv2RolesValidators = (input: string[], context: GenContext) => {
+    const validators = context.schema.apis.userv2.model.roles.validators;
     return Object.values(validators).reduce((step, validator) => {
         const validate = (validator as LibValidator)(input);
         if (step || validate) {
@@ -581,12 +583,12 @@ export const runUserRolesValidators = (input: string[], context: GenContext) => 
             }
         }
         return step;
-    }, null);
+    }, null as LibValidatorReturnUnion);
 };
 
 
-export const runUserEmailValidators = (input: string, context: GenContext) => {
-    const validators = context.schema.apis.user.model.email.validators;
+export const runUserv2EmailValidators = (input: string, context: GenContext) => {
+    const validators = context.schema.apis.userv2.model.email.validators;
     return Object.values(validators).reduce((step, validator) => {
         const validate = (validator as LibValidator)(input);
         if (step || validate) {
@@ -597,12 +599,12 @@ export const runUserEmailValidators = (input: string, context: GenContext) => {
             }
         }
         return step;
-    }, null);
+    }, null as LibValidatorReturnUnion);
 };
 
 
-export const runUserBirthdateValidators = (input: Date, context: GenContext) => {
-    const validators = context.schema.apis.user.model.birthdate.validators;
+export const runUserv2BirthdateValidators = (input: Date, context: GenContext) => {
+    const validators = context.schema.apis.userv2.model.birthdate.validators;
     return Object.values(validators).reduce((step, validator) => {
         const validate = (validator as LibValidator)(input);
         if (step || validate) {
@@ -613,12 +615,12 @@ export const runUserBirthdateValidators = (input: Date, context: GenContext) => 
             }
         }
         return step;
-    }, null);
+    }, null as LibValidatorReturnUnion);
 };
 
 
-export const runUserJsonValidators = (input: any, context: GenContext) => {
-    const validators = context.schema.apis.user.model.json.validators;
+export const runUserv2JsonValidators = (input: any, context: GenContext) => {
+    const validators = context.schema.apis.userv2.model.json.validators;
     return Object.values(validators).reduce((step, validator) => {
         const validate = (validator as LibValidator)(input);
         if (step || validate) {
@@ -629,12 +631,12 @@ export const runUserJsonValidators = (input: any, context: GenContext) => {
             }
         }
         return step;
-    }, null);
+    }, null as LibValidatorReturnUnion);
 };
 
 
-export const runUserTodosValidators = (input: ObjectID[], context: GenContext) => {
-    const validators = context.schema.apis.user.model.todos.validators;
+export const runUserv2TodosValidators = (input: ObjectID[], context: GenContext) => {
+    const validators = context.schema.apis.userv2.model.todos.validators;
     return Object.values(validators).reduce((step, validator) => {
         const validate = (validator as LibValidator)(input);
         if (step || validate) {
@@ -645,51 +647,51 @@ export const runUserTodosValidators = (input: ObjectID[], context: GenContext) =
             }
         }
         return step;
-    }, null);
+    }, null as LibValidatorReturnUnion);
 };
 
 
-export const runAllCanSelectUserGuards = async (context: GenContext) => {
+export const runAllCanSelectUserv2Guards = async (context: GenContext) => {
     return Promise.all([
-        runCanSelectUserUsernameGuards(context),
-        runCanSelectUserPasswordGuards(context),
-        runCanSelectUserRolesGuards(context),
-        runCanSelectUserEmailGuards(context),
-        runCanSelectUserBirthdateGuards(context),
-        runCanSelectUserJsonGuards(context),
-        runCanSelectUserTodosGuards(context),
+        runCanSelectUserv2UsernameGuards(context),
+        runCanSelectUserv2PasswordGuards(context),
+        runCanSelectUserv2RolesGuards(context),
+        runCanSelectUserv2EmailGuards(context),
+        runCanSelectUserv2BirthdateGuards(context),
+        runCanSelectUserv2JsonGuards(context),
+        runCanSelectUserv2TodosGuards(context),
     ]);
 };
 
 
-export const runAllCanCreateUserGuards = async (context: GenContext) => {
+export const runAllCanCreateUserv2Guards = async (context: GenContext) => {
     return Promise.all([
-        runCanCreateUserUsernameGuards(context),
-        runCanCreateUserPasswordGuards(context),
-        runCanCreateUserRolesGuards(context),
-        runCanCreateUserEmailGuards(context),
-        runCanCreateUserBirthdateGuards(context),
-        runCanCreateUserJsonGuards(context),
-        runCanCreateUserTodosGuards(context),
+        runCanCreateUserv2UsernameGuards(context),
+        runCanCreateUserv2PasswordGuards(context),
+        runCanCreateUserv2RolesGuards(context),
+        runCanCreateUserv2EmailGuards(context),
+        runCanCreateUserv2BirthdateGuards(context),
+        runCanCreateUserv2JsonGuards(context),
+        runCanCreateUserv2TodosGuards(context),
     ]);
 };
 
 
-export const runAllCanUpdateUserGuards = async (context: GenContext) => {
+export const runAllCanUpdateUserv2Guards = async (context: GenContext) => {
     return Promise.all([
-        runCanUpdateUserUsernameGuards(context),
-        runCanUpdateUserPasswordGuards(context),
-        runCanUpdateUserRolesGuards(context),
-        runCanUpdateUserEmailGuards(context),
-        runCanUpdateUserBirthdateGuards(context),
-        runCanUpdateUserJsonGuards(context),
-        runCanUpdateUserTodosGuards(context),
+        runCanUpdateUserv2UsernameGuards(context),
+        runCanUpdateUserv2PasswordGuards(context),
+        runCanUpdateUserv2RolesGuards(context),
+        runCanUpdateUserv2EmailGuards(context),
+        runCanUpdateUserv2BirthdateGuards(context),
+        runCanUpdateUserv2JsonGuards(context),
+        runCanUpdateUserv2TodosGuards(context),
     ]);
 };
 
 
-export const runAllUserValidators = (context: GenContext) => {
-    const validators = Object.entries(context.schema.apis.user.model)
+export const runAllUserv2Validators = (context: GenContext) => {
+    const validators = Object.entries(context.schema.apis.userv2.model)
         .map(([fieldName, field]: [string, any]) => [fieldName, field, field.validators || {}] as [string, any, LibValidator]);
     const validations = validators.map(([fieldName, field, validators]) => Object.entries(validators)
         .map(([validatorName, validator]) => [validatorName, validator(context.req[fieldName], context)] as [string, LibValidatorReturnUnion])
@@ -701,11 +703,11 @@ export const runAllUserValidators = (context: GenContext) => {
 };
 
 
-export class UserUtilityService {
+export class Userv2UtilityService {
 
     context: GenContext;
 
-    model = UserModel;
+    model = Userv2Model;
 
     constructor() {
     }
@@ -723,7 +725,7 @@ export class UserUtilityService {
                 delete instance[fieldName];
             }));
         };
-        const results = await runAllCanSelectUserGuards(this.context);
+        const results = await runAllCanSelectUserv2Guards(this.context);
         return query
             .then(result => {
                 Array.isArray(result)
@@ -733,29 +735,29 @@ export class UserUtilityService {
             });
     }
 
-    async applyAllCanCreateGuards(_payload: UserCreatePayloadModel) {
-        const payload = fieldForCreateUser
+    async applyAllCanCreateGuards(_payload: Userv2CreatePayloadModel) {
+        const payload = fieldForCreateUserv2
             .reduce((step, fieldName) => ({ ...step, [fieldName]: _payload[fieldName] }), {});
         const deleteThem = (results: LibGuardReturnUnion[], body: any) => {
             results.forEach(result => Object.keys(result || {}).forEach(fieldName => {
                 delete body[fieldName];
             }));
         };
-        const results = await runAllCanCreateUserGuards(this.context);
+        const results = await runAllCanCreateUserv2Guards(this.context);
         deleteThem(results, payload);
         return payload;
     }
 
-    async applyAllCanUpdateGuards(_payload: UserUpdatePayloadModel) {
+    async applyAllCanUpdateGuards(_payload: Userv2UpdatePayloadModel) {
         const payload = {
             id: _payload.id,
-            $set: fieldForUpdateSetUser
+            $set: fieldForUpdateSetUserv2
                 .filter(fieldName => _payload.$set && fieldName in Object.keys(_payload.$set))
                 .reduce((step, fieldName) => ({ ...step, [fieldName]: _payload.$set[fieldName] }), {}),
-            $push: fieldForUpdatePushUser
+            $push: fieldForUpdatePushUserv2
                 .filter(fieldName => _payload.$push && fieldName in Object.keys(_payload.$push))
                 .reduce((step, fieldName) => ({ ...step, [fieldName]: _payload.$push[fieldName] }), {}),
-            $pull: fieldForUpdatePullUser
+            $pull: fieldForUpdatePullUserv2
                 .filter(fieldName => _payload.$pull && fieldName in Object.keys(_payload.$pull))
                 .reduce((step, fieldName) => ({ ...step, [fieldName]: _payload.$pull[fieldName] }), {}),
         };
@@ -764,7 +766,7 @@ export class UserUtilityService {
                 delete body[fieldName];
             }));
         };
-        const results = await runAllCanUpdateUserGuards(this.context);
+        const results = await runAllCanUpdateUserv2Guards(this.context);
         deleteThem(results, payload.$set);
         deleteThem(results, payload.$push);
         deleteThem(results, payload.$pull);
@@ -772,9 +774,9 @@ export class UserUtilityService {
     }
 
     async find(
-        mongooseQueryObject?: UserQueryObject,
-        mongooseProjectionObject?: UserProjectionObject,
-        mongoosePopulateObject: UserPopulateObject = {},
+        mongooseQueryObject?: Userv2QueryObject,
+        mongooseProjectionObject?: Userv2ProjectionObject,
+        mongoosePopulateObject: Userv2PopulateObject = {},
         mongooseQueryOptions?: any,
         lean: boolean = false,
         exec: boolean = false,
@@ -792,7 +794,7 @@ export class UserUtilityService {
     }
 
     async create(
-        _createPayload: UserCreatePayloadModel,
+        _createPayload: Userv2CreatePayloadModel,
     ) {
         const createPayload = await this.applyAllCanCreateGuards(_createPayload);
         const instance = new this.model(createPayload);
@@ -800,7 +802,7 @@ export class UserUtilityService {
     }
 
     async update(
-        _updatePayload: UserUpdatePayloadModel,
+        _updatePayload: Userv2UpdatePayloadModel,
         lean: boolean = false,
         exec: boolean = false,
         cb?: any
@@ -835,9 +837,9 @@ export class UserUtilityService {
     }
 
     async findLean(
-        mongooseQueryObject?: UserQueryObject,
-        mongooseProjectionObject?: UserProjectionObject,
-        mongoosePopulateObject: UserPopulateObject = {},
+        mongooseQueryObject?: Userv2QueryObject,
+        mongooseProjectionObject?: Userv2ProjectionObject,
+        mongoosePopulateObject: Userv2PopulateObject = {},
         mongooseQueryOptions?: any
     ) {
         return this.find(
@@ -849,11 +851,11 @@ export class UserUtilityService {
         );
     }
 
-    async createLean(createPayload: UserCreatePayloadModel) {
+    async createLean(createPayload: Userv2CreatePayloadModel) {
         return this.create(createPayload);
     }
 
-    async updateLean(updatePayload: UserUpdatePayloadModel) {
+    async updateLean(updatePayload: Userv2UpdatePayloadModel) {
         return this.update(updatePayload, true);
     }
 
@@ -862,9 +864,9 @@ export class UserUtilityService {
     }
 
     async findExec(
-        mongooseQueryObject?: UserQueryObject,
-        mongooseProjectionObject?: UserProjectionObject,
-        mongoosePopulateObject: UserPopulateObject = {},
+        mongooseQueryObject?: Userv2QueryObject,
+        mongooseProjectionObject?: Userv2ProjectionObject,
+        mongoosePopulateObject: Userv2PopulateObject = {},
         mongooseQueryOptions?: any,
         cb?: any,
     ) {
@@ -879,11 +881,11 @@ export class UserUtilityService {
         );
     }
 
-    async createExec(createPayload: UserCreatePayloadModel) {
+    async createExec(createPayload: Userv2CreatePayloadModel) {
         return this.create(createPayload);
     }
 
-    async updateExec(updatePayload: UserUpdatePayloadModel, cb?: any) {
+    async updateExec(updatePayload: Userv2UpdatePayloadModel, cb?: any) {
         return this.update(updatePayload, false, true, cb);
     }
 
@@ -892,9 +894,9 @@ export class UserUtilityService {
     }
 
     async findLeanExec(
-        mongooseQueryObject?: UserQueryObject,
-        mongooseProjectionObject?: UserProjectionObject,
-        mongoosePopulateObject: UserPopulateObject = {},
+        mongooseQueryObject?: Userv2QueryObject,
+        mongooseProjectionObject?: Userv2ProjectionObject,
+        mongoosePopulateObject: Userv2PopulateObject = {},
         mongooseQueryOptions?: any,
         cb?: any
     ) {
@@ -909,11 +911,11 @@ export class UserUtilityService {
         );
     }
 
-    async createLeanExec(createPayload: UserCreatePayloadModel) {
+    async createLeanExec(createPayload: Userv2CreatePayloadModel) {
         return this.create(createPayload);
     }
 
-    async updateLeanExec(updatePayload: UserUpdatePayloadModel, cb?: any) {
+    async updateLeanExec(updatePayload: Userv2UpdatePayloadModel, cb?: any) {
         return this.update(updatePayload, true, true, cb);
     }
 
@@ -922,29 +924,31 @@ export class UserUtilityService {
     }
 }
 
-export const mainUserUtilityService = new UserUtilityService();
+export const mainUserv2UtilityService = new Userv2UtilityService();
 
 
 
-export class UserService {
+export class Userv2Service {
 
-    utils = mainUserUtilityService;
+    utils = mainUserv2UtilityService;
 
-    constructor() {}
+    constructor() {
+        this.utils.context = gen.context;
+    }
 
     async getAll() {
-        return this.utils.find({}, defaultUserProjectionObject, defaultUserPopulateObject);
+        return this.utils.find({}, defaultUserv2ProjectionObject, defaultUserv2PopulateObject);
     }
     
     async getById(id: ID) {
-        return this.utils.find({ id }, defaultUserProjectionObject, defaultUserPopulateObject);
+        return this.utils.find({ id }, defaultUserv2ProjectionObject, defaultUserv2PopulateObject);
     }
     
-    async create(createPayload: UserCreatePayloadModel) {
+    async create(createPayload: Userv2CreatePayloadModel) {
         return this.utils.create(createPayload);
     }
     
-    async update(updatePayload: UserUpdatePayloadModel) {
+    async update(updatePayload: Userv2UpdatePayloadModel) {
         return this.utils.update(updatePayload);
     }
     
@@ -953,7 +957,7 @@ export class UserService {
     }
 }
 
-export const mainUserService = new UserService();
+export const mainUserv2Service = new Userv2Service();
 
 
 
@@ -968,9 +972,9 @@ export const $instance = new $name();
 */
 
 
-export class UserController {
+export class Userv2Controller {
     
-    service = mainUserService;
+    service = mainUserv2Service;
 
     constructor() {}
 
@@ -1036,27 +1040,32 @@ export class UserController {
 
 }
 
-export const mainUserController = new UserController();
+export const mainUserv2Controller = new Userv2Controller();
 
 
-export class UserRouter {
+export class Userv2Router {
 
-    controller = mainUserController;
+    controller = mainUserv2Controller;
     router: any;
 
-    constructor() {
+    constructor() {}
+
+    initialize() {
         this.router = Router()
-            .post('/', ...undefined.schema.apis.user.webServices['POST /'].middlewares, this.controller.create())
-            .delete('/:id', ...undefined.schema.apis.user.webServices['DELETE /:id'].middlewares, this.controller.delete())
-            .put('/:id/password', ...undefined.schema.apis.user.webServices['PUT /:id/password'].middlewares);
+            .post('/', ...gen.context.schema.apis.userv2.webServices['POST /'].middlewares, this.controller.create())
+            .delete('/:id', ...gen.context.schema.apis.userv2.webServices['DELETE /:id'].middlewares, this.controller.delete())
+            .put('/:id/password', ...gen.context.schema.apis.userv2.webServices['PUT /:id/password'].middlewares)
+            .get('/', ...gen.context.schema.apis.userv2.webServices['GET /'].middlewares, this.controller.getAll())
+            .get('/:id', ...gen.context.schema.apis.userv2.webServices['GET /:id'].middlewares, this.controller.getById())
+            .put('/:id', ...gen.context.schema.apis.userv2.webServices['PUT /:id'].middlewares, this.controller.update());
     }
 
     applyRouter(app: Application) {
-        app.use('/user', this.router);
+        app.use('/userv2', this.router);
     }
 
 }
 
-export const mainUserRouter = new UserRouter();
+export const mainUserv2Router = new Userv2Router();
 
 

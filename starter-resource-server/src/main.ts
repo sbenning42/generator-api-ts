@@ -1,7 +1,7 @@
 /**
  * Standard `express` import statements
  */
-import express from 'express';
+import express, { Request, Response } from 'express';
 import bodyParser from 'body-parser';
 import cors from 'cors';
 import helmet from 'helmet';
@@ -11,11 +11,10 @@ import morgan from 'morgan';
 import swaggerUi from 'swagger-ui-express';
 import YAML from 'yamljs';
 import { L } from './common/logger';
-import { mainUseService } from './modules/use/service';
 import { environment } from './environment';
-import { test } from './common/my-api/test';
-import { MyApiEngine } from './lib/my-api/engine';
-import { myApi } from './lib/my-api/goal';
+import { gen } from './lib/gen/core';
+import { GenContext, P } from './lib/gen/types';
+import { mainTodov2Router } from './generated-v2/todov2/todov2';
 
 const {
   port,
@@ -49,7 +48,155 @@ async function main() {
     L.info('Cannot apply swagger.', error)
   }
 
-  const engine = new MyApiEngine(myApi);
+  // const engine = new MyApiEngine(myApi);
+
+  const { jwt, iOwn, hasRole } = gen.context.lib.middlewares;
+  const { alwaysCan, alwaysCannot } = gen.context.lib.guards;
+
+  gen.register({
+      config: {
+          jwtSecret: 'secret',
+          passportFields: ['username', 'password'],
+          iAmModelName: 'User',
+          outDir: './src/generated-v2',
+          genLibDir: '../../lib/gen',
+      },
+      apis: {
+          userv2: {
+              model: {
+                  username: {
+                      type: String, // the only required property
+                      required: true,
+                      unique: true,
+                      validators: {
+                          minLengthUsername: (s: string) => s.length < 3
+                              ? { minLengthUsername: 'Username too short' } : null,
+                          maxLengthUsername: (s: string) => s.length > 255
+                              ? { maxLengthUsername: 'Username too long' } : null,
+                      }
+                  },
+                  password: {
+                      type: String,
+                      required: true,
+                      guards: {
+                          canSelect: alwaysCannot, // [() => false]
+                          canUpdate: alwaysCannot, // dedied web service
+                      },
+                      validators: {
+                          minLengthPassword: (s: string) => s.length < 8
+                              ? { minLengthPassword: 'Password too short' } : null,
+                          maxLengthPassword: (s: string) => s.length > 255
+                              ? { maxLengthPassword: 'Password too long' } : null,
+                      }
+                  },
+                  roles: {
+                      type: [String],
+                      required: true,
+                      default: ['user'],
+                      guards: {
+                          canCreate: alwaysCannot,
+                          canUpdate: [({ user }: GenContext) => P('admin' in user.roles ? null : { notAuthorized: 'Not Authorized' })],
+                      },
+                      validators: {
+                          allowedRoles: (roles: string[]) => roles.every(role => ['user', 'admin'].includes(role))
+                              ? { allowedRoles: `Unknom role in ${roles}` } : null,
+                      }
+                  },
+                  email: {
+                      type: String, // the only required property
+                      required: true,
+                      unique: true,
+                      validators: {
+                          minLengthUsername: (s: string) => s.length < 8
+                              ? { minLengthUsername: 'Username too short' } : null,
+                          maxLengthUsername: (s: string) => s.length > 255
+                              ? { maxLengthUsername: 'Username too long' } : null,
+                      }
+                  },
+                  birthdate: {
+                      type: Date, // the only required property
+                      required: true,
+                  },
+                  json: {
+                      type: Object, // the only required property
+                      default: {},
+                  },
+                  todos: {
+                      type: ['Todov2'],
+                      default: [],
+                      guards: {
+                          canCreate: alwaysCannot,
+                          canUpdate: alwaysCannot,
+                      },
+                      populate: true
+                  }
+              },
+              webServices: {
+                  all: {
+                      middlewares: [jwt, hasRole('iAm', 'admin')]
+                  },
+                  'POST /': {
+                      excludes: { 0: true, 1: true },
+                  },
+                  'DELETE /:id': {
+                      middlewares: [hasRole('admin')], 
+                      excludes: { 1: true },
+                  },
+                  'PUT /:id/password': {
+                      middlewares: [
+                          (req: Request, res: Response) => {
+                              res.json({ message: 'not implemented' });
+                          }
+                      ]
+                  }
+              }
+          },
+          todov2: {
+              model: {
+                  title: {
+                      type: String,
+                      required: true,
+                      unique: true,
+                  },
+                  done: {
+                      type: Boolean,
+                      required: true,
+                      default: false,
+                  },
+                  json: {
+                      type: Object,
+                      default: {},
+                  },
+                  author: {
+                      type: 'Userv2',
+                      required: true,
+                      default: ({ user }: GenContext) => user.id,
+                      guards: {
+                          canCreate: alwaysCannot,
+                          canUpdate: alwaysCannot,
+                      },
+                      reverse: ['todos'],
+                      populate: true
+                  }
+              },
+              webServices: {
+                  all: {
+                      //middlewares: [jwt]
+                  },
+                  mutation: {
+                      //middlewares: [hasRole('iOwn', 'admin')]
+                  },
+                  'GET /:id/author': {
+                      //middlewares: [hasRole('iOwn', 'admin')]
+                  }
+              }
+          }
+      },
+  });
+  // gen.generate();
+  gen.generate(false);
+  mainTodov2Router.initialize();
+  mainTodov2Router.applyRouter(app);
 
   /**
    * Apply application handlers
