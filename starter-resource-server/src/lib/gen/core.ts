@@ -239,11 +239,11 @@ export const $name = (input: $type, context: GenContext) => {
 };
 `; 
 export const runAllValidatorsTemplate = `
-export const $name = (context: GenContext) => {
+export const $name = (context: GenContext, payload: any) => {
     const validators = Object.entries(context.schema.apis.$api.model)
         .map(([fieldName, field]: [string, any]) => [fieldName, field, field.validators || {}] as [string, any, LibValidator]);
     const validations = validators.map(([fieldName, field, validators]) => Object.entries(validators)
-        .map(([validatorName, validator]) => [validatorName, validator(context.req[fieldName], context)] as [string, LibValidatorReturnUnion])
+        .map(([validatorName, validator]) => [validatorName, validator(payload[fieldName], context)] as [string, LibValidatorReturnUnion])
     );
     if (validations.some(([validationName, validation]) => !!validation)) {
         return validations;
@@ -301,7 +301,7 @@ export class $name {
         };
         const results = await $runAllCanCreateGuards(this.context);
         deleteThem(results, payload);
-        return payload;
+        return payload as $createPayloadModel;
     }
 
     async applyAllCanUpdateGuards(_payload: $updatePayloadModel) {
@@ -326,7 +326,11 @@ export class $name {
         deleteThem(results, payload.$set);
         deleteThem(results, payload.$push);
         deleteThem(results, payload.$pull);
-        return payload;
+        return payload as $updatePayloadModel;
+    }
+
+    applyAllValidators(context: GenContext, payload: any) {
+        return $runAllValidators(context, payload);
     }
 
     async find(
@@ -353,6 +357,10 @@ export class $name {
         _createPayload: $createPayloadModel,
     ) {
         const createPayload = await this.applyAllCanCreateGuards(_createPayload);
+        const results = this.applyAllValidators(gen.context, createPayload);
+        if (results) {
+            throw new Error(JSON.stringify(results));
+        }
         const instance = new this.model(createPayload);
         return instance.save();
     }
@@ -375,6 +383,12 @@ export class $name {
                 [fieldName]: { $in: toPull }
             }), {}),
         });
+        const resultsForSet = this.applyAllValidators(gen.context, updatePayload.$set);
+        const resultsForPush = this.applyAllValidators(gen.context, updatePayload.$push);
+        const resultsForPull = this.applyAllValidators(gen.context, updatePayload.$pull);
+        if (resultsForSet || resultsForPush || resultsForPull) {
+            throw new Error(JSON.stringify([resultsForSet, resultsForPush, resultsForPull]));
+        }
         const queryLean = () => lean ? query().lean() : query();
         const queryExec = () => exec ? queryLean().exec(cb) : queryLean();
         return queryExec();
@@ -494,23 +508,28 @@ export class $name {
     }
 
     async getAll() {
-        return this.utils.find({}, $defaultProjectionObject, $defaultPopulateObject);
+        const results = await this.utils.find({}, $defaultProjectionObject, $defaultPopulateObject);
+        return results;
     }
     
     async getById(id: ID) {
-        return this.utils.find({ id }, $defaultProjectionObject, $defaultPopulateObject);
+        const result = await this.utils.find({ id }, $defaultProjectionObject, $defaultPopulateObject);
+        return result;
     }
     
     async create(createPayload: $createPayloadModel) {
-        return this.utils.create(createPayload);
+        const result = await this.utils.create(createPayload);
+        return result;
     }
     
     async update(updatePayload: $updatePayloadModel) {
-        return this.utils.update(updatePayload);
+        const result = await this.utils.update(updatePayload);
+        return result;
     }
     
     async delete(id: ID) {
-        return this.utils.delete(id);
+        const result = await this.utils.delete(id);
+        return result;
     }
 }
 
@@ -543,7 +562,7 @@ export class $name {
                 const response = await this.service.getAll();
                 res.json({ response });
             } catch (error) {
-                res.status(400).send(error);
+                res.status(400).json({ error: error.toString() });
             }
         };
     }
@@ -555,7 +574,7 @@ export class $name {
                 const response = await this.service.getById(id);
                 res.json({ response });
             } catch (error) {
-                res.status(400).send(error);
+                res.status(400).json({ error: error.toString() });
             }
         };
     }
@@ -567,7 +586,7 @@ export class $name {
                 const response = await this.service.create(payload);
                 res.json({ response });
             } catch (error) {
-                res.status(400).send(error);
+                res.status(400).json({ error: error.toString() });
             }
         };
     }
@@ -580,7 +599,7 @@ export class $name {
                 const response = await this.service.update({ id, ...payload });
                 res.json({ response });
             } catch (error) {
-                res.status(400).send(error);
+                res.status(400).json({ error: error.toString() });
             }
         };
     }
@@ -592,7 +611,7 @@ export class $name {
                 const response = await this.service.delete(id);
                 res.json({ response });
             } catch (error) {
-                res.status(400).send(error);
+                res.status(400).json({ error: error.toString() });
             }
         };
     }
@@ -642,7 +661,7 @@ export class GenCore {
             },
             validators: {},
             middlewares: {
-                jwt: mainPassportService.jwt,
+                jwt: mainPassportService.jwt(),
                 hasRole: mainPassportService.hasRole,
                 iOwn: mainPassportService.owner,
             },
@@ -726,6 +745,7 @@ export class GenCore {
                             imports: `
 import mongoose from 'mongoose';
 import { ObjectID } from 'mongodb';
+import { gen } from '${(config.genLibDir || "../../lib/gen").slice(3)}/core';
 
 export const ObjectId = mongoose.Schema.Types.ObjectId;
 export const Mixed = mongoose.Schema.Types.Mixed;

@@ -8,7 +8,7 @@ import mongoose, { Model, Document, Schema, model } from 'mongoose';
 import { ObjectID } from 'mongodb';
 import { Singleton } from '../../common/singleton/singleton';
 import { environment } from '../../environment';
-import { UserModel, UserSchema } from '../../generated/types';
+import { UserModel, UserSchema } from '../../generated-v2/types';
 import { L } from '../../common/logger';
 import { context } from '../../config/context';
 

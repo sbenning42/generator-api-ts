@@ -14,7 +14,8 @@ import { L } from './common/logger';
 import { environment } from './environment';
 import { gen } from './lib/gen/core';
 import { GenContext, P } from './lib/gen/types';
-import { mainTodov2Router } from './generated-v2/todov2/todov2';
+import { mainTodoRouter } from './generated-v2/todo/todo';
+import { mainMongoService } from './modules/mongo/service';
 
 const {
   port,
@@ -62,7 +63,7 @@ async function main() {
           genLibDir: '../../lib/gen',
       },
       apis: {
-          userv2: {
+          user: {
               model: {
                   username: {
                       type: String, // the only required property
@@ -122,7 +123,7 @@ async function main() {
                       default: {},
                   },
                   todos: {
-                      type: ['Todov2'],
+                      type: ['Todo'],
                       default: [],
                       guards: {
                           canCreate: alwaysCannot,
@@ -151,7 +152,7 @@ async function main() {
                   }
               }
           },
-          todov2: {
+          todo: {
               model: {
                   title: {
                       type: String,
@@ -168,9 +169,9 @@ async function main() {
                       default: {},
                   },
                   author: {
-                      type: 'Userv2',
+                      type: 'User',
                       required: true,
-                      default: ({ user }: GenContext) => user.id,
+                      default: () => gen.context.user.id,
                       guards: {
                           canCreate: alwaysCannot,
                           canUpdate: alwaysCannot,
@@ -181,22 +182,29 @@ async function main() {
               },
               webServices: {
                   all: {
-                      //middlewares: [jwt]
+                      middlewares: [jwt]
                   },
                   mutation: {
-                      //middlewares: [hasRole('iOwn', 'admin')]
+                      middlewares: [hasRole('iOwn', 'admin')]
                   },
                   'GET /:id/author': {
-                      //middlewares: [hasRole('iOwn', 'admin')]
+                      middlewares: [hasRole('iOwn', 'admin')]
                   }
               }
           }
       },
   });
-  // gen.generate();
-  gen.generate(false);
-  mainTodov2Router.initialize();
-  mainTodov2Router.applyRouter(app);
+  await mainMongoService.db();
+  const generate = false;
+  if (generate) {
+    gen.generate();
+  } else {
+    gen.generate(false);
+    mainTodoRouter.initialize();
+    mainTodoRouter.applyRouter(app);
+  }
+  ///*
+  //*/
 
   /**
    * Apply application handlers
