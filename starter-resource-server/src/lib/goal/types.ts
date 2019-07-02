@@ -1,6 +1,7 @@
 import { ObjectID } from "mongodb";
 import mongoose from 'mongoose';
 import { Request, Response, Application, Router } from 'express';
+import { getCtx } from './ctx';
 
 export type ID = string | number | ObjectID;
 
@@ -10,11 +11,14 @@ export const Mixed = mongoose.Schema.Types.Mixed;
 export const PrCl = (thing: any) => () => Promise.resolve(thing);
 export const Pr = (thing: any) => PrCl(thing)();
 
-export const runGuards = (guardObj: { [field: string]: ((ctx: any) => Promise<{} | null>)[] }) => {
-    return async (ctx: any) => {
+export const runGuards = (guardObj: { [field: string]: ((input: any, ctx: any) => Promise<{} | null>)[] }) => {
+    return async (input: any, ctx: any) => {
+        console.log('GO: ', guardObj);
+        console.log('INPUT: ', input);
         const guarded = await Object.entries(guardObj)
+            .filter(([field, guards]) => input === undefined || field in input)
             .filter(([field, guards]) => guards && guards.length > 0)
-            .map(async ([field, guards]) => [field, await Promise.all(guards.map(guard => guard(ctx)))] as [string, any])
+            .map(async ([field, guards]) => [field, await Promise.all(guards.map(guard => guard(input, ctx)))] as [string, any])
             .reduce(async (res$, field$) => {
                 const res = await res$;
                 const [field, fieldRes] = await field$;
@@ -30,12 +34,13 @@ export const runGuards = (guardObj: { [field: string]: ((ctx: any) => Promise<{}
 export const runValidators = (validatorObj: { [field: string]: ((input: any, ctx: any) => Promise<{} | null>)[] }, path: string = '') => {
     return async <T>(input: T, ctx: any) => {
         const validated = await Object.entries(validatorObj)
+            .filter(([field, validators]) => input === undefined || field in input)
             .filter(([field, validators]) => validators && validators.length > 0)
             .map(async ([field, validators]) => [field, await Promise.all(validators.map(validator => validator(path ? input[path][field] : input[field], ctx)))] as [string, any])
             .reduce(async (res$, field$) => {
                 const res = await res$;
                 const [field, fieldRes] = await field$;
-                if (fieldRes) {
+                if (fieldRes && fieldRes.length > 0 && !fieldRes.every(fr => fr === null)) {
                     res[field] = fieldRes;
                 }
                 return res;
@@ -57,14 +62,19 @@ export const preUserFind = async function () {
         }
     });
     const thisProjection = { ...defaultUserProjection };
-    const guardResults = await runUserSelectGuards(ctx);
+    const ctx = getCtx();
+    console.log('Will call guards');
+    const guardResults = await runUserSelectGuards(undefined, ctx);
+    console.log('Had guards results: ', guardResults);
     if (guardResults) {
         ctx.userSelectGuardErrors = guardResults;
         Object.keys(guardResults).forEach(field => {
-            thisProjection[field] = 0;
+            delete thisProjection[field];
         });
     }
+    console.log(thisProjection);
     this.select(thisProjection);
+    console.log('Had selected');
 };
 
 
@@ -72,7 +82,8 @@ export const preUserFind = async function () {
  * Apply create guards + create validators
  */
 export const preUserSave = async function () {
-    const guardResults = await runUserCreateGuards(ctx);
+    const ctx = getCtx();
+    const guardResults = await runUserCreateGuards(this, ctx);
     if (guardResults) {
         ctx.userCreateGuardErrors = guardResults;
         Object.keys(guardResults).forEach(field => {
@@ -91,7 +102,9 @@ export const preUserSave = async function () {
  * Apply update guards + update validators
  */
 export const preUserUpdate = async function () {
-    const guardResults = await runUserUpdateGuards(ctx);
+    const ctx = getCtx();
+    const guardResults = await runUserUpdateGuards(this, ctx);
+    console.log(guardResults);
     if (guardResults) {
         ctx.userCreateGuardErrors = guardResults;
         Object.keys(guardResults).forEach(field => {
@@ -109,7 +122,8 @@ export const preUserUpdate = async function () {
  * Report modification to relateds models
  */
 export const postUserSave = async function () {
-    return Promise.all(Object.entries(defaultUserSync)
+    const ctx = getCtx();
+    await Promise.all(Object.entries(defaultUserSync)
         .map(async ([field, { target, on, array }]) => {
             const targetModel = mongoose.model(target);
             const [, targetSchema] = Object.entries(ctx.schema).find(([api]) => api === target);
@@ -174,12 +188,24 @@ export const postUserSave = async function () {
  * 
  * mongoosify update payload
  */
-export const convertUpdateUserForMongoose = (updateUser: UpdateUser) => ({
-    id: updateUser.id,
-    $set: updateUser.set ? updateUser.set : {},
-    $push: updateUser.push ? Object.entries(updateUser.push).reduce((push, [field, vals]) => ({ ...push, [field]: { $each: vals } }), {}) : [],
-    $pull: updateUser.pull ? Object.entries(updateUser.pull).reduce((pull, [field, vals]) => ({ ...pull, [field]: { $in: vals } }), {}) : [],
-});
+export const convertUpdateUserForMongoose = (updateUser: UpdateUser) => {
+    const mongooseUpdate = {
+        id: updateUser.id,
+        $set: updateUser.set ? updateUser.set : {},
+        $push: updateUser.push ? Object.entries(updateUser.push).reduce((push, [field, vals]) => ({ ...push, [field]: { $each: vals } }), {}) : {},
+        $pull: updateUser.pull ? Object.entries(updateUser.pull).reduce((pull, [field, vals]) => ({ ...pull, [field]: { $in: vals } }), {}) : {},
+    };
+    if (Object.keys(mongooseUpdate.$set).length < 1) {
+        delete mongooseUpdate.$set;
+    }
+    if (Object.keys(mongooseUpdate.$push).length < 1) {
+        delete mongooseUpdate.$push;
+    }
+    if (Object.keys(mongooseUpdate.$pull).length < 1) {
+        delete mongooseUpdate.$pull;
+    }
+    return mongooseUpdate;
+};
 
 /**
  * Schema for User. set function are used to access old field value in post save/update hook 
@@ -191,7 +217,7 @@ export const mainUserSchema = new mongoose.Schema({
         unique: true,
         select: true,
         default: undefined,
-        ref: undefined,
+        // ref: undefined,
         set: function (username: string) {
             this['__old_username'] = this.username;
             this.username = username;
@@ -204,13 +230,14 @@ export const mainUserSchema = new mongoose.Schema({
         unique: false,
         select: false,
         default: undefined,
-        ref: undefined,
-        set: function (username: string) {
-            this['__old_username'] = this.username;
-            this.username = username;
-            return username;
+        // ref: undefined,
+        set: function (password: string) {
+            this['__old_password'] = this.password;
+            this.password = password;
+            return password;
         } 
     },
+    /*
     store: {
         type: ObjectId,
         required: true,
@@ -218,19 +245,20 @@ export const mainUserSchema = new mongoose.Schema({
         select: true,
         default: undefined,
         ref: 'Store',
-        set: function (password: string) {
-            this['__old_password'] = this.password;
-            this.password = password;
-            return password;
+        set: function (store: string) {
+            this['__old_store'] = this.store;
+            this.password = store;
+            return store;
         } 
     },
+    */
     roles: {
         type: [String],
         required: true,
         unique: false,
         select: true,
         default: ['user'],
-        ref: undefined,
+        // ref: undefined,
         set: function (roles: string[]) {
             this['__old_roles'] = this.roles;
             this.username = roles;
@@ -243,7 +271,7 @@ export const mainUserSchema = new mongoose.Schema({
         unique: false,
         select: true,
         default: {},
-        ref: undefined,
+        // ref: undefined,
         set: function (json: any) {
             this['__old_json'] = this.json;
             this.json = json;
@@ -260,7 +288,6 @@ export interface User {
     id: ID;
     username: string;
     password?: string;
-    store: ObjectID;
     roles: string[];
     json?: any;
 }
@@ -270,7 +297,6 @@ export interface PopulatedUser {
     id: ID;
     username: string;
     password?: string;
-    store: Store;
     roles: string[];
     json?: any;
 }
@@ -282,6 +308,8 @@ export interface CreateUser {
     password: string;
     json?: any;
 }
+
+export const createUserField = ['id', 'username', 'password', 'json'];
 
 export interface UpdateUser {
     id: ID;
@@ -300,12 +328,13 @@ export interface UpdateUser {
     };
 }
 
+export const updateUserField = ['username', 'password', 'roles', 'json'];
+
 // All field '?', skip if canSelect === NEVER
 export interface UserProjection {
     id?: 0 | 1;
     username?: 0 | 1;
     password?: 0 | 1;
-    store?: 0 | 1;
     roles?: 0 | 1;
     json?: 0 | 1;
 }
@@ -314,25 +343,16 @@ export interface UserProjection {
 export const defaultUserProjection = {
     id: 1,
     username: 1,
-    password: 0,
-    store: 1,
     roles: 1,
     json: 1,
 };
 
 // all related field
 export interface UserPopulate {
-    store: boolean;
 }
 
 // all related field that have populate === true
 export const defaultUserPopulate = {
-    store: true,
-};
-
-// all related field that have populate === true
-export const defaultUserPopulateAll = {
-    store: true,
 };
 
 export type UserConditions = any;
@@ -340,8 +360,8 @@ export type UserConditions = any;
 export const defaultUserConditions = {};
 
 export const defaultUserSync = {
-    store: { target: 'Store', on: 'users', array: true }
-};
+    // store: { target: 'Store', on: 'users', array: true }
+} as { [name: string]: { target: string, on: string, array: boolean } };
 
 /**
  * Reverse
@@ -359,7 +379,6 @@ export const defaultUserSync = {
 export const userSelectGuards = {
     id: [],
     username: [],
-    store: [],
     roles: [],
     json: [],
 };
@@ -415,8 +434,6 @@ export const runUserUpdateSetValidators = runValidators(userUpdateValidators, 's
 export const runUserUpdatePushValidators = runValidators(userUpdateValidators, 'push');
 export const runUserUpdatePullValidators = runValidators(userUpdateValidators, 'pull');
 
-const ctx = undefined;
-
 mainUserSchema.pre('find', preUserFind);
 mainUserSchema.pre('save', preUserSave);
 mainUserSchema.pre('update', preUserUpdate);
@@ -428,8 +445,12 @@ export const mainUserModel = mongoose.model('UserV4', mainUserSchema);
 
 export class UserUtils {
     
-    getAll() {
-        return mainUserModel.find();
+    async getAll() {
+        const r = mainUserModel.find();
+        console.log('r');
+        const R = await r;
+        console.log('R: ', R);
+        return r;
     }
     
     getById(id: ID) {
@@ -443,7 +464,7 @@ export class UserUtils {
     
     async updateById(update: UpdateUser) {
         const user = await this.getById(update.id);
-        user.update(convertUpdateUserForMongoose(update));
+        return user.update(convertUpdateUserForMongoose(update));
     }
     
     deleteById(id: ID) {
@@ -476,6 +497,7 @@ export const mainUserService = new UserService();
 export class UserController {
 
     private error(error: any) {
+        const ctx = getCtx();
         return {
             error: error.toString(),
             userSelectGuardErrors: ctx.userSelectGuardErrors,
@@ -488,6 +510,7 @@ export class UserController {
 
     getAll() {
         return async (req: Request, res: Response) => {
+            console.log(`Got called ...`);
             try {
                 res.json({ response: await mainUserService.getAll() });
             } catch (error) {
@@ -546,20 +569,20 @@ export class UserController {
 
 export const mainUserController = new UserController();
 
-export const userGetAllMiddlewares = ctx.schema.user.webServices['GET /'].middlewares;
-export const userGetByIdMiddlewares = ctx.schema.user.webServices['POST /'].middlewares;
-export const userCreateMiddlewares = ctx.schema.user.webServices['GET /:id'].middlewares;
-export const userUpdateMiddlewares = ctx.schema.user.webServices['PUT /:id'].middlewares;
-export const userDeleteMiddlewares = ctx.schema.user.webServices['DELETE /:id'].middlewares;
+export const userGetAllMiddlewares = () => getCtx().schema.user.webServices['GET /'].middlewares;
+export const userGetByIdMiddlewares = () => getCtx().schema.user.webServices['POST /'].middlewares;
+export const userCreateMiddlewares = () => getCtx().schema.user.webServices['GET /:id'].middlewares;
+export const userUpdateMiddlewares = () => getCtx().schema.user.webServices['PUT /:id'].middlewares;
+export const userDeleteMiddlewares = () => getCtx().schema.user.webServices['DELETE /:id'].middlewares;
 
 export class UserRouter {
     applyRouter(app: Application) {
-        app.use('users', Router()
-            .get('/', ...userGetAllMiddlewares, mainUserController.getAll())
-            .post('/', ...userCreateMiddlewares, mainUserController.create())
-            .get('/:id', ...userGetByIdMiddlewares, mainUserController.getById())
-            .put('/:id', ...userUpdateMiddlewares, mainUserController.update())
-            .delete('/:id', ...userDeleteMiddlewares, mainUserController.delete())
+        app.use('/users', Router()
+            .get('/', ...userGetAllMiddlewares(), mainUserController.getAll())
+            .post('/', ...userCreateMiddlewares(), mainUserController.create())
+            .get('/:id', ...userGetByIdMiddlewares(), mainUserController.getById())
+            .put('/:id', ...userUpdateMiddlewares(), mainUserController.update())
+            .delete('/:id', ...userDeleteMiddlewares(), mainUserController.delete())
         );
     }
 }
@@ -568,6 +591,7 @@ export const mainUserRouter = new UserRouter();
 
 /******************************************************************************************************************** */
 
+/*
 export interface Store {
     id: ID;
     name: string;
@@ -607,3 +631,4 @@ export interface Product {
     createdAt?: Date;
     updatedAt?: Date;
 }
+*/

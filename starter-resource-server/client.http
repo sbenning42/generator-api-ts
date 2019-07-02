@@ -23,3 +23,31 @@ content-type: application/json
     "username": "string",
     "password": "string"
 }
+
+###
+
+get http://localhost:4266/users HTTP/1.1
+content-type: application/json
+
+
+###
+
+post http://localhost:4266/users HTTP/1.1
+content-type: application/json
+
+{
+    "username": "test 2",
+    "password": "test"
+}
+
+###
+
+put http://localhost:4266/users/5d1b42d2bc3f3f2c7c507e9f HTTP/1.1
+content-type: application/json
+
+{
+    "push": {
+        "roles": ["admin"]
+    }
+}
+
