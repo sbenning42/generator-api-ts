@@ -1,5 +1,6 @@
 import { ObjectID } from "mongodb";
 import mongoose from 'mongoose';
+import { Request, Response, Application, Router } from 'express';
 
 export type ID = string | number | ObjectID;
 
@@ -43,6 +44,146 @@ export const runValidators = (validatorObj: { [field: string]: ((input: any, ctx
     };
 };
 
+/****************************************************************************************************** */
+
+
+/**
+ * Apply select guards
+ */
+export const preUserFind = async function () {
+    Object.entries(defaultUserPopulate).forEach(([field, should]) => {
+        if (should) {
+            this.populate(field);
+        }
+    });
+    const thisProjection = { ...defaultUserProjection };
+    const guardResults = await runUserSelectGuards(ctx);
+    if (guardResults) {
+        ctx.userSelectGuardErrors = guardResults;
+        Object.keys(guardResults).forEach(field => {
+            thisProjection[field] = 0;
+        });
+    }
+    this.select(thisProjection);
+};
+
+
+/**
+ * Apply create guards + create validators
+ */
+export const preUserSave = async function () {
+    const guardResults = await runUserCreateGuards(ctx);
+    if (guardResults) {
+        ctx.userCreateGuardErrors = guardResults;
+        Object.keys(guardResults).forEach(field => {
+            this.set(field, undefined);
+        });
+    }
+    const validatorResults = await runUserCreateValidators(this, ctx);
+    if (validatorResults) {
+        ctx.userCreateValidatorErrors = validatorResults;
+        throw new Error(JSON.stringify(validatorResults));
+    }
+};
+
+
+/**
+ * Apply update guards + update validators
+ */
+export const preUserUpdate = async function () {
+    const guardResults = await runUserUpdateGuards(ctx);
+    if (guardResults) {
+        ctx.userCreateGuardErrors = guardResults;
+        Object.keys(guardResults).forEach(field => {
+            this.set(field, undefined);
+        });
+    }
+    const validatorResults = await runUserUpdateValidators(this, ctx);
+    if (validatorResults) {
+        ctx.userCreateValidatorErrors = validatorResults;
+        throw new Error(JSON.stringify(validatorResults));
+    }
+};
+
+/**
+ * Report modification to relateds models
+ */
+export const postUserSave = async function () {
+    return Promise.all(Object.entries(defaultUserSync)
+        .map(async ([field, { target, on, array }]) => {
+            const targetModel = mongoose.model(target);
+            const [, targetSchema] = Object.entries(ctx.schema).find(([api]) => api === target);
+            if (Array.isArray(this[field])) {
+                const oldTargeteds = this['__old_' + field] as ID[];
+                const targeteds = await targetModel.find({ _id: { $in: this[field] } });
+                const removeds = await targetModel.find({ _id: { $in: oldTargeteds } });
+                const news = targeteds.filter(tar => !oldTargeteds.includes(tar._id));
+                if (removeds.length === 0 && news.length === 0) {
+                    return;
+                }
+                if (array) {
+                    return Promise.all(
+                        news.map(async (_new) => {
+                            _new[on].push(this._id);
+                            return _new.save();
+                        })
+                        .concat(removeds.map(async (_rem) => {
+                            _rem[on] = _rem[on].filter((id: ID) => id !== this._id);
+                            return _rem.save();
+                        }))
+                    );
+                } else {
+                    return Promise.all(
+                        news.map(async (_new) => {
+                            _new[on] = this._id;
+                            return _new.save();
+                        }).concat(removeds.map(async (_rem) => {
+                            _rem[on] = undefined;
+                            return targetSchema[on].required ? _rem.remove() : _rem.save();
+                        }))
+                    );
+                }
+            } else {
+                const targeted = await targetModel.findOne({ _id: this[field] });
+                const oldTargeted = await targetModel.findOne({ _id: this['__old_' + field] });
+                if (oldTargeted._id === targeted._id) {
+                    return;
+                }
+                if (array) {
+                    targeted[on].push(this._id);
+                    oldTargeted[on] = oldTargeted[on].filter((id: ID) => id !== this._id);
+                    return Promise.all([
+                        targeted.save(),
+                        /** TODO delete if required */
+                        oldTargeted.save()
+                    ]);
+                } else {
+                    targeted[on] = this._id;
+                    oldTargeted[on] = undefined;
+                    return Promise.all([
+                        targeted.save(),
+                        targetSchema[on].required ? oldTargeted.remove() : oldTargeted.save()
+                    ]);
+                }
+            }
+        })
+    );
+};
+
+/**
+ * 
+ * mongoosify update payload
+ */
+export const convertUpdateUserForMongoose = (updateUser: UpdateUser) => ({
+    id: updateUser.id,
+    $set: updateUser.set ? updateUser.set : {},
+    $push: updateUser.push ? Object.entries(updateUser.push).reduce((push, [field, vals]) => ({ ...push, [field]: { $each: vals } }), {}) : [],
+    $pull: updateUser.pull ? Object.entries(updateUser.pull).reduce((pull, [field, vals]) => ({ ...pull, [field]: { $in: vals } }), {}) : [],
+});
+
+/**
+ * Schema for User. set function are used to access old field value in post save/update hook 
+ */
 export const mainUserSchema = new mongoose.Schema({
     username: {
         type: String,
@@ -50,7 +191,12 @@ export const mainUserSchema = new mongoose.Schema({
         unique: true,
         select: true,
         default: undefined,
-        ref: undefined
+        ref: undefined,
+        set: function (username: string) {
+            this['__old_username'] = this.username;
+            this.username = username;
+            return username;
+        } 
     },
     password: {
         type: String,
@@ -58,7 +204,12 @@ export const mainUserSchema = new mongoose.Schema({
         unique: false,
         select: false,
         default: undefined,
-        ref: undefined
+        ref: undefined,
+        set: function (username: string) {
+            this['__old_username'] = this.username;
+            this.username = username;
+            return username;
+        } 
     },
     store: {
         type: ObjectId,
@@ -66,7 +217,12 @@ export const mainUserSchema = new mongoose.Schema({
         unique: false,
         select: true,
         default: undefined,
-        ref: 'Store'
+        ref: 'Store',
+        set: function (password: string) {
+            this['__old_password'] = this.password;
+            this.password = password;
+            return password;
+        } 
     },
     roles: {
         type: [String],
@@ -74,7 +230,12 @@ export const mainUserSchema = new mongoose.Schema({
         unique: false,
         select: true,
         default: ['user'],
-        ref: undefined
+        ref: undefined,
+        set: function (roles: string[]) {
+            this['__old_roles'] = this.roles;
+            this.username = roles;
+            return roles;
+        } 
     },
     json: {
         type: Mixed,
@@ -82,8 +243,16 @@ export const mainUserSchema = new mongoose.Schema({
         unique: false,
         select: true,
         default: {},
-        ref: undefined
+        ref: undefined,
+        set: function (json: any) {
+            this['__old_json'] = this.json;
+            this.json = json;
+            return json;
+        } 
     },
+}, {
+    minimize: false,
+    timestamps: true
 });
 
 // All field '?' if not required or if select === false or if canSelect is not empty and canSelect is !== ALWAYS, skip if canSelect === NEVER
@@ -241,132 +410,163 @@ export const userUpdateValidators = {
 };
 
 export const runUserCreateValidators = runValidators(userCreateValidators);
+export const runUserUpdateValidators = runValidators(userUpdateValidators);
 export const runUserUpdateSetValidators = runValidators(userUpdateValidators, 'set');
 export const runUserUpdatePushValidators = runValidators(userUpdateValidators, 'push');
 export const runUserUpdatePullValidators = runValidators(userUpdateValidators, 'pull');
 
 const ctx = undefined;
 
-mainUserSchema.pre('find', async function() {
-    let populate: any;
-    switch (this['tag']) {
-        case 'getAll':
-        case 'getMany':
-            populate = defaultUserPopulateAll;
-            break;
-        default:
-            populate = defaultUserPopulate;
-            break ;
-    }
-    Object.entries(populate).forEach(([field, should]) => {
-        if (should) {
-            this.populate(field);
-        }
-    });
-    const thisProjection = { ...defaultUserProjection };
-    const guardResults = await runUserSelectGuards(ctx);
-    if (guardResults) {
-        ctx.userSelectGuardErrors = guardResults;
-        Object.keys(guardResults).forEach(field => {
-            thisProjection[field] = 0;
-        });
-    }
-    this.select(thisProjection);
-});
+mainUserSchema.pre('find', preUserFind);
+mainUserSchema.pre('save', preUserSave);
+mainUserSchema.pre('update', preUserUpdate);
+mainUserSchema.post('save', postUserSave);
+mainUserSchema.pre('update', postUserSave);
 
-mainUserSchema.pre('save', async function() {
-    const guardResults = await runUserCreateGuards(ctx);
-    if (guardResults) {
-        ctx.userCreateGuardErrors = guardResults;
-        Object.keys(guardResults).forEach(field => {
-            this.set(field, undefined);
-        });
-    }
-    const validatorResults = await runUserCreateValidators(ctx.req.body, ctx);
-    if (validatorResults) {
-        ctx.userCreateValidatorErrors = validatorResults;
-        throw new Error(JSON.stringify(validatorResults));
-    }
-});
-
-mainUserSchema.post('save', async function() {
-    const synced = await Promise.all(Object.entries(defaultUserSync)
-        .map(async ([field, { target, on, array }]) => {
-            const targetModel = mongoose.model(target);
-            if (Array.isArray(this[field])) {
-                const oldTargeteds = this['__old_' + field] as ID[];
-                const targeteds = await targetModel.find({ _id: { $in: this[field] } });
-                const removeds = await targetModel.find({ _id: { $in: oldTargeteds } });
-                const news = targeteds.filter(tar => !oldTargeteds.includes(tar._id));
-                if (removeds.length === 0 && news.length === 0) {
-                    return;
-                }
-                if (array) {
-                    await Promise.all(news.map(async (_new) => {
-                        _new[on].push(this._id);
-                        await _new.save();
-                    }));
-                    await Promise.all(removeds.map(async (_rem) => {
-                        _rem[on] = _rem[on].filter((id: ID) => id !== this._id);
-                        await _rem.save();
-                    }));
-                } else {
-                    await Promise.all(news.map(async (_new) => {
-                        _new[on] = this._id;
-                        await _new.save();
-                    }));
-                    await Promise.all(removeds.map(async (_rem) => {
-                        _rem[on] = undefined;
-                        /** TODO delete if required */
-                        await _rem.save();
-                    }));
-                }
-            } else {
-                const targeted = await targetModel.findOne({ _id: this[field] });
-                const oldTargeted = await targetModel.findOne({ _id: this['__old_' + field] });
-                if (oldTargeted._id === targeted._id) {
-                    return;
-                }
-                if (array) {
-                    targeted[on].push(this._id);
-                    oldTargeted[on] = oldTargeted[on].filter((id: ID) => id !== this._id);
-                    await targeted.save();
-                    /** TODO delete if required */
-                    await oldTargeted.save();
-                } else {
-                    targeted[on] = this._id;
-                    oldTargeted[on] = undefined;
-                    await targeted.save();
-                    /** TODO delete if required */
-                    await oldTargeted.save();
-                }
-            }
-        })
-    );
-});
-
-export const mainUserModel = mongoose.model('User', mainUserSchema);
+export const mainUserModel = mongoose.model('UserV4', mainUserSchema);
 
 
 export class UserUtils {
     
-    getAll() {}
-    getMany() {}
-    getOne() {}
-    getById() {}
+    getAll() {
+        return mainUserModel.find();
+    }
     
-    createMany() {}
-    createOne() {}
+    getById(id: ID) {
+        return mainUserModel.findById(id);
+    }
     
-    updateMany() {}
-    updateOne() {}
-    updateById() {}
+    createOne(payload: CreateUser) {
+        const user = new mainUserModel(payload);
+        return user.save();
+    }
     
-    deleteMany() {}
-    deleteOne() {}
-    deleteById() {}
+    async updateById(update: UpdateUser) {
+        const user = await this.getById(update.id);
+        user.update(convertUpdateUserForMongoose(update));
+    }
+    
+    deleteById(id: ID) {
+        return mainUserModel.findByIdAndRemove(id);
+    }
 }
 
+export const mainUserUtils = new UserUtils();
+
+export class UserService {
+    async getAll() {
+        return mainUserUtils.getAll();
+    }
+    async getById(id: ID) {
+        return mainUserUtils.getById(id);
+    }
+    async create(payload: CreateUser) {
+        return mainUserUtils.createOne(payload);
+    }
+    async update(payload: UpdateUser) {
+        return mainUserUtils.updateById(payload);
+    }
+    async delete(id: ID) {
+        return mainUserUtils.deleteById(id);
+    }
+}
+
+export const mainUserService = new UserService();
+
+export class UserController {
+
+    private error(error: any) {
+        return {
+            error: error.toString(),
+            userSelectGuardErrors: ctx.userSelectGuardErrors,
+            userCreateGuardErrors: ctx.userCreateGuardErrors,
+            userUpdateGuardErrors: ctx.userUpdateGuardErrors,
+            userCreateValidators: ctx.userCreateValidators,
+            userUpdateValidators: ctx.userUpdateValidators,
+        };
+    }
+
+    getAll() {
+        return async (req: Request, res: Response) => {
+            try {
+                res.json({ response: await mainUserService.getAll() });
+            } catch (error) {
+                res.status(400).json(this.error(error));
+            }
+        };
+    }
+
+    getById() {
+        return async (req: Request, res: Response) => {
+            const id = req.params.id;
+            try {
+                res.json({ response: await mainUserService.getById(id) });
+            } catch (error) {
+                res.status(400).json(this.error(error));
+            }
+        };
+    }
+
+    create() {
+        return async (req: Request, res: Response) => {
+            const payload = req.body;
+            try {
+                res.json({ response: await mainUserService.create(payload) });
+            } catch (error) {
+                res.status(400).json(this.error(error));
+            }
+        };
+    }
+
+    update() {
+        return async (req: Request, res: Response) => {
+            const id = req.params.id;
+            const set = req.body.set;
+            const push = req.body.push;
+            const pull = req.body.pull;
+            try {
+                res.json({ response: await mainUserService.update({ id, set, push, pull }) });
+            } catch (error) {
+                res.status(400).json(this.error(error));
+            }
+        };
+    }
+
+    delete() {
+        return async (req: Request, res: Response) => {
+            const id = req.params.id;
+            try {
+                res.json({ response: await mainUserService.delete(id) });
+            } catch (error) {
+                res.status(400).json(this.error(error));
+            }
+        };
+    }
+}
+
+export const mainUserController = new UserController();
+
+export const userGetAllMiddlewares = ctx.schema.user.webServices['GET /'].middlewares;
+export const userGetByIdMiddlewares = ctx.schema.user.webServices['POST /'].middlewares;
+export const userCreateMiddlewares = ctx.schema.user.webServices['GET /:id'].middlewares;
+export const userUpdateMiddlewares = ctx.schema.user.webServices['PUT /:id'].middlewares;
+export const userDeleteMiddlewares = ctx.schema.user.webServices['DELETE /:id'].middlewares;
+
+export class UserRouter {
+    applyRouter(app: Application) {
+        app.use('users', Router()
+            .get('/', ...userGetAllMiddlewares, mainUserController.getAll())
+            .post('/', ...userCreateMiddlewares, mainUserController.create())
+            .get('/:id', ...userGetByIdMiddlewares, mainUserController.getById())
+            .put('/:id', ...userUpdateMiddlewares, mainUserController.update())
+            .delete('/:id', ...userDeleteMiddlewares, mainUserController.delete())
+        );
+    }
+}
+
+export const mainUserRouter = new UserRouter();
+
+/******************************************************************************************************************** */
 
 export interface Store {
     id: ID;
