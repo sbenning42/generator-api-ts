@@ -319,26 +319,33 @@ export class UserUtils {
             if (reverseModel) {
                 if (Array.isArray(value)) {
                     const reversedInstances = await reverseModel.findMany({ _id: { $in: value.map(v => new ObjectID(v)) } });
-                    return Promise.all(reversedInstances.map(ri => {
-                        if (array) {
-                            ri[_for] ? ri[_for].push(value) : (ri[_for] = [value]);
-                        } else {
-                            ri[_for] = value;
-                        }
-                        return ri.save();
-                    }));
+                    return Promise.all(
+                        reversedInstances.filter(ri => {
+                            if (array) {
+                                return !(ri[_for] && ri[_for].includes(saved._id));
+                            } else {
+                                return !ri[_for] === saved._id;
+                            }
+                        }).map(ri => {
+                            if (array) {
+                                ri[_for] ? ri[_for].push(saved._id) : (ri[_for] = [saved._id]);
+                            } else {
+                                ri[_for] = saved._id;
+                            }
+                            return ri.save();
+                        }));
                 } else {
                     const reversedInstance = await reverseModel.findById(value);
                     if (array) {
-                        reversedInstance[_for] ? reversedInstance[_for].push(value) : (reversedInstance[_for] = [value]);
+                        reversedInstance[_for] ? reversedInstance[_for].push(saved._id) : (reversedInstance[_for] = [saved._id]);
                     } else {
-                        reversedInstance[_for] = value;
+                        reversedInstance[_for] = saved._id;
                     }
                     return reversedInstance.save();
                 }
             }
         }));
-        console.log('body::: ', body, instance);
+        // console.log('body::: ', body, instance);
         return instance.save();
     }
 
@@ -393,8 +400,43 @@ export class UserUtils {
     async _delete(id: ID) {
         const {
             models: { user: model },
+            reverses: { user: reverses },
         } = getCtx();
-        return model.findByIdAndRemove(id);
+        const instance = await model.findByIdAndRemove(id);
+        await Promise.all(reverses.map(async ({ on, _for, at, array }) => {
+            const {
+                models: { [at]: reverseModel },
+                schemas: { [at]: reverseSchema },
+            } = getCtx();
+            const value = instance[on];
+            if (reverseModel) {
+                if (Array.isArray(value)) {
+                    const reversedInstances = await reverseModel.findMany({ _id: { $in: value.map(v => new ObjectID(v)) } });
+                    return Promise.all(
+                        reversedInstances.filter(ri => true).map(ri => {
+                            if (array) {
+                                ri[_for] = ri[_for].filter(thisId => thisId !== instance._id);
+                            } else if (reverseSchema[_for].required) {
+                                return ri.remove().then(() => ri);
+                            } else {
+                                ri[_for] = undefined;
+                            }
+                            return ri.save();
+                        }));
+                } else {
+                    const reversedInstance = await reverseModel.findById(value);
+                    if (array) {
+                        reversedInstance[_for] = reversedInstance[_for].filter(thisId => thisId !== instance._id);
+                    } else if (reverseSchema[_for].required) {
+                        return reversedInstance.remove().then(() => reversedInstance);
+                    } else {
+                        reversedInstance[_for] = undefined;
+                    }
+                    return reversedInstance.save();
+                }
+            }
+        }));
+        return instance;
     }
 
     selectAll() {

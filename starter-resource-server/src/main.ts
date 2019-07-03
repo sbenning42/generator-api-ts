@@ -62,7 +62,7 @@ GOOD IMPL
   // const engine = new MyApiEngine(myApi);
   
 
-  computeCtx({ apis });
+  computeCtx({ apis }, true);
 
   console.log('CONTEXT::: ', ctx());
   

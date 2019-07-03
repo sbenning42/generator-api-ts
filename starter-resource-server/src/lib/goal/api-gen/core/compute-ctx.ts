@@ -4,8 +4,9 @@ import { ctx as getCtx } from "./ctx";
 import { NEVER } from "./constantes";
 import { augmentSchema } from './augment-schema';
 import { getMongooseEquivalentType } from './get-mongoose-equivalent-type';
+import { generate } from './generate';
 
-export function computeCtx(schema: ApiSchema) {
+export function computeCtx(schema: ApiSchema, shouldGenerate: boolean) {
     augmentSchema(schema);
     const ctx = getCtx();
     const { schema: { apis } }: { schema: ApiSchema } = ctx;
@@ -93,4 +94,8 @@ export function computeCtx(schema: ApiSchema) {
         ...all,
         [api]: mongoose.model(api, ctx.schemas[api]),
     }), {});
+
+    if (shouldGenerate) {
+        generate();
+    }
 }
