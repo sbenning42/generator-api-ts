@@ -12,9 +12,9 @@ import swaggerUi from 'swagger-ui-express';
 import YAML from 'yamljs';
 import { L } from './common/logger';
 import { environment } from './environment';
-import { mainUserRouter } from './lib/goal/types';
-import { getCtx } from './lib/goal/ctx';
 import { mainMongoService } from './modules/mongo/service';
+import { withCtx, computeCtx, ctx } from './lib/goal/api-gen';
+import { apis } from './lib/goal/apis';
 
 const {
   port,
@@ -39,6 +39,7 @@ async function main() {
     bodyParser.urlencoded({ extended: true }), // enable extended encoded urls
     cors(), // use `origin: '*'` cors HTTP Headers
     morgan('combined'), // use some HTTP logging support
+    withCtx,
   );
 
   /*
@@ -51,38 +52,20 @@ async function main() {
   */
 
   await mainMongoService.init();
+/*
+GOOD IMPL
+  populateCtx();
 
+  const userRouter = new UserRouter();
+  userRouter.apply(app);
+*/
   // const engine = new MyApiEngine(myApi);
+  
 
-  const ctx = getCtx();
-  ctx.schema = {
-      user: {
-          webServices: {
-              'GET /': {
-                  middlewares: [
-                      (req: Request, res: Response, next: NextFunction) => {
-                          console.log(`In 'GET /' mniddlewares... Calling 'next()';`);
-                          next();
-                      }
-                  ]
-              },
-              'POST /': {
-                  middlewares: []
-              },
-              'GET /:id': {
-                  middlewares: []
-              },
-              'PUT /:id': {
-                  middlewares: []
-              },
-              'DELETE /:id': {
-                  middlewares: []
-              }
-          }
-      }
-  };
+  computeCtx({ apis });
 
-  mainUserRouter.applyRouter(app);
+  console.log('CONTEXT::: ', ctx());
+  
 
   /**
    * Start `express` server

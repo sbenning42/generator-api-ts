@@ -1,9 +1,11 @@
 import { getCtx } from './ctx';
 import { ObjectID } from 'mongodb';
-import { Query, Document } from 'mongoose';
+import mongoose, { Query, Document } from 'mongoose';
 import { Request, Response, Application, Router } from 'express';
 
 export type ID = string | number | ObjectID;
+export const ObjectId = mongoose.Schema.Types.ObjectId;
+export const Mixed = mongoose.Schema.Types.Mixed;
 
 export const Pr = (thing: any) => Promise.resolve(thing);
 
@@ -21,22 +23,25 @@ export const ADMIN = [(ctx: any) => Pr(ctx.user && Array.isArray(ctx.user.roles)
 export const SELF = [(ctx: any) => Pr(ctx.user && Array.isArray(ctx.user.roles) && 'self' in ctx.user.roles ? null : { unauthorized: 'unauthorized.' })];
 export const OWNER = [(ctx: any) => Pr(ctx.user && Array.isArray(ctx.user.roles) && 'owner' in ctx.user.roles ? null : { unauthorized: 'unauthorized.' })];
 
-export const runGuards = (modelName: string, action: 'select' | 'create' | 'update', fields: string[]) => Promise.all(
-    Object.entries(getCtx().schema[modelName].model)
-        .filter(([fieldName]) => fields.includes(fieldName))
-        .map(([fieldName, field]: [string, any]) => Promise.all(
-            field.guards[action].map((guard: any) => guard(getCtx()))
-        ).then(errors => errors && errors.length > 0 && errors.some(error => !!error)
-            ? { [fieldName]: errors.reduce((all, error) => ({ ...all, ...error }), {}) }
-            : null
-        ))
-).then(errors => errors.filter(error => !!error)
-    .reduce((all, error) => ({ ...all, ...error }), {})
-).then(error => Object.keys(error).length > 0 ? error : null);
+export const runGuards = (modelName: string, action: 'select' | 'create' | 'update', fields: string[]) => {
+    //console.log('2:::::', getCtx());
+    return Promise.all(
+        Object.entries(getCtx().schema[modelName].model)
+            .filter(([fieldName]) => fields.includes(fieldName))
+            .map(([fieldName, field]: [string, any]) => Promise.all(
+                field.guards[action].map((guard: any) => guard(getCtx()))
+            ).then(errors => errors && errors.length > 0 && errors.some(error => !!error)
+                ? { [fieldName]: errors.reduce((all, error) => ({ ...all, ...error }), {}) }
+                : null
+            ))
+    ).then(errors => errors.filter(error => !!error)
+        .reduce((all, error) => ({ ...all, ...error }), {})
+    ).then(error => Object.keys(error).length > 0 ? error : null);
+};
 
 export const runValidators = (modelName: string, action: 'create' | 'update', body: any, fields: string[]) => Promise.all(
     Object.entries(getCtx().schema[modelName].model)
-        .filter(([fieldName]) => fields.includes(fieldName))
+        .filter(([fieldName]) => fields.includes(fieldName) && Object.keys(body).includes(fieldName))
         .map(([fieldName, field]: [string, any]) => Promise.all(
             field.validators[action].map((validator: any) => validator(getCtx(), body[fieldName]))
         ).then(errors => errors && errors.length > 0 && errors.some(error => !!error)
@@ -47,6 +52,8 @@ export const runValidators = (modelName: string, action: 'create' | 'update', bo
     .reduce((all, error) => ({ ...all, ...error }), {})
 ).then(error => Object.keys(error).length > 0 ? error : null);
 
+/*********************************************************************************** */
+
 export const user = {
     model: {
         username: {
@@ -54,7 +61,7 @@ export const user = {
             required: true,
             unique: true,
             validators: {
-                both: [MINLENGTH(5)]
+                all: [MINLENGTH(5)]
             }
         },
         password: {
@@ -66,7 +73,7 @@ export const user = {
                 update: NEVER
             },
             validators: {
-                both: [MINLENGTH(8), MAXLENGTH(255)]
+                all: [MINLENGTH(8), MAXLENGTH(255)]
             }
         },
         roles: {
@@ -74,13 +81,16 @@ export const user = {
             required: true,
             default: ['user'],
             guards: {
-                create: NEVER,
-                update: ADMIN
+                // create: NEVER,
+                // update: ADMIN
             }
         },
         todos: {
             type: ['Todo'],
             default: [],
+            guards: {
+                create: NEVER
+            }
         }
     },
     ws: {
@@ -115,6 +125,8 @@ export const todo = {
     }
 };
 
+/*************************************************************************** */
+
 export const augmentSchema = (schema: any) => {
     Object.entries(schema)
         .forEach(([apiName, api]: [string, any]) => {
@@ -144,17 +156,115 @@ export const augmentSchema = (schema: any) => {
         });
 };
 
+/**
+ * Generate:
+ * 
+ *  - types
+ *      - entity
+ *      - populated entity
+ *      - create payload
+ *      - update payload
+ *          - set payload
+ *          - push payload
+ *          - pull payload
+ *  - consts
+ *      - default populate fieldName array 
+ *      - default reverse { on: string, _for: string, at: string, array: boolean } array 
+ *      - default mongoose schema 
+ *      - default mongoose model
+ *      - default projection
+ *      - default fields
+ *          - select fieldName array 
+ *          - create fieldName array 
+ *          - update
+ *              - set fieldName array 
+ *              - push fieldName array 
+ *              - pull fieldName array 
+ *      - middlewares array
+ *  - class
+ *      - utils
+ *      - service
+ *      - controller
+ *      - router
+ */
 
-getCtx().schema = augmentSchema({ user, todo });
+export const populateCtx = () => {
+    const ctx = getCtx();
+    const schema = { user, todo };
+    augmentSchema(schema);
+    ctx.schema = schema;
+    ctx.populates = {
+        user: ['todos'],
+    };
+    ctx.reverses = {
+        user: [
+            { on: 'todos', _for: 'author', at: 'Todo', array: false }
+        ]
+    };
+    ctx.schemas = {
+        user: new mongoose.Schema({
+            username: {
+                type: String,
+                required: true,
+                unique: true
+            },
+            password: {
+                type: String,
+                required: true,
+                select: false, // guard.select === NEVER
+            },
+            roles: {
+                type: [String],
+                default: ['user']
+            },
+            todos: {
+                type: [ObjectId],
+                required: true,
+                // ref: 'Todo'
+                default: []
+            },
+        }, { minimize: false, timestamps: true }),
+    };
+    ctx.models = {
+        user: mongoose.model('User', ctx.schemas.user),
+    };
+    ctx.projections = {
+        user: {
+            username: 1,
+            roles: 1,
+            todos: 1,
+            createdAt: 1,
+            updatedAt: 1,
+        },
+    };
+    ctx.fields = {
+        user: {
+            select: ['id', 'username', 'roles', 'todos'],
+            create: ['id', 'username', 'password', 'roles'],
+            update: {
+                set: ['username', 'roles', 'todos'],
+                push: ['roles', 'todos'],
+                pull: ['roles', 'todos'],
+            },
+        },
+    };
+    ctx.err = {};
+    ctx.middlewares = {
+        user: []
+    };
+    // console.log('1:::::', getCtx());
+};
 
 export class UserUtils {
     
-    qPopulateAll(q: Query<any>) {
-        return Promise.all(getCtx().populates.user.map((populate: string) => q.populate(populate)));
+    async qPopulateAll(q: Query<any>) {
+        await Promise.all(getCtx().populates.user.map((populate: string) => q.populate(populate)));
+        return q;
     }
     
-    dPopulateAll(d: Document) {
-        return Promise.all(getCtx().populates.user.map((populate: string) => d.populate(populate).execPopulate()));
+    async dPopulateAll(d: Document) {
+        await Promise.all(getCtx().populates.user.map((populate: string) => d.populate(populate).execPopulate()));
+        return d;
     }
 
     async _select(id?: ID) {
@@ -166,13 +276,14 @@ export class UserUtils {
             err
         } = getCtx();
         const projection = { ...baseProjection };
-        const guardErrors = await runGuards('User', 'select', fields);
+        const guardErrors = await runGuards('user', 'select', fields);
         if (guardErrors) {
             Object.keys(guardErrors).forEach(field => {
                 delete projection[field];
             });
             err.guardErrors = { select: guardErrors };
         }
+        console.log(projection);
         return this.qPopulateAll(model[method](condition, projection));
     }
 
@@ -180,24 +291,54 @@ export class UserUtils {
         const {
             models: { user: model },
             fields: { user: { create: fields } },
+            reverses: { user: reverses },
             err
         } = getCtx();
         const body = fields
             .filter(field => _body[field] !== undefined)
             .reduce((b, field) => ({ ...b, [field]: _body[field] }), {});
-        const guardErrors = await runGuards('User', 'create', fields);
+        const guardErrors = await runGuards('user', 'create', fields);
         if (guardErrors) {
             Object.keys(guardErrors).forEach(field => {
                 delete body[field];
             });
             err.guardErrors = { create: guardErrors };
         }
-        const validatorErrors = await runValidators('User', 'create', body, fields);
+        const validatorErrors = await runValidators('user', 'create', body, fields);
         if (validatorErrors) {
             err.validatorErrors = { create: validatorErrors };
             throw new Error(JSON.stringify(validatorErrors));
         }
         const instance = new model(body);
+        const saved = await instance.save();
+        await Promise.all(reverses.map(async ({ on, _for, at, array }) => {
+            const {
+                models: { [at]: reverseModel },
+            } = getCtx();
+            const value = saved[on];
+            if (reverseModel) {
+                if (Array.isArray(value)) {
+                    const reversedInstances = await reverseModel.findMany({ _id: { $in: value.map(v => new ObjectID(v)) } });
+                    return Promise.all(reversedInstances.map(ri => {
+                        if (array) {
+                            ri[_for] ? ri[_for].push(value) : (ri[_for] = [value]);
+                        } else {
+                            ri[_for] = value;
+                        }
+                        return ri.save();
+                    }));
+                } else {
+                    const reversedInstance = await reverseModel.findById(value);
+                    if (array) {
+                        reversedInstance[_for] ? reversedInstance[_for].push(value) : (reversedInstance[_for] = [value]);
+                    } else {
+                        reversedInstance[_for] = value;
+                    }
+                    return reversedInstance.save();
+                }
+            }
+        }));
+        console.log('body::: ', body, instance);
         return instance.save();
     }
 
@@ -208,6 +349,7 @@ export class UserUtils {
             err
         } = getCtx();
         const { set: _set = {}, push: _push = {}, pull: _pull = {} } = _body;
+        console.log({ setFields, pushFields, pullFields });
         const set = setFields
             .filter(field => _set[field] !== undefined)
             .reduce((b, field) => ({ ...b, [field]: _set[field] }), {});
@@ -218,7 +360,8 @@ export class UserUtils {
             .filter(field => _pull[field] !== undefined)
             .reduce((b, field) => ({ ...b, [field]: _pull[field] }), {});
         const fields = Array.from(new Set([...setFields, ...pushFields, ...pullFields]));
-        const guardErrors = await runGuards('User', 'update', fields);
+        console.log({ id, set, push, pull });
+        const guardErrors = await runGuards('user', 'update', fields);
         if (guardErrors) {
             Object.keys(guardErrors).forEach(field => {
                 delete set[field];
@@ -227,7 +370,7 @@ export class UserUtils {
             });
             err.guardErrors = { update: guardErrors };
         }
-        const validatorErrors = await runValidators('User', 'update', { ...pull, ...push, ...set }, fields);
+        const validatorErrors = await runValidators('user', 'update', { ...pull, ...push, ...set }, fields);
         if (validatorErrors) {
             err.validatorErrors = { update: validatorErrors };
             throw new Error(JSON.stringify(validatorErrors));
@@ -244,8 +387,7 @@ export class UserUtils {
             update.$pull = Object.entries(pull)
                 .reduce((p, [key, values]) => ({ ...p, [key]: { $in: values } }), {});
         }
-        const instance = model.findByIdAndUpdate(id, update);
-        return instance.save();
+        return model.findByIdAndUpdate(id, update, { new: true });
     }
 
     async _delete(id: ID) {
@@ -308,7 +450,10 @@ export class UserController {
     getAll() {
         return async (req: Request, res: Response) => {
             try {
-                res.json(await this.service.getAll());
+                res.json({
+                    response: await this.service.getAll(),
+                    errors: getCtx().err
+                });
             } catch (error) {
                 res.status(400).json({ error: error.toString() });
             }
@@ -319,7 +464,10 @@ export class UserController {
         return async (req: Request, res: Response) => {
             const id = req.params.id;
             try {
-                res.json(await this.service.getById(id));
+                res.json({
+                    response: await this.service.getById(id),
+                    errors: getCtx().err
+                });
             } catch (error) {
                 res.status(400).json({ error: error.toString() });
             }
@@ -330,7 +478,10 @@ export class UserController {
         return async (req: Request, res: Response) => {
             const body = req.body;
             try {
-                res.json(await this.service.create(body));
+                res.json({
+                    response: await this.service.create(body),
+                    errors: getCtx().err
+                });
             } catch (error) {
                 res.status(400).json({ error: error.toString() });
             }
@@ -342,7 +493,10 @@ export class UserController {
             const id = req.params.id;
             const body = req.body;
             try {
-                res.json(await this.service.update(id, body));
+                res.json({
+                    response: await this.service.update(id, body),
+                    errors: getCtx().err
+                });
             } catch (error) {
                 res.status(400).json({ error: error.toString() });
             }
@@ -353,7 +507,10 @@ export class UserController {
         return async (req: Request, res: Response) => {
             const id = req.params.id;
             try {
-                res.json(await this.service.delete(id));
+                res.json({
+                    response: await this.service.delete(id),
+                    errors: getCtx().err
+                });
             } catch (error) {
                 res.status(400).json({ error: error.toString() });
             }
@@ -370,11 +527,11 @@ export class UserRouter {
             middlewares: { user: middlewares }
         } = getCtx();
         app.use('/users', Router()
-            .get('/', ...middlewares['GET /'], this.controller.getAll())
-            .post('/', ...middlewares['POST /'], this.controller.create())
-            .get('/:id', ...middlewares['GET /:id'], this.controller.getById())
-            .put('/:id', ...middlewares['PUT /:id'], this.controller.update())
-            .delete('/:id', ...middlewares['DELETE /:id'], this.controller.delete())
+            .get('/', ...(middlewares['GET /'] || []), this.controller.getAll())
+            .post('/', ...(middlewares['POST /'] || []), this.controller.create())
+            .get('/:id', ...(middlewares['GET /:id'] || []), this.controller.getById())
+            .put('/:id', ...(middlewares['PUT /:id'] || []), this.controller.update())
+            .delete('/:id', ...(middlewares['DELETE /:id'] || []), this.controller.delete())
         );
     }
 }

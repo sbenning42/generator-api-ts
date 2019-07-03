@@ -1,13 +1,13 @@
 import { Request, Response, NextFunction } from 'express';
 
 const context: any = {};
-export function getCtx() {
-    return context;
-}
 
-export const initCtx = (req: Request, res: Response, next: NextFunction) => {
+export const withCtx = (req: Request, res: Response, next: NextFunction) => {
     context.req = req;
     context.res = res;
     context.err = {};
+    req['ctx'] = context;
     next();
-}
+};
+
+export const ctx = () => context;

@@ -26,7 +26,7 @@ content-type: application/json
 
 ###
 
-get http://localhost:4266/users HTTP/1.1
+get http://localhost:4266/users/5d1ca5575e798201989c3789 HTTP/1.1
 content-type: application/json
 
 
@@ -36,18 +36,23 @@ post http://localhost:4266/users HTTP/1.1
 content-type: application/json
 
 {
-    "username": "test 2",
-    "password": "test"
+    "username": "test 4265sfgh4",
+    "password": "test test",
+    "roles": ["user", "admin"]
 }
 
 ###
 
-put http://localhost:4266/users/5d1b42d2bc3f3f2c7c507e9f HTTP/1.1
+put http://localhost:4266/users/5d1cad3a771523031fd7a61b HTTP/1.1
 content-type: application/json
 
 {
-    "push": {
-        "roles": ["admin"]
+    "set": {
+        "roles": ["1", "5"]
     }
 }
 
+###
+
+delete http://localhost:4266/users/5d1cad0ae21251031157189d
+content-type: application/json
