@@ -1,8 +1,0 @@
-query GetTodos {
-    get_todos {
-        title done owner
-    }
-    get_todos_id_owner(id: $owner) {
-        username roles todos
-    }
-}
