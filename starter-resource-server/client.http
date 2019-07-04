@@ -20,6 +20,48 @@ post http://localhost:4266/auth/signin HTTP/1.1
 content-type: application/json
 
 {
-    "username": "string",
-    "password": "string"
+    "username": "test test",
+    "password": "test test"
 }
+
+###
+
+get http://localhost:4266/users HTTP/1.1
+content-type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyIjp7Il9pZCI6IjVkMWRkNTU1ODQ4YTdiMjUxM2QxNWM5NiIsInJvbGVzIjpbInVzZXIiXSwidG9kb3MiOltdLCJ1c2VybmFtZSI6InRlc3QgdGVzdCIsIl9fdiI6MH0sImlkIjoiNWQxZGQ1NTU4NDhhN2IyNTEzZDE1Yzk2IiwiaWF0IjoxNTYyMjM2MjY3fQ.ZUM7fFb5i2rDClkLTbL_5u5gdlD0GCcIYlM7j4-FeDo
+
+
+###
+
+post http://localhost:4266/users HTTP/1.1
+content-type: application/json
+
+{
+    "username": "test test",
+    "password": "test test",
+    "roles": ["user", "admin"]
+}
+
+###
+
+put http://localhost:4266/users/5d1cad3a771523031fd7a61b HTTP/1.1
+content-type: application/json
+
+{
+    "set": {
+        "roles": ["1", "5"]
+    }
+}
+
+###
+
+delete http://localhost:4266/users/5d1cad0ae21251031157189d
+content-type: application/json
+
+###
+
+get http://localhost:4266/todos
+content-type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyIjp7Il9pZCI6IjVkMWRkNTU1ODQ4YTdiMjUxM2QxNWM5NiIsInJvbGVzIjpbInVzZXIiXSwidG9kb3MiOltdLCJ1c2VybmFtZSI6InRlc3QgdGVzdCIsIl9fdiI6MH0sImlkIjoiNWQxZGQ1NTU4NDhhN2IyNTEzZDE1Yzk2IiwiaWF0IjoxNTYyMjM2MjY3fQ.ZUM7fFb5i2rDClkLTbL_5u5gdlD0GCcIYlM7j4-FeDo
+
+

@@ -1,6 +1,9 @@
 /**
  * Standard `express` import statements
  */
+import { prepareUser } from './common/api-gen/core/prepare-user';
+prepareUser();
+
 import express from 'express';
 import bodyParser from 'body-parser';
 import cors from 'cors';
@@ -11,8 +14,12 @@ import morgan from 'morgan';
 import swaggerUi from 'swagger-ui-express';
 import YAML from 'yamljs';
 import { L } from './common/logger';
-import { mainUseService } from './modules/use/service';
 import { environment } from './environment';
+import { mainMongoService } from './modules/mongo/service';
+import { withCtx, computeCtx, ctx } from './common/api-gen';
+import { apis } from './apis';
+import { mainPassportRouter } from './modules/passport/router';
+import { mainUseService } from './modules/use/service';
 
 const {
   port,
@@ -37,20 +44,26 @@ async function main() {
     bodyParser.urlencoded({ extended: true }), // enable extended encoded urls
     cors(), // use `origin: '*'` cors HTTP Headers
     morgan('combined'), // use some HTTP logging support
+    withCtx,
   );
 
+  
   try {
     const swaggerDocument = YAML.load(swagger);
     app.use('/docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument, swaggerOptions));
   } catch (error) {
     L.info('Cannot apply swagger.', error)
   }
+  
 
+  await mainMongoService.init();
+  L.info(`DB: ${mainMongoService.url} connected.`);
+  
+  computeCtx({ apis }, true);
+  mainPassportRouter.applyRouter(app);
 
-  /**
-   * Apply application handlers
-   */
-  await mainUseService.use(app);
+  mainUseService.use(app);
+  
 
   /**
    * Start `express` server

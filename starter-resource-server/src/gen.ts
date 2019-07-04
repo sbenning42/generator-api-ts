@@ -1,15 +1,13 @@
-import { APIGen } from './common/api-gen/core';
-import { schema } from './config';
+import { prepareUser } from './common/api-gen/core/prepare-user';
+prepareUser();
+import { computeCtx, write } from './common/api-gen';
+import { apis } from './apis';
 
 const EXIT = (status: number) => process.exit(status), FAILURE = 1, SUCCESS = 0;
 
 function succeed() {
-    const G = new APIGen();
-    const { outDir, backupOutDir } = schema.config;
-    if (!!backupOutDir) {
-        G.backup(outDir, backupOutDir);
-    }
-    G.write(outDir, G.generate(schema));
+    computeCtx({ apis }, true);
+    write();
     
     EXIT(SUCCESS);
 }

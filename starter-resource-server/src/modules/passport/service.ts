@@ -8,9 +8,9 @@ import mongoose, { Model, Document, Schema, model } from 'mongoose';
 import { ObjectID } from 'mongodb';
 import { Singleton } from '../../common/singleton/singleton';
 import { environment } from '../../environment';
-import { UserModel, UserSchema } from '../../generated/types';
 import { L } from '../../common/logger';
-import { context } from '../../config/context';
+import { ctx } from '../../common/api-gen';
+import bcrypt from 'bcrypt';
 
 export const InvalidTokenSchema = new mongoose.Schema({
     token: {
@@ -25,8 +25,7 @@ export const InvalidTokenSchema = new mongoose.Schema({
 export const InvalidTokenModel = mongoose.model('InvalidToken', InvalidTokenSchema);
 
 export interface PassportServiceConfig<User> {
-    User: Model<Document & User>;
-    UserSchema: Schema<Document & User>;
+    User?: Model<Document & User>;
     secret?: string;
     fields?: [string, string?];
 }
@@ -36,24 +35,25 @@ export class PassportService<User extends { _id: string | ObjectID }> extends Si
     constructor(public config: PassportServiceConfig<User>) {
         super(PassportService);
         const {
-            User, UserSchema,
+            User = mongoose.model('User'),
             secret = uuid(),
             fields: [username = 'username', password = 'password'] = [],
         } = config;
-        this.config = { User, UserSchema, secret, fields: [username, password] };
+        this.config = { User: mongoose.model('User'), secret, fields: [username, password] };
         this.setupLocalStrategy();
         this.setupJWTStrategy();
     }
 
     private setupLocalStrategy() {
-        const { User, fields } = this.config;
+        const { fields } = this.config;
+        const User = mongoose.model('User');
         passport.use(new passportLocal.Strategy(
             async (username, password, done) => {
                 const user = await User
                     .findOne({ [fields[0]]: username })
                     .select(`+${fields[0]} +${fields[1]}`)
                     .lean();
-                if (!user || (user[`${fields[1]}`] !== password)) {
+                if (!user || !(bcrypt.compare(password, user[`${fields[1]}`]))) {
                     return done(null, false);
                 } else {
                     delete user[fields[1]];
@@ -64,13 +64,16 @@ export class PassportService<User extends { _id: string | ObjectID }> extends Si
     }
 
     private setupJWTStrategy() {
-        const { User, secret, fields } = this.config;
+        const { secret, fields } = this.config;
+        const User = mongoose.model('User');
         const JWTOptions = {
             jwtFromRequest: passportJWT.ExtractJwt.fromAuthHeaderAsBearerToken(),
             secretOrKey: secret,
         };
         passport.use(new passportJWT.Strategy(JWTOptions, async ({ id }, done) => {
             const user = await User.findById(id);
+            ctx().user = user;
+            ctx().req.user = user;
             if (!user) {
                 return done(null, false);
             } else {
@@ -114,7 +117,7 @@ export class PassportService<User extends { _id: string | ObjectID }> extends Si
                 L.info(`Not self: `, user.id, id);
                 return res.status(403).json({ message: 'Unauthorized.' });
             }
-            context().self = id;
+            ctx().self = id;
             next();
         };
     }
@@ -133,65 +136,6 @@ update
 updateOne
 updateMany
      */
-
-    owner(
-        Schema: Schema<Document>,
-        loc?: { key: string, on: any, name: string, field?: string },
-        fors: ('deleteMany'
-            |'find'
-            |'deleteOne'
-            |'findOne'
-            |'findOneAndDelete'
-            |'findOneAndRemove'
-            |'findOneAndUpdate'
-            |'updateOne'
-            |'updateMany'
-            |'remove'
-            |'validate'
-            |'save'
-            |'update')[] = [
-                'validate',
-                'save',
-                'find',
-                'findOne',
-                'findOneAndDelete',
-                'findOneAndRemove',
-                'findOneAndUpdate',
-                'update',
-                'updateMany',
-                'updateOne',
-                'remove',
-                'deleteOne',
-                'deleteMany'
-            ]
-    ) {
-        Schema = Schema.clone();
-        return async (req: Request, res: Response, _next: NextFunction) => {
-            const { user: { id } } = req;
-            const original = loc.on[loc.key];
-            const { field = 'owner' } = loc;
-            fors.forEach(_for => {
-                Schema = Schema.pre(_for, function(next) {
-                    if (_for === 'validate' || _for === 'save') {
-                        this[field] = id;
-                    } else if (_for === 'remove') {
-                        if (!this[field] === id) {
-                            throw new Error('Unauthorized');
-                        }
-                    } else {
-                        this['where']({ [field]: id });
-                    }
-                    next();
-                });
-                Schema = Schema.post(_for, function(next) {
-                    loc.on[loc.key] = original;
-                });
-            });
-            context().self = id;
-            loc.on[loc.key] = model(loc.key + `_PATCH_${uuid()}`, Schema, loc.name);
-            _next();          
-        };
-    }
 
     localSigninController() {
         const {
@@ -225,8 +169,7 @@ const {
     jwtSecret,
 } = environment;
 
+
 export const mainPassportService = new PassportService({
-    secret: jwtSecret,
-    User: UserModel,
-    UserSchema: UserSchema
+    secret: jwtSecret
 });
