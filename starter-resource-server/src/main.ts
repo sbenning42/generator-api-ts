@@ -1,7 +1,10 @@
 /**
  * Standard `express` import statements
  */
-import express, { Request, Response, NextFunction } from 'express';
+import { prepareUser } from './common/api-gen/core/prepare-user';
+prepareUser();
+
+import express from 'express';
 import bodyParser from 'body-parser';
 import cors from 'cors';
 import helmet from 'helmet';
@@ -13,8 +16,10 @@ import YAML from 'yamljs';
 import { L } from './common/logger';
 import { environment } from './environment';
 import { mainMongoService } from './modules/mongo/service';
-import { withCtx, computeCtx, ctx } from './lib/goal/api-gen';
-import { apis } from './lib/goal/apis';
+import { withCtx, computeCtx, ctx } from './common/api-gen';
+import { apis } from './apis';
+import { mainPassportRouter } from './modules/passport/router';
+import { mainUseService } from './modules/use/service';
 
 const {
   port,
@@ -42,29 +47,22 @@ async function main() {
     withCtx,
   );
 
-  /*
+  
   try {
     const swaggerDocument = YAML.load(swagger);
     app.use('/docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument, swaggerOptions));
   } catch (error) {
     L.info('Cannot apply swagger.', error)
   }
-  */
-
-  await mainMongoService.init();
-/*
-GOOD IMPL
-  populateCtx();
-
-  const userRouter = new UserRouter();
-  userRouter.apply(app);
-*/
-  // const engine = new MyApiEngine(myApi);
   
 
+  await mainMongoService.init();
+  L.info(`DB: ${mainMongoService.url} connected.`);
+  
   computeCtx({ apis }, true);
+  mainPassportRouter.applyRouter(app);
 
-  console.log('CONTEXT::: ', ctx());
+  mainUseService.use(app);
   
 
   /**

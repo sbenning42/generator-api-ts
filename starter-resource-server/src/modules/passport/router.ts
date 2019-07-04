@@ -22,7 +22,7 @@ export class PassportRouter extends Singleton {
             mainPassportService.localSignoutController(),
         );
 
-    applyRouter(app: Application, path: string = '') {
+    applyRouter(app: Application, path: string = '/auth') {
         app.use(path, this.router);
     }
 

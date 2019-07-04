@@ -1,0 +1,350 @@
+
+swagger: "2.0"
+info:
+    version: "0.0.1"
+    title: "Swagger API"
+host: localhost:4266
+basePath: "/"
+schemes:
+    - http
+    - https
+
+securityDefinitions:
+    bearerAuth:
+        type: "apiKey"
+        name: "Authorization"
+        in: "header"
+consumes:
+    - application/json
+produces:
+    - application/json
+
+
+definitions:
+    User:
+        type: object
+        properties:
+            username:
+                type: string
+
+            password:
+                type: string
+
+            roles:
+                type: array
+                items:
+                    type: string
+
+            todos:
+                type: string
+    Todo:
+        type: object
+        properties:
+            title:
+                type: string
+
+            done:
+                type: boolean
+
+            author:
+                type: string
+    PopulatedUser:
+        type: object
+        properties:
+            username:
+                type: string
+
+            password:
+                type: string
+
+            roles:
+                type: array
+                items:
+                    type: string
+
+            todos:
+                type: array
+                items:
+                    $ref: '#/definitions/Todo'
+    PopulatedTodo:
+        type: object
+        properties:
+            title:
+                type: string
+
+            done:
+                type: boolean
+
+            author:
+                $ref: '#/definitions/User'
+    CreateUser:
+        type: object
+        properties:
+            username:
+                type: string
+
+            password:
+                type: string
+    CreateTodo:
+        type: object
+        properties:
+            title:
+                type: string
+
+            done:
+                type: boolean
+    SetUser:
+        type: object
+        properties:
+            username:
+                type: string
+
+            roles:
+                type: array
+                items:
+                    type: string
+    SetTodo:
+        type: object
+        properties:
+            title:
+                type: string
+
+            done:
+                type: boolean
+    PushUser:
+        type: object
+        properties:
+            roles:
+                type: array
+                items:
+                    type: string
+    PushTodo:
+        type: object
+    PullUser:
+        type: object
+        properties:
+            roles:
+                type: array
+                items:
+                    type: string
+    PullTodo:
+        type: object
+    UpdateUser:
+        type: object
+        properties:
+            id:
+                type: string
+
+            set:
+                $ref: '#/definitions/SetUser'
+
+            push:
+                $ref: '#/definitions/PushUser'
+
+            pull:
+                $ref: '#/definitions/PullUser'
+    UpdateTodo:
+        type: object
+        properties:
+            id:
+                type: string
+
+            set:
+                $ref: '#/definitions/SetTodo'
+
+            push:
+                $ref: '#/definitions/PushTodo'
+
+            pull:
+                $ref: '#/definitions/PullTodo'
+
+
+paths:
+    /users:
+        post:
+            tags: ['User']
+            description: "sample description"
+            parameters:
+                - name: body
+                  description: "Not provided"
+                  in: body
+                  schema:
+                    $ref: '#/definitions/CreateUser'
+            responses:
+                '200':
+                    description: "not provided."
+                    schema:
+                        $ref: '#/definitions/User'
+
+        get:
+            security:
+              - bearerAuth: []
+            tags: ['User']
+            description: "sample description"
+            responses:
+                '200':
+                    description: "not provided."
+                    schema:
+                        type: array
+                        items:
+                            $ref: '#/definitions/User'
+
+    /users/{id}:
+        delete:
+            security:
+              - bearerAuth: []
+            tags: ['User']
+            description: "sample description"
+            parameters:
+                - name: id
+                  in: path
+                  required: true
+                  description: "Not provided"
+                  type: string
+            responses:
+                '200':
+                    description: "not provided."
+                    schema:
+                        $ref: '#/definitions/User'
+
+        get:
+            security:
+              - bearerAuth: []
+            tags: ['User']
+            description: "sample description"
+            parameters:
+                - name: id
+                  in: path
+                  required: true
+                  description: "Not provided"
+                  type: string
+            responses:
+                '200':
+                    description: "not provided."
+                    schema:
+                        $ref: '#/definitions/User'
+
+        put:
+            security:
+              - bearerAuth: []
+            tags: ['User']
+            description: "sample description"
+            parameters:
+                - name: id
+                  in: path
+                  required: true
+                  description: "Not provided"
+                  type: string
+
+                - name: body
+                  description: "Not provided"
+                  in: body
+                  schema:
+                    $ref: '#/definitions/UpdateUser'
+            responses:
+                '200':
+                    description: "not provided."
+                    schema:
+                        $ref: '#/definitions/User'
+
+    /users/{id}/password:
+        put:
+            security:
+              - bearerAuth: []
+            tags: ['User']
+            description: "sample description"
+            responses:
+                '200':
+                    description: "not provided."
+                    schema:
+                        type: object
+
+    /todos:
+        get:
+            security:
+              - bearerAuth: []
+            tags: ['Todo']
+            description: "sample description"
+            responses:
+                '200':
+                    description: "not provided."
+                    schema:
+                        type: array
+                        items:
+                            $ref: '#/definitions/Todo'
+
+        post:
+            security:
+              - bearerAuth: []
+            tags: ['Todo']
+            description: "sample description"
+            parameters:
+                - name: body
+                  description: "Not provided"
+                  in: body
+                  schema:
+                    $ref: '#/definitions/CreateTodo'
+            responses:
+                '200':
+                    description: "not provided."
+                    schema:
+                        $ref: '#/definitions/Todo'
+
+    /todos/{id}:
+        get:
+            security:
+              - bearerAuth: []
+            tags: ['Todo']
+            description: "sample description"
+            parameters:
+                - name: id
+                  in: path
+                  required: true
+                  description: "Not provided"
+                  type: string
+            responses:
+                '200':
+                    description: "not provided."
+                    schema:
+                        $ref: '#/definitions/Todo'
+
+        put:
+            security:
+              - bearerAuth: []
+            tags: ['Todo']
+            description: "sample description"
+            parameters:
+                - name: id
+                  in: path
+                  required: true
+                  description: "Not provided"
+                  type: string
+
+                - name: body
+                  description: "Not provided"
+                  in: body
+                  schema:
+                    $ref: '#/definitions/UpdateTodo'
+            responses:
+                '200':
+                    description: "not provided."
+                    schema:
+                        $ref: '#/definitions/Todo'
+
+        delete:
+            security:
+              - bearerAuth: []
+            tags: ['Todo']
+            description: "sample description"
+            parameters:
+                - name: id
+                  in: path
+                  required: true
+                  description: "Not provided"
+                  type: string
+            responses:
+                '200':
+                    description: "not provided."
+                    schema:
+                        $ref: '#/definitions/Todo'
+
