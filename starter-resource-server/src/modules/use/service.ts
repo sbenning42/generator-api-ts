@@ -2,7 +2,7 @@ import passport from 'passport';
 import { Application } from 'express';
 import { environment } from '../../environment';
 import { Singleton } from '../../common/singleton/singleton';
-// import { UserRouter } from '../../generated-code/user/user';
+import { UserRouter } from '../../generated-code/user/user';
 
 const {
 } = environment;
@@ -20,7 +20,7 @@ export class UseService extends Singleton {
                 
         app.use(passport.initialize());
         
-        // new UserRouter().apply(app);
+        new UserRouter().apply(app);
 
     }
 }

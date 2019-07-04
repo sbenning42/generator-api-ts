@@ -1,0 +1,197 @@
+
+swagger: "2.0"
+info:
+    version: "0.0.1"
+    title: "Swagger API"
+host: localhost:4266
+basePath: "/"
+schemes:
+    - http
+    - https
+
+securityDefinitions:
+    bearerAuth:
+        type: "apiKey"
+        name: "Authorization"
+        in: "header"
+consumes:
+    - application/json
+produces:
+    - application/json
+
+
+definitions:
+    User:
+        type: object
+        properties:
+            username:
+                type: string
+
+            password:
+                type: string
+
+            roles:
+                type: array
+                items:
+                    type: string
+    PopulatedUser:
+        type: object
+        properties:
+            username:
+                type: string
+
+            password:
+                type: string
+
+            roles:
+                type: array
+                items:
+                    type: string
+    CreateUser:
+        type: object
+        properties:
+            username:
+                type: string
+
+            password:
+                type: string
+    SetUser:
+        type: object
+        properties:
+            username:
+                type: string
+
+            roles:
+                type: array
+                items:
+                    type: string
+    PushUser:
+        type: object
+        properties:
+            roles:
+                type: array
+                items:
+                    type: string
+    PullUser:
+        type: object
+        properties:
+            roles:
+                type: array
+                items:
+                    type: string
+    UpdateUser:
+        type: object
+        properties:
+            id:
+                type: string
+
+            set:
+                $ref: '#/definitions/SetUser'
+
+            push:
+                $ref: '#/definitions/PushUser'
+
+            pull:
+                $ref: '#/definitions/PullUser'
+
+
+paths:
+    /users:
+        post:
+            tags: ['User']
+            description: "sample description"
+            parameters:
+                - name: body
+                  description: "Not provided"
+                  in: body
+                  schema:
+                    $ref: '#/definitions/CreateUser'
+            responses:
+                '200':
+                    description: "not provided."
+                    schema:
+                        $ref: '#/definitions/User'
+
+        get:
+            security:
+              - bearerAuth: []
+            tags: ['User']
+            description: "sample description"
+            responses:
+                '200':
+                    description: "not provided."
+                    schema:
+                        type: array
+                        items:
+                            $ref: '#/definitions/User'
+
+    /users/{id}:
+        delete:
+            security:
+              - bearerAuth: []
+            tags: ['User']
+            description: "sample description"
+            parameters:
+                - name: id
+                  in: path
+                  required: true
+                  description: "Not provided"
+                  type: string
+            responses:
+                '200':
+                    description: "not provided."
+                    schema:
+                        $ref: '#/definitions/User'
+
+        get:
+            security:
+              - bearerAuth: []
+            tags: ['User']
+            description: "sample description"
+            parameters:
+                - name: id
+                  in: path
+                  required: true
+                  description: "Not provided"
+                  type: string
+            responses:
+                '200':
+                    description: "not provided."
+                    schema:
+                        $ref: '#/definitions/User'
+
+        put:
+            security:
+              - bearerAuth: []
+            tags: ['User']
+            description: "sample description"
+            parameters:
+                - name: id
+                  in: path
+                  required: true
+                  description: "Not provided"
+                  type: string
+
+                - name: body
+                  description: "Not provided"
+                  in: body
+                  schema:
+                    $ref: '#/definitions/UpdateUser'
+            responses:
+                '200':
+                    description: "not provided."
+                    schema:
+                        $ref: '#/definitions/User'
+
+    /users/{id}/password:
+        put:
+            security:
+              - bearerAuth: []
+            tags: ['User']
+            description: "sample description"
+            responses:
+                '200':
+                    description: "not provided."
+                    schema:
+                        type: object
+

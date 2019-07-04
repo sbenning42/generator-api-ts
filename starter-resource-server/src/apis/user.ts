@@ -33,16 +33,6 @@ export const user: ApiEntitySchema = {
             validators: {
                 update: [(ctx: any, roles: string[]) => Pr(roles.every(role => ['user', 'admin'].includes(role)) ? null : { invalidValue: `Field 'roles' (${roles}) contains invalid value(s).` })]
             }
-        },
-        todos: {
-            type: ['Todo'],
-            required: true,
-            default: [],
-            guards: {
-                create: NEVER,
-                update: NEVER,
-            },
-            reverse: 'author'
         }
     }
 };
