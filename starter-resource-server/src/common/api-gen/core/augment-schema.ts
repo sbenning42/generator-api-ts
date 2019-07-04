@@ -2,6 +2,7 @@ import { ApiSchema, ApiEntitySchema, ApiEntityModelFieldSchema, ApiEntityWSsSche
 import { ctx } from "./ctx";
 import { mainPassportService } from "../../../modules/passport/service";
 import { Request, Response, NextFunction } from "express";
+import bcrypt from 'bcrypt';
 
 function augmentEntityModelFieldSchema([, field]: [string, ApiEntityModelFieldSchema]) {
     field.array = Array.isArray(field.type);
@@ -116,6 +117,12 @@ export function augmentSchema(schema: ApiSchema) {
             ],
         },
         'POST /': {
+            middlewares: [async (req: Request, res: Response, next: NextFunction) => {
+                if (req.body.password) {
+                    req.body.password = await bcrypt.hash(req.body.password, 10);
+                }
+                next();
+            }],
             excludes: { 0: true, 1: true, 2: true },
             secure: false,
         },

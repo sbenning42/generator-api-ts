@@ -89,7 +89,6 @@ export async function create(api: string, _body: any) {
         const {
             models: { [(target as string).toLocaleLowerCase()]: reverseModel },
         } = ctx();
-        console.log('reverseModel: ', reverseModel, target);
         const value = saved[field];
         if (Array.isArray(value)) {
             const reversedInstances = await reverseModel.find({ _id: { $in: value.map(v => new ObjectID(v)) } });

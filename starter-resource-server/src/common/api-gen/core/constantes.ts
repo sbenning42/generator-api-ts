@@ -9,8 +9,8 @@ export const Pr = (thing: any) => Promise.resolve(thing);
 
 // Validators
 export const REQUIRED = (ctx: any, input: string) => Pr(![null, undefined].includes(input) ? null : { required: 'Input is required.' });
-export const MINLENGTH = (length: number) => (ctx: any, input: string) => Pr(input && input.length > length ? null : { minLength: 'Input too short.' });
-export const MAXLENGTH = (length: number) => (ctx: any, input: string) => Pr(input && input.length < length ? null : { minLength: 'Input too long.' });
+export const MINLENGTH = (length: number) => (ctx: any, input: string) => Pr(input && input.length > length ? null : { minLength: 'Input too short.' + input });
+export const MAXLENGTH = (length: number) => (ctx: any, input: string) => Pr(input && input.length < length ? null : { maxLength: 'Input too long.' + input });
 export const MIN = (min: number) => (ctx: any, input: number) => Pr(input && input > min ? null : { minLength: 'Input too little.' });
 export const MAX = (max: number) => (ctx: any, input: number) => Pr(input && input < max ? null : { minLength: 'Input too big.' });
 

@@ -10,6 +10,7 @@ import { Singleton } from '../../common/singleton/singleton';
 import { environment } from '../../environment';
 import { L } from '../../common/logger';
 import { ctx } from '../../common/api-gen';
+import bcrypt from 'bcrypt';
 
 export const InvalidTokenSchema = new mongoose.Schema({
     token: {
@@ -52,7 +53,7 @@ export class PassportService<User extends { _id: string | ObjectID }> extends Si
                     .findOne({ [fields[0]]: username })
                     .select(`+${fields[0]} +${fields[1]}`)
                     .lean();
-                if (!user || (user[`${fields[1]}`] !== password)) {
+                if (!user || !(bcrypt.compare(password, user[`${fields[1]}`]))) {
                     return done(null, false);
                 } else {
                     delete user[fields[1]];
