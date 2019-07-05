@@ -1,376 +1,720 @@
+# API-GEN
 
-
-# Stay tuned for official doc to release soon !
-
-  
-  
-
-# api-gen
-
-  
-
-`api-gen` est une librairie *Node* permettant d'accélérer le développement d'une *API REST Express*.
-
-  
 ## Paradigme
 
-`api-gen` prend un **schéma d'API** en entrée et génère les classes et les types *typescript* permettant de manipuler cette API. Il génère également le **swagger** associé à l'API.
+`api-gen` est une librairie de développement d'API Node.
 
-Le **schéma d'API** est un object de *type* `ApiSchema`. 
+Elle regroupe:
 
+ - Un programme de génération de code typescript et de documentation `swagger`
+ - Un starter extensible.
+ - Un service d'authentification `local` + `JWT`
+ - `req: express.Request` accessible n'importe où, même dans les fonctions `mongoose.Schema.default`
 
-## Get Started
-  
+Son objectif principale, est de mettre à disposition du développeur, une sorte de langage de description de l'API qu'il veut implémenter. Ce langage est en fait un plain javascript object de configuration. 
 
-	$ git clone "https://github.com/zto-sbenning/node-api-starter"
-	$ cd node-api-starter/server
-	$ npm install
+> Il est possible, mais compliquer, de typer fortement du code typescript, uniquement via des directives évaluées au run-time. 
+> Pour s'affranchir de cette complexité, `api-gen`, met à disposition un programme de génération de code  typescript.
+> Ce code utilise des fonctions génériques, non-fortement typés, dans des classes spécifiques, fortement typées.
 
-  
+## $ npm run (gen | dev | sync)
 
-Ce starter contient 2 programmes *Node*  `./src/main.ts` et `./src/gen.ts`
+Le repo Github d'`api-gen` contient 3 scripts npm principaux. (Au moyen de son `package.json@scripts`).
 
-  `./src/gen.ts` permet de générer le swagger et une partie du code de l'application.
-  `./src/main.ts` est le programme de l'API Node.
+ - `$ npm run gen`
+ - `$ npm run dev`
+ - `$ npm run sync` 
 
-> Pour exécuter `./src/main.ts` exécutez la commande `$ npm run dev`
-> Pour exécuter `./src/gen.ts` exécutez la commande `$ npm run gen`
-> Pour exécuter `./src/gen.ts` puis `./src/main.ts` exécutez la commande `$ npm run sync`
+# gen
 
-  
+Le script `gen` permet d'invoquer le programme définit dans `./src/gen.ts`. Ce programme analyse l'object de type `ApiSchema` exporté par `./src/apis/index.ts`. Puis, il génère les fichiers suivants:
 
-Pour commencer on peut simplement exécuter:
+- `./src/generated-code/schema.yml` (1)
+- `./src/generated-code/types.ts` (2)
+- `./src/generated-code/<api>/<api>.ts` (3)
 
-  
+Un répertoire `<api>` est créé pour chaque clef de la propriété `apis` de l'object de configuration de type `ApiSchema`, exporté par `./src/apis/index.ts`.
 
-	$ npm run dev
+(1) - Le `swagger` de l'API décrite.
+(2) - Les types typescript utiles à l'API.
+(3) - Les classes typescript, spécifiques à une entité de l'API.
 
-  
-Le starter contient uniquement un model **User** permettant le support de `passport.js`
+# dev
 
-Dans le navigateur, aller sur `http://localhost:4266/docs` pour accéder au **swagger** de l'API.
+Le script `dev` permet d'invoquer le programme définit dans `./src/main.ts`. Ce programme analyse l'object de type `ApiSchema` exporté par `./src/apis/index.ts`.  Puis il instancie un server Express sur le port `4266`, et sert le `swagger` généré par `gen` sur le *endpoint* `/docs`.
 
-  
+# sync
 
-Vous devriez arriver sur une page de ce genre:
-![enter image description here](https://lh3.googleusercontent.com/dmv0lRH76KFyftmC66s8xVEs9UakNfEeqjYr8MxQQKmU35HHur8TwugWRj1M4i7m8IeAqGkVqrw)
+Le script `sync` permet d'invoquer successivement, les scripts `gen` puis `dev`. Utile lorsque l'on met à jour une API existante. Il re-génère ainsi le code impacté, et re-lance le server Express.
 
+# Etendre le starter ./src/main.ts
 
-  
 
-On peut noter tout d'abord les cadenas sur la droite des *Web Services* qui indique que le *Web Service* nécessite un JSON Web token pour être utilisé.
+ # ./src/apis
 
-  
+Ce répertoire est l'endroit idéal où définir les *schémas d'APIs*. `api-gen` considère qu'une API est définit par:
 
-Le bouton **Authorize** (en haut à droite) permet de coller un *JWT* de la forme `Bearer <token>` pour *débloquer* les *Web Service*.
+- le model de ses entités.
+- les web services exposés pour requêter / muter ses entités.
 
-  
-
-Pour obtenir un *token*, il faut tout d'abord utiliser le *Web Service*  `POST /users` afin de créer un utilisateur. Ce *Web Service* est le seul qui n'est pas protégé par un JWT.
-
-Une fois l'utilisateur créé, vous pouvez ensuite obtenir un *token* sur le *Web Service*  `POST /auth/signin`
-
-Le **swagger** n'expose pas encore le module **Auth**, utilisez *Postman* ou *CuRL*  à la place.
-
-> Le starter contient le fichier **http.client** ce fichier permet d'exécuter des requêtes (à la manière de Postman) depuis le *plugin VSCode* **REST-Client**.
-
-Exemple avec CuRL:
-  
-
-	$ curl -X POST "http://localhost:4266/auth/signin" \
-		> -H "Content-Type: application/json" \
-		> -d '{"username":"<USERNAME>", "password":"<PASSWORD>"}
-  
-
-> Remplacez \<USERNAME> et \<PASSWORD> par ceux utilisés lors de la création de l'**User**
-
-  
-
-Copiez le *token* et authentifiez-vous sur *swagger*, en l'inscrivant sous la forme `Bearer <token>` -- via le bouton **authorize**.
-
-  
-
-Vous pouvez maintenant accéder à tous les *Web Services*.
-
-
-   
-
-## Extends
-
-  
-
-Pour étendre l'*API*, nous allons définir et enregistrer des **schémas d'entités**.
-
-Ces **schémas** seront *parsés* par le programme `./src/gen.ts` de manière à générer les *types* et *class* *TypeScripts* utiles pour manipuler l'**API**.
-
-
-## Exemple - Todo Entity
-
-  Ajoutons l'entité **Todo** à notre **API**.
- 
- Un **Todo** aura:
- -  un champ **title** de type **string**,  unique et requis
- -  un champ **done** de type **boolean**,  requis et `false` par défaut.
-
-  Créer le fichier `todo.ts` dans le répertoire `src/apis`.
-
-Le minimum requis pour déclarer une **entité** est un object de *type* `ApiEntitySchema`.
-
-Ajoutons donc l'`ApiEntitySchema` de l'entité `Todo` dans le fichier `src/apis/todo.ts`:
-
-	// ./src/apis/todo.ts
-	
-	import { ApiEntitySchema } from '../common/api-gen';
-
-	export const todo = {
-		model: {
-				title: {
-				type:  String,
-				required:  true,
-				unique:  true,
-			},
-			done: {
-				type:  Boolean,
-				required:  true,
-				default:  false,
-			}
-		}
-	};
-
-La propriété **model** d'`ApiEntitySchema` ressemble à l'object que peut prendre `mongoose.Schema({ ... })` en paramètre:
-
-	
-	interface  ApiEntityModelFieldSchema {
-		type:  ApiEntityModelFieldTypeUnion;
-		required?:  boolean;
-		unique?:  boolean;
-		select?:  boolean;
-		default?:  any;
-		guards?:  ApiEntityModelFieldGuards;
-		validators?:  ApiEntityModelFieldValidators;
-		reverse?:  string;
-		populate?:  string;
-		relation?:  boolean; # Private api-gen part. Do not use it on your own
-		array?:  boolean; # Private api-gen part. Do not use it on your own
-		related?:  string; # Private api-gen part. Do not use it on your own
-	}
-	
-	interface  ApiEntityModelSchema {
-		[field:  string]:  ApiEntityModelFieldSchema;
-	}
-
-
-Une fois l'object `todo: ApiEntitySchema` définit, il ne manque qu'à l'enregistrer dans l'`index.ts` du répertoire `src/apis`.
-
-	// ./src/apis/index.ts
-	
-	import { user } from  "./user";
-	import { todo } from  "./todo";
-
-	export  const  apis  = {
-		user: user,
-		todo: todo,
-	};
-
-Maintenant que l'*entité* **Todo** est enregistrer, on doit relancer le programme `./src/gen.ts` pour lui permettre de mettre à jour le **swagger** et le code généré.
-
-	$ npm run sync 
-  
-Si on retourne sur `http://localhost:4266/docs`, on peut voir que l'**API** **Todo** à été générée.
-
-Cependant, tous les *Web Services* retournent une erreur *404*. C'est **normal**, nous avons générer le code et le **swagger**, mais nous n'avons pas encore appliqué ce code à note application.
-
-Pour cela, on utilise la fonction **use** du service `UseService`.
-
-Rendez-vous dans le répertoire `src/modules/use` et éditez le fichier `service.ts`.
-
-	import  passport  from  'passport';
-	import { Application } from  'express';
-	import { environment } from  '../../environment';
-	import { Singleton } from  '../../common/singleton/singleton';
-	import { UserRouter } from  '../../generated-code/user/user';
-
-	/*
-	 * Ajout (1)
-	 * 
-	 * On importe le Router Express généré par api-gen.
-	 */
-	import { TodoRouter } from  '../../generated-code/todo/todo';
-	  
-	export  class  UseService  extends  Singleton {
-		
-		constructor(public  config:  UseServiceConfig) {
-			super(UseService);
-		}
-
-	  
-
-		async  use(app:  Application) {
-			app.use(passport.initialize());
-			new  UserRouter().apply(app);
-
-			/*
-			 * Ajout (2)
-			 * 
-			 * On applique le Router Express à notre application
-			 */
-			new  TodoRouter().apply(app);
-		}
-
-	}
-
-	export  const  mainUseService  =  new  UseService({});
-
-Voilà ! On peut maintenant relancer l'application:
-
-	$ npm run dev
-
-Les *Web Services* sont maintenant accessibles.
-
-## Sécurité et validation
-
-`api-gen` propose 3 niveaux de sécurité et validation:
-
-- Les middlewares
-- Les guards
-- Les validators
-
-## Middlewares
-
-Les middlewares sont des functions exécutées à l'invocation d'un *Web Service*, avant d'invoquer son *controller*.
-Les middlewares `api-gen` sont exactements équivalents aux middlewares Express et doivent avoir pour signature:
-
-	type ApiMiddleware = (req: express.Request, res: express.Response, next: express.NextFunction) => void
-
-Si un *middleware* n'invoque **pas** son paramètre `next: NextFunction` alors la chaîne d'exécution s'arrête.
-
-Pour appliquer des middlewares aux *Web Services* générés, on utilise la propriété **ws** d'`ApiEntitySchema`.
-Cette propriété est de type `ApiEntityWSsSchema`:
-
-  
-
-	interface  ApiEntityWSSchema {
-		middlewares?:  ApiMiddleware[]; // La chaîne d'exécution du WS
-		excludes?:  ApiExludes; // Les fonctions à exclure de la chaîne d'exécution de ce WS
-		skip?:  boolean; // true pour ne pas générer ce WS
-		secure?:  boolean; // true pour signifier à swagger si ce WS nécessite un JWT
-		type?:  'query'  |  'mutation'; # Private api-gen part. Do not use it on your own
-	}
-	
-	interface  ApiEntityWSsSchema {
-		all?: ApiEntityWSSchema;
-		query?: ApiEntityWSSchema;
-		mutation?: ApiEntityWSSchema;
-		[endpointPattern:  string]:  ApiEntityWSSchema;
-	}
-
-Les propriétés `all`, `query` et `mutation` permettent de cibler plusieurs *Web Services* à la fois:
-
- - `all`: cible tous les *Web Services* de l'**entité**
- - `query`: cible tous les *Web Services* **GET** de l'entité
- - `mutation`: cible tous les *Web Services* **POST**/**PUT**/**DELETE** de l'entité
-
-Les autres propriétés doivent respectés l'expression régulière: `(GET|POST|PUT|DELETE) \/(\w|\/|:)*` et permettent de cibler l'unique *Web Service* qui match le pattern.
-
-`api-gen` génère par défaut **5** *Web Services* par entités:
-
-- `GET /`: fetch l'ensemble de la collection de l'entité 
-- `POST /`: créer une nouvelle instance de l'entité
-- `GET /:id`: fetch l'instance de l'entité ciblée par **:id**
-- `PUT /:id`: modifier l'instance de l'entité ciblée par **:id**
-- `DELETE /:id`: supprimer l'instance de l'entité ciblée par **:id**
-
-Vous pouvez ajouter autant de *Web Service* que nécessaire, mais comme il n'y aura pas de *controller* pré-définit pour ces *Web Services* "customs", vous devez implémenter un controller en tant que dernier *middleware* du *Web Service*.
-
-Par exemple:
-
-	const myCustomController = (req: express.Request, res: express.Response) => {
-		console.log(`Custom log ${req.params.id}`);
-		res.json({ ok: true });
-	};
-
-	export const myApi: ApiEntitySchema = {
-		model: {
-			name: {
-				type: string,
-			}
-		},
-		ws: {
-			'GET /:id/log': {
-				middlewares: [myCustomController]
-			}
-		}
-	}; 
-
-> Note sur l'utilisation d'**excludes**:
-> La propriété `excludes` d'un WS lui permet d'exclure des middlewares appliqués via `all`, `query` et `mutation`.
-> `exclude` accepte une *map* `{ [idx: number]: boolean }` spécifiant les index du tableau `middlewares` à exclure de ce WS. 
-> Pour un WS, les index de ces middlewares respectent toujours `idx@all < idx@query|mutation < idx@[endpointPattern]`.
+Pour définir une API, créer un fichier typescript au nom de l'API dans le répertoire `./src/apis`.
 
 Exemple: 
 
-	const jwt = (...) => ...;
-	const hasRole = (...) => (...) => ...;
+	// ./src/apis/user.ts
 
-	export const myApi: ApiEntitySchema = {
+	export const user: ApiEntitySchema = {
+		model: {},
+		ws: {},
+	};
+
+Voici le minimum requis pour définir une API. En fait, la propriété `ws` aka: Web Service, n'est pas requise.
+Bon, pour le moment cette API n'est pas très utile.
+
+On va commencer par définir le model des entités de type `user`.
+Pour ça, on utilise la propriété `model` de notre schéma d'API de type `ApiEntitySchema`.
+
+Exemple: 
+
+	// ./src/apis/user.ts
+
+	export const user: ApiEntitySchema = {
 		model: {
-			name: {
-				type: string,
+			username: {
+				type: String,
+				required: true,
+				unique: true
+			},
+			password: {
+				type: String,
+				required: true
+			}
+		},
+		ws: {},
+	};
+
+Seul la propriété `type` des champs de type `ApiEntityModelFieldSchema` (aka: `username`, `password`) est requise.
+Cependant, `api-gen` expose quelques options de configuration pouvant être utiles: 
+
+	type ApiEntityModelFieldTypeUnion = String
+		| Number
+		| Boolean
+		| Date
+		| Object // aka: any
+		| string // aka: relations. Exemples: 'User', 'Product', ['Tag']
+		| [String]
+		| [Number]
+		| [Boolean]
+		| [Date]
+		| [Object]
+		| [string];
+	
+	interface ApiEntityModelFieldSchema {
+		type:  ApiEntityModelFieldTypeUnion;
+		required?:  boolean;
+		unique?:  boolean;
+		select?:  boolean; // true if field should only appears in `create` aka: POST / response
+		default?:  any; // 42, function () { return this.foo = 'bar' }, () => ctx().req.user.id, ...
+		populate?:  boolean; // if this field is a relation, true to automatically populate the field on queries.
+		reverse?:  string; // if this field is a relation, set it to the name of the field in the related model. `create` and `delete` operations on this API will be automatically reversed to that related API on it's model field `reverse`. Exemple: 'todos', 'author'  
+		guards?:  ApiEntityModelFieldGuards; // function to guard this specific field against the context (aka: req: Request) on `select`, 'create' and 'update' operations (or all via `all`)
+		validators?:  ApiEntityModelFieldValidators; // function to validate the value of this field in the body of the incoming request on `create` and `update` operations (or both via `all`)
+	}
+
+Même si la propriété `ws` de notre schéma est vide, `api-gen` va générer les 5 web services CRUD de l'API.
+Par défaut, ces web services sont publics.
+
+Imaginons que l'on veuille protéger tous ceux induisant des accès en écriture sur notre server. Pour ça on peut utiliser la propriété *spéciale* (aka: qui ne respecte pas `endpointPattern`) `mutation`: 
+
+Exemple: 
+
+	// ./src/apis/user.ts
+
+	import { mainPassportService } from '../../modules/passport/service';
+
+	export const user: ApiEntitySchema = {
+		model: {
+			username: {
+				type: String,
+				required: true,
+				unique: true
+			},
+			password: {
+				type: String,
+				required: true
 			}
 		},
 		ws: {
-			all: {
-				middlewares: [jwt],
-			},
 			mutation: {
-				middlewares: [hasRole('admin')],
+				middlewares: [mainPassportService.jwt()]
+			}
+		},
+	};
+
+Cependant, il serait plus utile de ne pas protéger le web service POST / aka: create, en tout cas pour une API `user` (eg: `jwt` encode une instance d'un entité `user`, il faut donc avoir créé un `user` au préalable pour pouvoir passer le middleware `jwt` avec succès).
+
+Pour ça, on utilise la propriété `excludes` pour exclure des middlewares appliqués à un niveau au dessus (aka: via `all`, `query` and `mutation`)
+	
+	// ./src/apis/user.ts
+
+	import { mainPassportService } from '../../modules/passport/service';
+
+	export const user: ApiEntitySchema = {
+		model: {
+			username: {
+				type: String,
+				required: true,
+				unique: true
+			},
+			password: {
+				type: String,
+				required: true
+			}
+		},
+		ws: {
+			mutation: {
+				middlewares: [mainPassportService.jwt()]
 			},
 			'POST /': {
-				excludes: { 1: true } // comme all.middlewares < mutation.middlewares, `1: true` ecxlue le middleware hasRole 
-			},
-			'GET /': {
-				excludes: { 0: true, 1: true } // exclue les middlewares jwt et hasRole de ce WS
+				excludes: {
+					0: true, // index of the middlewares to exclude
+				}
 			}
+		},
+	};
+
+Les middlewares sont appliqués dans l'ordre `[...all, ...(query|mutation), ...'endpointPattern']`.
+Les 5 web services générés correspondent aux patterns `GET /`, `POST /`, `GET /:id`, `PUT /:id` et `DELETE /:id`.
+
+
+
+ # ./src/apis/index.ts 
+
+Une fois qu'une API est définit, on peut l'enregistrer pour `./src/gen.ts`.
+
+Exemple: 
+	
+	// ./src/apis/index.ts
+	
+	import { user } from  "./user";
+	
+	export  const  apis  = {
+		/* Register APIs here */
+		user:  user,
+	};
+
+> En général, cest maintenat le moment idéal pour exécuter `$ npm run gen`.
+
+ # ./src/modules/use/service.ts @ UseService.use(app)
+
+Use fois le code et le *swagger* généré par `./src/gen.ts`, il ne reste plus qu'à appliquer le Router Express généré pour l'API à notre application Express.
+
+La fonction `use` du service `UseService`, présent dans le fichier ` ./src/modules/use/service.ts` est l'endroit idéal pour invoquer, dans le programme `./src/main.ts`, le code généré par le programme `./src/gen.ts` (et dont l'API correspond, au `swagger` également généré).
+
+Exemple:
+
+	// ./src/modules/use/service.ts @ UseService.use(app) method
+
+	import { UserRouter } from '../../../generated-code/user/user.ts';
+	import { RoleRouter } from '../../../generated-code/role/role.ts';
+	import { ProductRouter } from '../../../generated-code/product/product.ts';
+	import { CategoryRouter } from '../../../generated-code/category/category.ts';
+
+	export class UseService {
+
+		use(app: Application) {
+			/*
+			 * Here is the good place to use generated code.
+			 * By now, this is mostly done with:
+			 *
+			 *    `import { <api>Router } from '../../../generated-code/<api>/<api>.ts';`
+			 *     ...
+			 *     ...
+			 *    `new <api>Router().apply(app);`
+			 */
+			new UserRouter().apply(app);
+			new RoleRouter().apply(app);
+			new ProductRouter().apply(app);
+			new CategoryRouter().apply(app);
 		}
-	}; 
-
-## Guards
-
-Les `guards` sont les cousins des middlewares. Ils permettent, eux, de protégé l'accès aux propriétés de l'entité, lors des opération de `lecture` de `création` ou de `mise à jour` des entités.
-
-On utilise pour ça la propriété `guards` de `ApiEntityModelFieldSchema`.
-
-	interface  ApiEntityModelFieldGuards {
-		all?:  ApiEntityModelFieldGuard[]; // Toutes les opérations -- GET|POST|PUT
-		select?:  ApiEntityModelFieldGuard[]; // lecture -- GET
-		create?:  ApiEntityModelFieldGuard[]; // création -- POST
-		update?:  ApiEntityModelFieldGuard[]; // mise à jour -- PUT
 	}
-	
-	type  ApiEntityModelFieldGuard  = (ctx:  any) =>  Promise<null  | { [error:  string]:  string }>;
 
-Un *guard* est une fonction asynchrone appliqué au **context***, qui permet, si celle-ci ne resolve **pas** sur `null` de protéger la propriété de l'entité -- Elle est retiré de la `projection mongodb` lors des opérations de `lecture` et elle est retiré du `body` de la requête lors des opérations de `création` et de `mise à jour`.
+Le programme `./src/main.ts` invoque cette fonction en lui donnant l'instance de l'Application Express, après lui avoir appliqué quelques *middlewares* de bases (cors, bodyParser, morgan, helmet, ...).
 
-Les éventuelles erreurs retournées par les `guards` d'une *entité* sont ajoutés dans le champ `guardErrors` du champ `errors` renvoyés par les WS.
+> **Feel free to PR the Github repo for more, or just ask support at sben.code.42@gmail.com** 
 
-## Validators
 
-Les `validators` sont les frères des `guards`. Ils permettent eux, de valider la valeur des champs envoyé dans le `body` de la requête, lors des opérations de `création` et de `mise à jour`.
+# Sécurité
 
-Cependant, et contrairement aux `guards`, une erreur renvoyées par un `validator` **stop** l'exécution de la requête et renvois l'erreur avec un *status HTTP 400*.
+## 1 - Les Middlewares : Stopper la chaîne d'exécution
+## 2 - Les Guards : Cacher des propriétés -- les rendre invisibles et/ou invulnérables
+## 3 - Les validators : Valider req.body ou stopper la chaîne d'exécution
 
-  
 
-	interface  ApiEntityModelFieldValidators {
-		all?:  ApiEntityModelFieldValidator[];
-		create?:  ApiEntityModelFieldValidator[];
-		update?:  ApiEntityModelFieldValidator[];
+# Automates
+
+## 1 - Auto Populate Relations
+## 2 - Auto Reverse Create and Deletion on related models
+
+# Samples
+
+## Twitter
+
+	import { ctx } from  "../common/api-gen";
+	import { MINLENGTH, Pr, NEVER, MAXLENGTH } from  "../common/api-gen/core/constantes";
+	import { mainPassportService } from  "../modules/passport/service";
+	  
+	export  const  user  = {
+	model: {
+	username: {
+	type:  String,
+	required:  true,
+	unique:  true,
+	validators: {
+	all: [MINLENGTH(5)]
 	}
-	
-	/*
-	 * @params(ctx): le context d'execution de la requete: ctx: { req: Request, res: Response: err: {} }
-	 * @params(input): La valeur du champ dans le body de la requête
-	 */
-	type  ApiEntityModelFieldValidator  = (ctx:  any, input:  any) =>  Promise<null  | { [error:  string]:  string }>;
+	},
+	password: {
+	type:  String,
+	required:  true,
+	validators: {
+	all: [MINLENGTH(8)]
+	}
+	},
+	roles: {
+	type: [String],
+	required:  true,
+	default: ['user'],
+	guards: {
+	create:  NEVER,
+	update: [
+	(ctx:  any) =>  Pr(ctx.user.roles.includes('admin') ?  null  : { unauthorized:  'unauthorized' }),
+	]
+	},
+	validators: {
+	update: [
+	(roles:  string[]) =>  Pr(roles.every(role  => ['user', 'admin'].includes(role)) ?  null  : { unknow:  `Unknow role in ${roles}` }),
 
-# @TODO: Correct. Continue. Improve
+	]
+
+	}
+
+	},
+
+	tags: {
+
+	type: ['Tag'],
+
+	default: [],
+
+	guards: {
+
+	create:  NEVER,
+
+	update:  NEVER,
+
+	},
+
+	reverse:  'creator',
+
+	},
+
+	tweets: {
+
+	type: ['Tweet'],
+
+	default: [],
+
+	guards: {
+
+	create:  NEVER,
+
+	update:  NEVER,
+
+	},
+
+	reverse:  'author',
+
+	},
+
+	comments: {
+
+	type: ['Comment'],
+
+	default: [],
+
+	guards: {
+
+	create:  NEVER,
+
+	update:  NEVER,
+
+	},
+
+	reverse:  'author',
+
+	}
+
+	},
+
+	ws: {
+
+	all: {
+
+	middlewares: [
+
+	mainPassportService.jwt(),
+
+	]
+
+	},
+
+	mutation: {
+
+	middlewares: [
+
+	mainPassportService.hasRole(['self', 'admin']),
+
+	]
+
+	},
+
+	'POST /': {
+
+	excludes: {
+
+	0:  true,
+
+	1:  true,
+
+	}
+
+	},
+
+	'DELETE /:id': {
+
+	middlewares: [
+
+	mainPassportService.hasRole(['admin']),
+
+	],
+
+	excludes: {
+
+	1:  true
+
+	}
+
+	}
+
+	}
+
+	};
+
+	export  const  tweet  = {
+
+	model: {
+
+	title: {
+
+	type:  String,
+
+	required:  true,
+
+	unique:  true,
+
+	},
+
+	content: {
+
+	type:  String,
+
+	required:  true,
+
+	validators: {
+
+	all: [MAXLENGTH(140)]
+
+	}
+
+	},
+
+	tags: {
+
+	type: ['Tag'],
+
+	default: [],
+
+	reverse:  'tweets',
+
+	},
+
+	comments: {
+
+	type: ['Comment'],
+
+	default: [],
+
+	guards: {
+
+	create:  NEVER,
+
+	update:  NEVER,
+
+	},
+
+	reverse:  'tweets'
+
+	},
+
+	author: {
+
+	type:  'User',
+
+	required:  true,
+
+	default: () =>  ctx().req.user.id,
+
+	guards: {
+
+	create:  NEVER,
+
+	update:  NEVER,
+
+	},
+
+	reverse:  'tweets'
+
+	}
+
+	},
+
+	ws: {
+
+	all: {
+
+	middlewares: [
+
+	mainPassportService.jwt(),
+
+	]
+
+	},
+
+	mutation: {
+
+	middlewares: [
+
+	mainPassportService.hasRole(['owner', 'admin']),
+
+	]
+
+	},
+
+	'DELETE /:id': {
+
+	middlewares: [
+
+	mainPassportService.hasRole(['admin']),
+
+	],
+
+	excludes: {
+
+	1:  true
+
+	}
+
+	}
+
+	}
+
+	};
+
+	export  const  tag  = {
+
+	model: {
+
+	title: {
+
+	type:  String,
+
+	required:  true,
+
+	unique:  true,
+
+	},
+
+	creator: {
+
+	type:  'User',
+
+	required:  true,
+
+	default: () =>  ctx().req.user.id,
+
+	guards: {
+
+	create:  NEVER,
+
+	update:  NEVER,
+
+	},
+
+	reverse:  'tags'
+
+	},
+
+	tweets: {
+
+	type: ['Tweet'],
+
+	default: [],
+
+	guards: {
+
+	create:  NEVER,
+
+	update:  NEVER,
+
+	},
+
+	}
+
+	},
+
+	ws: {
+
+	all: {
+
+	middlewares: [
+
+	mainPassportService.jwt(),
+
+	]
+
+	},
+
+	mutation: {
+
+	middlewares: [
+
+	mainPassportService.hasRole(['owner', 'admin']),
+
+	]
+
+	},
+
+	'DELETE /:id': {
+
+	middlewares: [
+
+	mainPassportService.hasRole(['admin']),
+
+	],
+
+	excludes: {
+
+	1:  true
+
+	}
+
+	}
+
+	}
+
+	};
+
+	export  const  comment  = {
+
+	model: {
+
+	content: {
+
+	type:  String,
+
+	required:  true,
+
+	},
+
+	tweet: {
+
+	type:  'Tweet',
+
+	required:  true,
+
+	guards: {
+
+	update:  NEVER,
+
+	},
+
+	reverse:  'comments'
+
+	},
+
+	author: {
+
+	type:  'User',
+
+	required:  true,
+
+	default: () =>  ctx().req.user.id,
+
+	guards: {
+
+	create:  NEVER,
+
+	update:  NEVER,
+
+	},
+
+	reverse:  'comments'
+
+	}
+
+	},
+
+	ws: {
+
+	all: {
+
+	middlewares: [
+
+	mainPassportService.jwt(),
+
+	]
+
+	},
+
+	mutation: {
+
+	middlewares: [
+
+	mainPassportService.hasRole(['owner', 'admin']),
+
+	]
+
+	},
+
+	'DELETE /:id': {
+
+	middlewares: [
+
+	mainPassportService.hasRole(['admin']),
+
+	],
+
+	excludes: {
+
+	1:  true
+
+	}
+
+	}
+
+	}
+
+	};
+
+
