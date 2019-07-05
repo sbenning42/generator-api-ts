@@ -1,3 +1,4 @@
+
 # API-GEN
 
 ## Paradigme
@@ -11,11 +12,11 @@ Elle regroupe:
  - Un service d'authentification `local` + `JWT`
  - `req: express.Request` accessible n'importe où, même dans les fonctions `mongoose.Schema.default`
 
-Son objectif principale, est de mettre à disposition du développeur, une sorte de langage de description de l'API qu'il veut implémenter. Ce langage est en fait un plain javascript object de configuration. 
+Son objectif principale, est de mettre à disposition du développeur, une sorte de langage de description de l'API qu'il veut implémenter. Ce langage est en fait un `plain javascript object` de configuration. 
 
-> Il est possible, mais compliquer, de typer fortement du code typescript, uniquement via des directives évaluées au run-time. 
+> Il est possible, mais compliqué, de typer fortement du code typescript, uniquement via des directives évaluées au run-time. 
 > Pour s'affranchir de cette complexité, `api-gen`, met à disposition un programme de génération de code  typescript.
-> Ce code utilise des fonctions génériques, non-fortement typés, dans des classes spécifiques, fortement typées.
+> Ce code utilise des fonctions génériques, non-fortement typées, dans des classes spécifiques, fortement typées.
 
 ## $ npm run (gen | dev | sync)
 
@@ -27,32 +28,34 @@ Le repo Github d'`api-gen` contient 3 scripts npm principaux. (Au moyen de son `
 
 # gen
 
-Le script `gen` permet d'invoquer le programme définit dans `./src/gen.ts`. Ce programme analyse l'object de type `ApiSchema` exporté par `./src/apis/index.ts`. Puis, il génère les fichiers suivants:
+Le script `gen` permet d'invoquer le programme définit dans `./src/gen.ts`. Ce programme analyse l'objet de type `ApiSchema` exporté par `./src/apis/index.ts`. Puis, il génère les fichiers suivants:
 
 - `./src/generated-code/schema.yml` (1)
 - `./src/generated-code/types.ts` (2)
 - `./src/generated-code/<api>/<api>.ts` (3)
 
-Un répertoire `<api>` est créé pour chaque clef de la propriété `apis` de l'object de configuration de type `ApiSchema`, exporté par `./src/apis/index.ts`.
+Un répertoire `<api>` est créé pour toutes les clefs de la propriété `apis` de l'objet de configuration de type `ApiSchema`, exporté par `./src/apis/index.ts`.
 
 (1) - Le `swagger` de l'API décrite.
-(2) - Les types typescript utiles à l'API.
+(2) - Les types typescript, utiles à l'API.
 (3) - Les classes typescript, spécifiques à une entité de l'API.
 
 # dev
 
-Le script `dev` permet d'invoquer le programme définit dans `./src/main.ts`. Ce programme analyse l'object de type `ApiSchema` exporté par `./src/apis/index.ts`.  Puis il instancie un server Express sur le port `4266`, et sert le `swagger` généré par `gen` sur le *endpoint* `/docs`.
+Le script `dev` permet d'invoquer le programme définit dans `./src/main.ts`. Ce programme analyse l'objet de type `ApiSchema` exporté par `./src/apis/index.ts`.  Puis, il instancie un serveur Express sur le port `4266`, et sert le `swagger` généré par `gen` sur le *endpoint* `/docs`.
 
 # sync
 
-Le script `sync` permet d'invoquer successivement, les scripts `gen` puis `dev`. Utile lorsque l'on met à jour une API existante. Il re-génère ainsi le code impacté, et re-lance le server Express.
+Le script `sync` permet d'invoquer successivement, les scripts `gen` puis `dev`. Utile lorsque l'on met à jour une API existante. Il regénère ainsi le code impacté, et relance le serveur Express.
 
-# Etendre le starter ./src/main.ts
+# Étendre le starter ./src/main.ts
 
 
  # ./src/apis
 
-Ce répertoire est l'endroit idéal où définir les *schémas d'APIs*. `api-gen` considère qu'une API est définit par:
+Ce répertoire est l'endroit idéal où définir les *schémas d'APIs*. 
+
+`api-gen` considère qu'une API est définit par:
 
 - le model de ses entités.
 - les web services exposés pour requêter / muter ses entités.
@@ -60,7 +63,11 @@ Ce répertoire est l'endroit idéal où définir les *schémas d'APIs*. `api-gen
 Pour définir une API, créer un fichier typescript au nom de l'API dans le répertoire `./src/apis`.
 
 Exemple: 
-	// ./src/apis/user.ts
+
+	/*
+	 * ./src/apis/user.ts
+	 */
+	
 	export const user: ApiEntitySchema = {
 		model: {},
 		ws: {},
@@ -73,7 +80,11 @@ On va commencer par définir le model des entités de type `user`.
 Pour ça, on utilise la propriété `model` de notre schéma d'API de type `ApiEntitySchema`.
 
 Exemple: 
-	// ./src/apis/user.ts
+
+	/*
+	 * ./src/apis/user.ts
+	 */
+	 
 	export const user: ApiEntitySchema = {
 		model: {
 			username: {
@@ -89,8 +100,9 @@ Exemple:
 		ws: {},
 	};
 
-Seul la propriété `type` des champs de type `ApiEntityModelFieldSchema` (aka: `username`, `password`) est requise.
+Seule la propriété `type` des champs de type `ApiEntityModelFieldSchema` (aka: `username`, `password`) est requise.
 Cependant, `api-gen` expose quelques options de configuration pouvant être utiles: 
+
 	type ApiEntityModelFieldTypeUnion = String
 		| Number
 		| Boolean
@@ -116,13 +128,18 @@ Cependant, `api-gen` expose quelques options de configuration pouvant être util
 		validators?:  ApiEntityModelFieldValidators; // function to validate the value of this field in the body of the incoming request on `create` and `update` operations (or both via `all`)
 	}
 
-Même si la propriété `ws` de notre schéma est vide, `api-gen` va générer les 5 web services CRUD de l'API.
+Même si la propriété `ws` de notre schéma est vide, `api-gen` va générer les 5 web services `CRUD` de l'API.
 Par défaut, ces web services sont publics.
 
-Imaginons que l'on veuille protéger tous ceux induisant des accès en écriture sur notre server. Pour ça on peut utiliser la propriété *spéciale* (aka: qui ne respecte pas `endpointPattern`) `mutation`: 
+Imaginons que l'on veuille protéger tous ceux induisant des accès en écriture sur notre serveur.
+Pour ça on peut utiliser la propriété *spéciale* (aka: qui ne respecte pas `endpointPattern`) `mutation`: 
 
-Exemple: 
-	// ./src/apis/user.ts
+Exemple:
+ 
+	/*
+	 * ./src/apis/user.ts
+	 */
+	 
 	import { mainPassportService } from '../../modules/passport/service';
 
 	export const user: ApiEntitySchema = {
@@ -144,11 +161,13 @@ Exemple:
 		},
 	};
 
-Cependant, il serait plus utile de ne pas protéger le web service POST / aka: create, en tout cas pour une API `user` (eg: `jwt` encode une instance d'un entité `user`, il faut donc avoir créé un `user` au préalable pour pouvoir passer le middleware `jwt` avec succès).
+Cependant, il serait plus utile de ne pas protéger le web service `POST /` aka: create, en tout cas pour une API `user` (eg: `jwt` encode une instance d'un entité `user`, il faut donc avoir créé un `user` au préalable pour pouvoir passer le middleware `jwt` avec succès).
 
-Pour ça, on utilise la propriété `excludes` pour exclure des middlewares appliqués à un niveau au dessus (aka: via `all`, `query` and `mutation`)
+Pour ça, on utilise la propriété `excludes` pour exclure des middlewares appliqués à un niveau au dessus (aka: via `all`, `query` et `mutation`)
 	
-	// ./src/apis/user.ts
+	/* 
+	 * ./src/apis/user.ts
+	 */ 
 
 	import { mainPassportService } from '../../modules/passport/service';
 
@@ -187,7 +206,9 @@ Une fois qu'une API est définit, on peut l'enregistrer pour `./src/gen.ts`.
 
 Exemple: 
 	
-	// ./src/apis/index.ts
+	/*
+	 * ./src/apis/index.ts
+	 */
 	
 	import { user } from  "./user";
 	
@@ -196,18 +217,20 @@ Exemple:
 		user:  user,
 	};
 
-> En général, cest maintenat le moment idéal pour exécuter `$ npm run gen`.
+> En général, c'est maintenant le moment idéal pour exécuter `$ npm run gen`.
 
  # ./src/modules/use/service.ts @ UseService.use(app)
 
-Use fois le code et le *swagger* généré par `./src/gen.ts`, il ne reste plus qu'à appliquer le Router Express généré pour l'API à notre application Express.
+Une fois le code et le *swagger* générés par `./src/gen.ts`, il ne reste plus qu'à appliquer le Router Express généré pour l'API à notre application Express.
 
 La fonction `use` du service `UseService`, présent dans le fichier ` ./src/modules/use/service.ts` est l'endroit idéal pour invoquer, dans le programme `./src/main.ts`, le code généré par le programme `./src/gen.ts` (et dont l'API correspond, au `swagger` également généré).
 
 Exemple:
 
-	// ./src/modules/use/service.ts @ UseService.use(app) method
-
+	/*
+	 * ./src/modules/use/service.ts @ UseService.use(app) method
+	 */
+	 
 	import { UserRouter } from '../../../generated-code/user/user.ts';
 	import { RoleRouter } from '../../../generated-code/role/role.ts';
 	import { ProductRouter } from '../../../generated-code/product/product.ts';
@@ -239,6 +262,12 @@ Le programme `./src/main.ts` invoque cette fonction en lui donnant l'instance de
 # Sécurité
 
 ## 1 - Les Middlewares : Stopper la chaîne d'exécution
+
+Le premier niveau de sécurité, est celui implémenté par Express: la chaîne d'exécution *middlewares*.
+
+Le principe est simple, pour chaque web service, on définit la *suite* (aka: chaîne) de fonctions à exécuter.
+
+
 ## 2 - Les Guards : Cacher des propriétés -- les rendre invisibles et/ou invulnérables
 ## 3 - Les validators : Valider req.body ou stopper la chaîne d'exécution
 
